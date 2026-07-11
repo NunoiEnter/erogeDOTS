@@ -30,7 +30,7 @@
     extraGroups = [ "networkmanager" "wheel" "video" "audio" ];
   };
 
-  environment.systemPackages = with pkgs; [ vim git wget ];
+  environment.systemPackages = with pkgs; [ vim git wget firefox ];
   
   nixpkgs.config.allowUnfree = true;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
