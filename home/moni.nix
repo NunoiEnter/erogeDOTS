@@ -15,6 +15,8 @@
     ".config/niri".source = ../config/niri;
     ".config/waybar".source = ../config/waybar;
     ".config/fuzzel".source = ../config/fuzzel;
+    ".config/foot".source = ../config/foot;
+    ".config/fastfetch".source = ../config/fastfetch;
   };
 
   programs.home-manager.enable = true;
