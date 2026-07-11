@@ -1,5 +1,4 @@
 { pkgs, ... }:
-
 {
   home.packages = with pkgs; [
     vesktop
@@ -14,4 +13,5 @@
     fira-code
     tree
   ];
+
 }
