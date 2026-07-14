@@ -54,13 +54,13 @@ layout {
 
     // an actual border drawn around every window (off by default)
     // turn this on if you want a border ON TOP of the focus ring look
-    border {
-        off
-        width 4
-        active-color "#ffc4dd"
-        inactive-color "#505050"
-        urgent-color "#9b0000"
-    }
+    // border {
+	//off
+       // width 4
+        //active-color "#ffc4dd"
+        //inactive-color "#505050"
+        //urgent-color "#9b0000"
+    //}
 
     shadow {
         // on
