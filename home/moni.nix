@@ -14,6 +14,10 @@
   # Note: niri, waybar, fastfetch, fuzzel managed by theme-switch
   home.file = {
     ".config/nvim".source = ../config/nvim;
+    ".config/niri/config.kdl".source = ../config/niri/config.kdl;
+    ".config/waybar".source = ../config/waybar;
+    ".config/fastfetch/config.jsonc".source = ../config/fastfetch/config.jsonc;
+    ".config/fuzzel/config.ini".source = ../config/fuzzel/config.ini;
   };
 
   programs.home-manager.enable = true;
