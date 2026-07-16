@@ -17,6 +17,7 @@
     ".config/fuzzel".source = ../config/fuzzel;
     ".config/foot".source = ../config/foot;
     ".config/fastfetch".source = ../config/fastfetch;
+    ".config/nvim".source = ../config/nvim;
   };
 
   programs.home-manager.enable = true;

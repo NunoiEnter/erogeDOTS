@@ -19,12 +19,21 @@
   services.displayManager.sddm.enable = true;
   services.displayManager.sddm.wayland.enable = true;
 
+  programs.qylock = {
+    enable = true;
+    theme = "nothing";
+  };
+
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
     alsa.enable = true;
     pulse.enable = true;
   };
+
+  services.upower.enable = true;
+  powerManagement.enable = true;
+  powerManagement.cpuFreqGovernor = "powersave";
 
   users.users.moni = {
     isNormalUser = true;
