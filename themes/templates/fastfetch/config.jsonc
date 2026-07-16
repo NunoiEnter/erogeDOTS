@@ -1,0 +1,64 @@
+{
+    "logo": {
+        "type": "small",
+        "source": "NixOS_small",
+        "padding": {
+            "top": 1,
+            "right": 2
+        }
+    },
+    "display": {
+        "separator": " → ",
+        "color": {
+            "keys": "{{FF_COLOR}}",
+            "title": "{{FF_COLOR}}"
+        }
+    },
+    "modules": [
+        "title",
+        "separator",
+        {
+            "type": "os",
+            "key": " 天",
+            "format": "{2}"
+        },
+        {
+            "type": "kernel",
+            "key": " 道",
+            "format": "{2}"
+        },
+        {
+            "type": "uptime",
+            "key": " 時"
+        },
+        {
+            "type": "packages",
+            "key": " 数"
+        },
+        "break",
+        {
+            "type": "shell",
+            "key": " 貝",
+            "format": "{3}"
+        },
+        {
+            "type": "terminal",
+            "key": " 端"
+        },
+        {
+            "type": "wm",
+            "key": " 窓"
+        },
+        {
+            "type": "memory",
+            "key": " 記",
+            "format": "{1} / {2} ({3})"
+        },
+        "break",
+        {
+            "type": "colors",
+            "paddingLeft": 2,
+            "symbol": "block"
+        }
+    ]
+}

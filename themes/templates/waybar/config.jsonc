@@ -1,0 +1,63 @@
+{
+    "layer": "top",
+    "position": "top",
+    "height": 34,
+    "margin-top": 6,
+    "margin-left": 10,
+    "margin-right": 10,
+
+    "modules-left": ["niri/workspaces", "niri/window"],
+    "modules-center": ["clock"],
+    "modules-right": ["custom/fcitx5", "pulseaudio", "network", "battery", "tray"],
+
+    "niri/workspaces": {
+        "format": "{icon}",
+        "format-icons": {
+            "active": "{{WAYBAR_WORKSPACE_ACTIVE}}",
+            "default": "{{WAYBAR_WORKSPACE_DEFAULT}}"
+        }
+    },
+
+    "niri/window": {
+        "format": "✧ {title}",
+        "max-length": 40
+    },
+
+    "clock": {
+        "format": "{{WAYBAR_CLOCK_ICON}} {:%H:%M}",
+        "tooltip-format": "{:%A, %d %B %Y}"
+    },
+
+    "custom/fcitx5": {
+        "exec": "~/.config/waybar/scripts/fcitx5-status.sh",
+        "interval": 1,
+        "format": "{}",
+        "on-click": "~/.config/waybar/scripts/fcitx5-cycle.sh",
+        "tooltip": false
+    },
+
+    "pulseaudio": {
+        "format": "{icon} {volume}%",
+        "format-icons": {
+            "default": ["🔈", "🔉", "🔊"]
+        },
+        "on-click": "pavucontrol"
+    },
+
+    "network": {
+        "format-wifi": "📶 {signalStrength}%",
+        "format-ethernet": "🖧 Wired",
+        "format-disconnected": "✕ Offline",
+        "tooltip-format": "{ifname}: {ipaddr}"
+    },
+
+    "battery": {
+        "format": "{icon} {capacity}%",
+        "format-icons": ["🥀", "🌷", "🌸", "🌺", "💮"],
+        "format-charging": "⚡ {capacity}%"
+    },
+
+    "tray": {
+        "spacing": 10
+    }
+}

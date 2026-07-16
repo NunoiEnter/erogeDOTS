@@ -17,6 +17,7 @@
     vesktop
     heroic
     p7zip
+    qbittorrent
   ];
 
 }
