@@ -12,6 +12,11 @@
     noto-fonts-cjk-sans
     fira-code
     tree
+    wine
+    steam
+    vesktop
+    heroic
+    p7zip
   ];
 
 }

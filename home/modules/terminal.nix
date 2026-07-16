@@ -7,6 +7,17 @@
     yazi
     fastfetch
     neovim
+    ripgrep
+    fd
+    gcc
+    gdb
+    curl
+    gnutar
+    tree-sitter
+    htop
+    btop
+    upower
+    opencode
   ];
 
   programs.zsh = {
