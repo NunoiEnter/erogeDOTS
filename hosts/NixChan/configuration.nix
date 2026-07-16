@@ -16,6 +16,7 @@
   };
 
   programs.niri.enable = true;
+  programs.zsh.enable = true;
   services.displayManager.sddm.enable = true;
   services.displayManager.sddm.wayland.enable = true;
 
@@ -38,6 +39,7 @@
   users.users.moni = {
     isNormalUser = true;
     extraGroups = [ "networkmanager" "wheel" "video" "audio" ];
+    shell = pkgs.zsh;
   };
 
   environment.systemPackages = with pkgs; [ vim git wget firefox ];

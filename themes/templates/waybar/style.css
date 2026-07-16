@@ -1,0 +1,92 @@
+* {
+    font-family: "Kosugi Maru", "M PLUS Rounded 1c", "Noto Sans Thai", "Noto Sans JP", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    min-height: 0;
+}
+
+window#waybar {
+    background: {{WAYBAR_BG_GRADIENT}};
+    border-radius: 16px;
+    border: 2px solid {{WAYBAR_BORDER}};
+    box-shadow: 0 4px 12px {{WAYBAR_SHADOW}};
+    color: {{WAYBAR_TEXT}};
+}
+
+#workspaces button {
+    padding: 2px 10px;
+    margin: 4px 3px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    color: {{PRIMARY_DARK}};
+    border: 1px solid transparent;
+    transition: all 0.2s ease-in-out;
+}
+
+#workspaces button.active {
+    background: {{WAYBAR_ACTIVE_BG}};
+    color: #ffffff;
+    border: 1px solid {{PRIMARY}};
+    box-shadow: 0 2px 6px {{WAYBAR_SHADOW}};
+}
+
+#workspaces button:hover {
+    background: {{PRIMARY_LIGHT}};
+    color: #ffffff;
+}
+
+#window {
+    padding: 4px 14px;
+    margin: 4px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.55);
+    color: {{PRIMARY_DARK}};
+    font-style: italic;
+}
+
+#clock {
+    padding: 4px 14px;
+    margin: 4px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, {{PRIMARY}}, {{PRIMARY_LIGHT}});
+    color: #ffffff;
+    font-weight: 700;
+}
+
+#custom-fcitx5,
+#pulseaudio,
+#network,
+#battery,
+#tray {
+    padding: 4px 12px;
+    margin: 4px 3px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.5);
+    color: {{PRIMARY_DARK}};
+}
+
+#custom-fcitx5 {
+    background: linear-gradient(135deg, {{PRIMARY_LIGHT}}, #ffffff);
+    font-weight: 700;
+    color: {{PRIMARY}};
+}
+
+#battery.charging {
+    color: {{PRIMARY}};
+}
+
+#battery.critical:not(.charging) {
+    background: {{PRIMARY}};
+    color: #ffffff;
+}
+
+#tray > .passive {
+    -gtk-icon-effect: dim;
+}
+
+tooltip {
+    background: {{BG}};
+    border: 1px solid {{WAYBAR_BORDER}};
+    border-radius: 10px;
+    color: {{WAYBAR_TEXT}};
+}

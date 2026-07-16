@@ -11,12 +11,8 @@
   ];
 
   # เชื่อมโยงโฟลเดอร์ตั้งค่า (Dotfiles)
+  # Note: niri, waybar, fastfetch, fuzzel managed by theme-switch
   home.file = {
-    ".config/niri".source = ../config/niri;
-    ".config/waybar".source = ../config/waybar;
-    ".config/fuzzel".source = ../config/fuzzel;
-    ".config/foot".source = ../config/foot;
-    ".config/fastfetch".source = ../config/fastfetch;
     ".config/nvim".source = ../config/nvim;
   };
 

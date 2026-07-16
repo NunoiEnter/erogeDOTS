@@ -1,15 +1,30 @@
-{ pkgs ? import <nixpkgs> {} }:
+{ pkgs }:
 
+let
+  rustToolchain = pkgs.rust-bin.stable.latest.default.override {
+    extensions = [
+      "rust-src"
+      "rust-analyzer"
+      "clippy"
+      "rustfmt"
+    ];
+  };
+in
 pkgs.mkShell {
-  buildInputs = with pkgs; [
-    cargo
-    rustc
-    rustfmt
-    clippy
+  nativeBuildInputs = [
+    rustToolchain
+
+    pkgs.cargo-edit
+    pkgs.cargo-watch
+    pkgs.cargo-audit
+    pkgs.cargo-deny
+    pkgs.cargo-bloat
+    pkgs.cargo-outdated
   ];
 
+  RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
+
   shellHook = ''
-    echo "🦀 ยินดีต้อนรับสู่ Rust Development Environment!"
-    echo "ระบบโหลด Compiler มาให้ใช้ชั่วคราวแล้วครับ"
+    echo "🦀 Rust $(rustc --version | awk '{print $2}') | cargo $(cargo --version | awk '{print $2}')"
   '';
 }
