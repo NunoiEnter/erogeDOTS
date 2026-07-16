@@ -147,7 +147,7 @@ generate_configs() {
     echo -e "${GREEN}Generated configs for $theme_name${NC}"
 }
 
-# Apply theme configs - removes HM symlinks, copies files directly
+# Apply theme configs - works with HM symlinks by modifying files in-place
 apply_theme() {
     local theme_name="$1"
     local cache_dir="$STATE_DIR/cache/$theme_name"
@@ -159,24 +159,25 @@ apply_theme() {
         local source_dir="$DOTFILES/config/$app"
         local theme_dir="$cache_dir/$app"
         
-        # Remove Home Manager symlink if it exists
-        if [[ -L "$target" ]]; then
-            rm "$target"
-        fi
-        
         # Create directory if it doesn't exist
         if [[ ! -d "$target" ]]; then
             mkdir -p "$target"
         fi
         
+        # If target is a symlink, resolve to actual path for copying
+        local real_target="$target"
+        if [[ -L "$target" ]]; then
+            real_target="$(readlink -f "$target")"
+        fi
+        
         # Copy base configs from dotfiles (only if target is empty)
-        if [[ -d "$source_dir" ]] && [[ -z "$(ls -A "$target" 2>/dev/null)" ]]; then
-            cp -r "$source_dir"/* "$target"/ 2>/dev/null || true
+        if [[ -d "$source_dir" ]] && [[ -z "$(ls -A "$real_target" 2>/dev/null)" ]]; then
+            cp -r "$source_dir"/* "$real_target"/ 2>/dev/null || true
         fi
         
         # Overwrite with theme-specific configs
         if [[ -d "$theme_dir" ]]; then
-            cp -r "$theme_dir"/* "$target"/ 2>/dev/null || true
+            cp -r "$theme_dir"/* "$real_target"/ 2>/dev/null || true
         fi
     done
     

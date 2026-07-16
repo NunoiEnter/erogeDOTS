@@ -64,6 +64,11 @@ window-rule {
     open-floating true
 }
 
+window-rule {
+    match app-id=r#"^foot$"# is-active=false
+    opacity 0.85
+}
+
 binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
     Mod+Return hotkey-overlay-title="Open a Terminal" { spawn "foot"; }
