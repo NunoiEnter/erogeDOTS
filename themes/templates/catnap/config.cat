@@ -1,0 +1,38 @@
+;   /\_/\   catnap config — erogeDOTS
+;  ( o.o )  themed, fast, minimal
+;   > ^ <
+
+import "distros.cat"
+
+; -- Appearance ---------------------------------------------------------------
+$layout       = "inline"
+$border_style = "single"
+$border_color = $magenta
+$distroid     = ""
+$stats_margin_top = 0
+$graph_width = 15
+$location = ""
+
+; -- Stat list ----------------------------------------------------------------
+$stats = [
+    @{id="username"  icon=''  name="user"      color=$magenta}
+    @{id="hostname"  icon=''  name="host"      color=$cyan}
+    @{id="uptime"    icon=''  name="up"        color=$blue}
+    @{id="separator"}
+
+    @{id="distro"    icon=''  name="os"        color=$yellow}
+    @{id="kernel"    icon=''  name="ker"       color=$green}
+    @{id="separator"}
+
+    @{id="desktop"   icon=''  name="de"        color=$green}
+    @{id="terminal"  icon=''  name="term"      color=$yellow}
+    @{id="shell"     icon='󰞷'  name="sh"       color=$green}
+    @{id="separator"}
+
+    @{id="cpu"       icon=''   name="cpu"       color=$magenta}
+    @{id="memory"    icon=''   name="mem"       color=$blue  graph=true graph_color_fg=$bright_blue}
+    @{id="disk_0"    icon=''   name="disk"      color=$cyan  graph=true graph_style="ascii" graph_color_fg=$bright_cyan}
+    @{id="separator"}
+
+    @{id="colors"    icon=''  name="colors"    color=$reset   symbol='●'}
+]

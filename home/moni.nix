@@ -9,7 +9,7 @@
     ./modules/desktop.nix
   ];
 
-  # Symlinks — niri, waybar, fastfetch, fuzzel managed by theme-switch
+  # Symlinks — niri, waybar, catnap, fuzzel managed by theme-switch
   home.file = {
     ".config/nvim".source = ../config/nvim;
   };
