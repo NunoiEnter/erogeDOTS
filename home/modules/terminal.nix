@@ -2,7 +2,9 @@
 
 {
   home.packages = with pkgs; [
-    foot
+    kitty
+    chafa
+    go
     alacritty
     yazi
     fastfetch
@@ -18,10 +20,14 @@
     btop
     upower
     opencode
+    fzf
+    cargo
+    rustc
   ];
 
   home.sessionPath = [
     "$HOME/erogeDOTS/scripts"
+    "$HOME/.local/bin"
   ];
 
   programs.zsh = {
@@ -36,52 +42,12 @@
       tspreview = "theme-switch preview";
     };
     initContent = ''
-      fastfetch
+      fastfetch --logo none 2>/dev/null
       setopt PROMPT_SUBST
       PROMPT='%F{magenta}%m%f %F{white}%~%%f '
     '';
   };
 
-  programs.foot = {
-    enable = true;
-    settings = {
-      main = {
-        term = "xterm-256color";
-        font = "monospace:size=11";
-        pad = "8x8";
-        dpi-aware = "yes";
-      };
-
-      cursor = {
-        style = "beam";
-        blink = "yes";
-      };
-
-      mouse = {
-        hide-when-typing = "yes";
-      };
-
-      "colors-dark" = {
-        alpha = "0.85";
-        background = "1a1b26";
-        foreground = "c0caf5";
-        regular0 = "15161e";
-        regular1 = "f7768e";
-        regular2 = "9ece6a";
-        regular3 = "e0af68";
-        regular4 = "7aa2f7";
-        regular5 = "bb9af7";
-        regular6 = "7dcfff";
-        regular7 = "a9b1d6";
-        bright0 = "414868";
-        bright1 = "f7768e";
-        bright2 = "9ece6a";
-        bright3 = "e0af68";
-        bright4 = "7aa2f7";
-        bright5 = "bb9af7";
-        bright6 = "7dcfff";
-        bright7 = "c0caf5";
-      };
-    };
-  };
+  # kitty managed by theme-switch (themes/templates/kitty/kitty.conf)
+  programs.kitty.enable = true;
 }

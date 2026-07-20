@@ -71,7 +71,12 @@ pkgs.mkShell {
   ];
 
   shellHook = ''
-    echo "🔒 CyberSecurity Shell loaded"
+    echo ""
+    echo "⚠  SECURITY TOOLS ENVIRONMENT"
+    echo "   Only use on systems you own or have explicit authorization to test."
+    echo "   Unauthorized access to computer systems is illegal."
+    echo ""
     echo "   nmap | nikto | sqlmap | hydra | metasploit | nuclei | ghidra"
+    echo ""
   '';
 }

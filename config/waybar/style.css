@@ -6,11 +6,8 @@
 }
 
 window#waybar {
-    background: linear-gradient(135deg, #ffe4ef 0%, #fff5f8 50%, #ffe9f2 100%);
     border-radius: 16px;
-    border: 2px solid #ffb6c9;
-    box-shadow: 0 4px 12px rgba(255, 143, 177, 0.25);
-    color: #7a3b52;
+    border: 2px solid;
 }
 
 #workspaces button {
@@ -18,21 +15,13 @@ window#waybar {
     margin: 4px 3px;
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.5);
-    color: #d67a99;
     border: 1px solid transparent;
     transition: all 0.2s ease-in-out;
 }
 
 #workspaces button.active {
-    background: linear-gradient(135deg, #ff9ec4, #ffc4dd);
     color: #ffffff;
-    border: 1px solid #ff8fb1;
-    box-shadow: 0 2px 6px rgba(255, 143, 177, 0.4);
-}
-
-#workspaces button:hover {
-    background: #ffd6e8;
-    color: #ffffff;
+    border: 1px solid;
 }
 
 #window {
@@ -40,7 +29,6 @@ window#waybar {
     margin: 4px;
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.55);
-    color: #8a4a63;
     font-style: italic;
 }
 
@@ -48,7 +36,6 @@ window#waybar {
     padding: 4px 14px;
     margin: 4px;
     border-radius: 10px;
-    background: linear-gradient(135deg, #ffb6c9, #ffe0ec);
     color: #ffffff;
     font-weight: 700;
 }
@@ -62,31 +49,16 @@ window#waybar {
     margin: 4px 3px;
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.5);
-    color: #a1546f;
 }
 
 #custom-fcitx5 {
-    background: linear-gradient(135deg, #ffd6e8, #ffffff);
     font-weight: 700;
-    color: #d6668c;
-}
-
-#battery.charging {
-    color: #ff8fb1;
 }
 
 #battery.critical:not(.charging) {
-    background: #ff6b9c;
     color: #ffffff;
 }
 
 #tray > .passive {
     -gtk-icon-effect: dim;
-}
-
-tooltip {
-    background: #fff0f5;
-    border: 1px solid #ffb6c9;
-    border-radius: 10px;
-    color: #7a3b52;
 }

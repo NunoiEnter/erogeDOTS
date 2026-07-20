@@ -4,22 +4,33 @@
   home.username = "moni";
   home.homeDirectory = "/home/moni";
 
-  # นำเข้าโมดูลที่แยกไว้
   imports = [
     ./modules/terminal.nix
     ./modules/desktop.nix
   ];
 
-  # เชื่อมโยงโฟลเดอร์ตั้งค่า (Dotfiles)
-  # Note: niri, waybar, fastfetch, fuzzel managed by theme-switch
+  # Symlinks — niri, waybar, fastfetch, fuzzel managed by theme-switch
   home.file = {
     ".config/nvim".source = ../config/nvim;
-    ".config/niri/config.kdl".source = ../config/niri/config.kdl;
-    ".config/waybar".source = ../config/waybar;
-    ".config/fastfetch/config.jsonc".source = ../config/fastfetch/config.jsonc;
-    ".config/fuzzel/config.ini".source = ../config/fuzzel/config.ini;
   };
 
   programs.home-manager.enable = true;
   home.stateVersion = "26.05";
+
+  # Restore active theme on home-manager activation
+  home.activation.restoreTheme = config.lib.homeManagerActivation.postActivationHook or "" + ''
+    export PATH="$HOME/.local/bin:$PATH"
+    STATE_FILE="$HOME/.config/theme/active"
+    if [[ -f "$STATE_FILE" ]]; then
+      THEME=$(cat "$STATE_FILE")
+      SCRIPTS="$HOME/erogeDOTS/scripts"
+      if [[ -x "$SCRIPTS/theme-switch" ]]; then
+        "$SCRIPTS/theme-switch" "$THEME" 2>/dev/null || true
+      fi
+      # Reload kitty config
+      if command -v kitty &>/dev/null; then
+        pkill -x "kitty" -USR1 2>/dev/null || true
+      fi
+    fi
+  '';
 }

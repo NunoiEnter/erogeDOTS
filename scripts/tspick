@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+export PATH="$HOME/.local/bin:$PATH"
+exec "$(dirname "$0")/theme-switch" picker "$@"
