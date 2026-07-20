@@ -72,12 +72,6 @@
                 "/"
             ],
             "format": "{size-used} / {size-total}"
-        },
-        "break",
-        {
-            "type": "colors",
-            "paddingLeft": 2,
-            "symbol": "block"
         }
     ]
 }
