@@ -71,7 +71,7 @@ window-rule {
 
 binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
-    Mod+Return hotkey-overlay-title="Open a Terminal" { spawn "foot"; }
+    Mod+Return hotkey-overlay-title="Open a Terminal" { spawn "kitty"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
     Mod+Shift+Space hotkey-overlay-title="Cycle Input Method" {
