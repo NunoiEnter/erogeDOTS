@@ -249,7 +249,7 @@ erogeDOTS/
 │   ├── templates/         # Config templates with {{VARIABLES}}
 │   │   ├── niri/config.kdl
 │   │   ├── waybar/{config.jsonc,style.css}
-│   │   ├── fastfetch/config.jsonc
+│   │   ├── catnap/config.cat
 │   │   └── fuzzel/config.ini
 │   ├── harumi/            # Pink/cute theme (default)
 │   ├── nanami/            # Dark purple/elegant
@@ -263,7 +263,7 @@ erogeDOTS/
 
 ## Theme Switcher
 
-Instant desktop theme changer. Switches niri, waybar, fuzzel, fastfetch colors without rebuild.
+Instant desktop theme changer. Switches niri, waybar, fuzzel, catnap colors without rebuild.
 
 ### Quick Start
 

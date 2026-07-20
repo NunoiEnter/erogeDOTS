@@ -11,7 +11,6 @@
     chafa
     go
     yazi
-    fastfetch
     neovim
     ripgrep
     fd
@@ -49,14 +48,14 @@
       setopt PROMPT_SUBST
       PROMPT='%F{magenta}%m%f %F{white}%~%%f '
 
-      # Fastfetch on open — cache for clear redraw
-      _FF_CACHE="$HOME/.cache/fastfetch_output"
-      if command -v fastfetch >/dev/null 2>&1; then
-        fastfetch > "$_FF_CACHE" 2>/dev/null
+      # Catnap on open — cache for clear redraw
+      _FF_CACHE="$HOME/.cache/catnap_output"
+      if command -v catnap >/dev/null 2>&1; then
+        catnap > "$_FF_CACHE" 2>/dev/null
         cat "$_FF_CACHE"
       fi
 
-      # clear redraws fastfetch
+      # clear redraws catnap
       clear() {
         command clear "$@"
         [[ -f "$_FF_CACHE" ]] && cat "$_FF_CACHE"
