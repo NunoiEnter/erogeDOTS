@@ -29,8 +29,8 @@ layout {
 
     focus-ring {
         width 4
-        active-color "#b4a7d6"
-        inactive-color "#353050"
+        active-color "#ff8fb1"
+        inactive-color "#505050"
     }
 
     shadow {
@@ -45,7 +45,7 @@ layout {
 
 spawn-at-startup "fcitx5" "-d"
 spawn-at-startup "awww-daemon"
-spawn-sh-at-startup "awww img ~/erogeDOTS/wallpapers/nene.jpg --transition-type fade"
+spawn-sh-at-startup "awww img ~/erogeDOTS/wallpapers/harumi.jpg --transition-type fade"
 spawn-at-startup "waybar"
 
 hotkey-overlay { }
@@ -62,11 +62,6 @@ window-rule {
 window-rule {
     match app-id=r#"firefox$"# title="^Picture-in-Picture$"
     open-floating true
-}
-
-window-rule {
-    match app-id=r#"^kitty$"# is-active=false
-    opacity 0.85
 }
 
 binds {
