@@ -29,8 +29,8 @@ layout {
 
     focus-ring {
         width 4
-        active-color "#cba6f7"
-        inactive-color "#45475a"
+        active-color "#b4a7d6"
+        inactive-color "#353050"
     }
 
     shadow {
@@ -45,7 +45,7 @@ layout {
 
 spawn-at-startup "fcitx5" "-d"
 spawn-at-startup "awww-daemon"
-spawn-sh-at-startup "awww img ~/erogeDOTS/wallpapers/natsume.jpg --transition-type fade"
+spawn-sh-at-startup "awww img ~/erogeDOTS/wallpapers/nene.jpg --transition-type fade"
 spawn-at-startup "waybar"
 
 hotkey-overlay { }
