@@ -48,8 +48,18 @@
     initContent = ''
       setopt PROMPT_SUBST
       PROMPT='%F{magenta}%m%f %F{white}%~%%f '
-      # Fast fetch on open (skip if not installed)
-      command -v fastfetch >/dev/null 2>&1 && fastfetch 2>/dev/null
+
+      # Fastfetch on open — delay for graphics, cache for clear
+      _FF_CACHE="$HOME/.cache/fastfetch_output"
+      if command -v fastfetch >/dev/null 2>&1; then
+        (sleep 0.3 && fastfetch > "$_FF_CACHE" 2>/dev/null && cat "$_FF_CACHE") &
+      fi
+
+      # clear redraws fastfetch
+      clear() {
+        command clear "$@"
+        [[ -f "$_FF_CACHE" ]] && cat "$_FF_CACHE"
+      }
     '';
   };
 }
