@@ -27,9 +27,9 @@
       if [[ -x "$SCRIPTS/theme-switch" ]]; then
         "$SCRIPTS/theme-switch" "$THEME" 2>/dev/null || true
       fi
-      # Reload kitty config
-      if command -v kitty &>/dev/null; then
-        pkill -x "kitty" -USR1 2>/dev/null || true
+      # Reload ghostty config
+      if command -v ghostty &>/dev/null; then
+        pkill -x "ghostty" -USR1 2>/dev/null || true
       fi
     fi
   '';
