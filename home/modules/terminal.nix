@@ -42,7 +42,6 @@
       tspreview = "theme-switch preview";
     };
     initContent = ''
-      fastfetch --logo none 2>/dev/null
       setopt PROMPT_SUBST
       PROMPT='%F{magenta}%m%f %F{white}%~%%f '
     '';

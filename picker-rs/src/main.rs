@@ -267,6 +267,9 @@ fn run_app(
             }
 
             match key.code {
+                KeyCode::Char('c') if key.modifiers.contains(crossterm::event::KeyModifiers::CONTROL) => {
+                    return Ok(());
+                }
                 KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
                 KeyCode::Up | KeyCode::Char('k') => {
                     if app.cursor > 0 {

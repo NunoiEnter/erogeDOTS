@@ -398,6 +398,12 @@ main() {
             restart_apps "$theme_name"
 
             done_msg "Theme switched to: $theme_name"
+
+            # Show fastfetch with new theme
+            if command -v fastfetch &>/dev/null; then
+                echo ""
+                fastfetch --logo none 2>/dev/null || true
+            fi
             ;;
     esac
 }
