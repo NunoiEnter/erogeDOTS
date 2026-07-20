@@ -49,7 +49,7 @@
       setopt PROMPT_SUBST
       PROMPT='%F{magenta}%m%f %F{white}%~%%f '
       # Fast fetch on open (skip if not installed)
-      command -v fastfetch >/dev/null 2>&1 && fastfetch --logo none --separator " → " 2>/dev/null
+      command -v fastfetch >/dev/null 2>&1 && fastfetch 2>/dev/null
     '';
   };
 }
