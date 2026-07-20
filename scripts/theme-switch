@@ -254,7 +254,7 @@ restart_apps() {
     fi
 
     # Restart waybar
-    waybar &
+    waybar >/dev/null 2>&1 &
     disown
     step "Waybar started"
 
@@ -399,9 +399,9 @@ main() {
 
             done_msg "Theme switched to: $theme_name"
 
-            # Show erogeDOTS banner
+            # Show erogeDOTS banner with theme name
             echo ""
-            echo -e "${MAGENTA}__      _                            ${NC}"
+            echo -e "${MAGENTA}__      _                              ${CYAN}$theme_name${NC}"
             echo -e "${MAGENTA}  /\\ \\ \\__ _| |_ ___ _   _ _ __ ___   ___ ${NC}"
             echo -e "${MAGENTA} /  \\/ / _\` | __/ __| | | | '_ \` _ \\ / _ \\${NC}"
             echo -e "${MAGENTA}/ /\\  / (_| | |_\\__ \\ |_| | | | | | |  __/${NC}"

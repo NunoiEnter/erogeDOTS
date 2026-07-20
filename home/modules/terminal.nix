@@ -46,7 +46,4 @@
       PROMPT='%F{magenta}%m%f %F{white}%~%%f '
     '';
   };
-
-  # kitty managed by theme-switch (themes/templates/kitty/kitty.conf)
-  programs.kitty.enable = true;
 }
