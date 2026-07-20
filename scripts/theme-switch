@@ -155,7 +155,7 @@ generate_configs() {
     parse_theme "$theme_name"
     validate_theme "$theme_name" || true
 
-    local apps=("niri" "waybar" "fastfetch" "fuzzel" "foot" "kitty")
+    local apps=("niri" "waybar" "fastfetch" "fuzzel" "ghostty" "alacritty" "foot" "kitty")
     for app in "${apps[@]}"; do
         if [[ -d "$TEMPLATES_DIR/$app" ]]; then
             mkdir -p "$cache_dir/$app"
@@ -176,7 +176,7 @@ apply_theme() {
     local theme_name="$1"
     local cache_dir="$STATE_DIR/cache/$theme_name"
 
-    local apps=("niri" "waybar" "fastfetch" "fuzzel" "foot" "kitty")
+    local apps=("niri" "waybar" "fastfetch" "fuzzel" "ghostty" "alacritty" "foot" "kitty")
 
     for app in "${apps[@]}"; do
         local target="$HOME/.config/$app"
@@ -247,10 +247,10 @@ restart_apps() {
         step "Niri reloaded"
     fi
 
-    # Restart kitty (sends SIGUSR1 to reload config)
-    if pgrep -x "kitty" > /dev/null 2>&1; then
-        pkill -x "kitty" -USR1 2>/dev/null || true
-        step "Kitty reloaded"
+    # Reload ghostty (config is re-read automatically, but send signal to running instances)
+    if pgrep -x "ghostty" > /dev/null 2>&1; then
+        pkill -x "ghostty" -USR1 2>/dev/null || true
+        step "Ghostty reloaded"
     fi
 
     # Restart waybar
