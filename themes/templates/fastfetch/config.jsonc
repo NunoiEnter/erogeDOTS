@@ -31,11 +31,6 @@
             "keyColor": "green"
         },
         {
-            "type": "packages",
-            "key": "pkgs",
-            "keyColor": "cyan"
-        },
-        {
             "type": "shell",
             "key": "sh",
             "keyColor": "blue",
@@ -63,15 +58,6 @@
             "key": "ram",
             "keyColor": "yellow",
             "format": "{used} / {total}"
-        },
-        {
-            "type": "disk",
-            "key": "disk",
-            "keyColor": "cyan",
-            "folders": [
-                "/"
-            ],
-            "format": "{size-used} / {size-total}"
         }
     ]
 }
