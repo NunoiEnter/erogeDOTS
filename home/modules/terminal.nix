@@ -27,6 +27,9 @@
     fzf
     cargo
     rustc
+    brightnessctl
+    blueman
+    nerd-fonts.jetbrains-mono
   ];
 
   home.sessionPath = [

@@ -3,8 +3,8 @@
 CUR=$(fcitx5-remote -n 2>/dev/null)
 
 case "$CUR" in
-    keyboard-us) echo "🇬🇧 EN" ;;
-    mozc)        echo "🇯🇵 JP" ;;
-    keyboard-th) echo "🇹🇭 TH" ;;
-    *)           echo "🈂 ${CUR:-?}" ;;
+    keyboard-us) echo "  EN" ;;
+    mozc)        echo "  JP" ;;
+    keyboard-th) echo "  TH" ;;
+    *)           echo "  ${CUR:-?}" ;;
 esac
