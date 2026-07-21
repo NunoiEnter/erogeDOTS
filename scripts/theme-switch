@@ -408,13 +408,16 @@ main() {
             # Show erogeDOTS banner with theme name
             echo ""
             echo -e "${MAGENTA}>>=======================================================<<${NC}"
-            echo -e "${MAGENTA}||   _____                      ____   ___ _____ ____    ${CYAN}|| $theme_name${NC}"
-            echo -e "${MAGENTA}||  | ____|_ __ ___   __ _  ___|  _ \\ / _ \\_   _/ ___|   ||${NC}"
-            echo -e "${MAGENTA}||  |  _| | '__/ _ \\ / _\` |/ _ \\ | | | | | || | \\___ \\   ||${NC}"
-            echo -e "${MAGENTA}||  | |___| | | (_) | (_| |  __/ |_| | |_| || |  ___) |  ||${NC}"
-            echo -e "${MAGENTA}||  |_____|_|  \\___/ \\__, |\\___|____/ \\___/ |_| |____/   ||${NC}"
-            echo -e "${MAGENTA}||                   |___/                               ||${NC}"
+            echo -e "${MAGENTA}||   _____                      ____   ___ _____ ____    ${CYAN}||${NC}"
+            echo -e "${MAGENTA}||  | ____|_ __ ___   __ _  ___|  _ \\ / _ \\_   _/ ___|   ${CYAN}||${NC}"
+            echo -e "${MAGENTA}||  |  _| | '__/ _ \\ / _\` |/ _ \\ | | | | | || | \\___ \\   ${CYAN}||${NC}"
+            echo -e "${MAGENTA}||  | |___| | | (_) | (_| |  __/ |_| | |_| || |  ___) |  ${CYAN}||${NC}"
+            echo -e "${MAGENTA}||  |_____|_|  \\___/ \\__, |\\___|____/ \\___/ |_| |____/   ${CYAN}||${NC}"
+            echo -e "${MAGENTA}||                   |___/                               ${CYAN}||${NC}"
             echo -e "${MAGENTA}>>=======================================================<<${NC}"
+            echo ""
+            echo -e "  ${MAGENTA}THEME ${CYAN}: ${NC}${COLORS[CHAR_FULL]:-$theme_name} ${CYAN}|${NC} ${COLORS[CHAR_GAME]:-unknown}"
+            echo -e "  ${MAGENTA}${COLORS[CHAR_NAME]:-}  ${NC}${DIM}${COLORS[CHAR_QUOTE]:-}${NC}"
             echo ""
             ;;
     esac
