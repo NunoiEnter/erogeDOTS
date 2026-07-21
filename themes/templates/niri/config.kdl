@@ -47,6 +47,7 @@ spawn-at-startup "fcitx5" "-d"
 spawn-at-startup "awww-daemon"
 spawn-sh-at-startup "awww img {{WALLPAPER}} --transition-type fade"
 spawn-at-startup "waybar"
+spawn-at-startup "swaync"
 
 hotkey-overlay { }
 

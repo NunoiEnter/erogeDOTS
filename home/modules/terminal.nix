@@ -12,6 +12,7 @@
     go
     yazi
     neovim
+    swaynotificationcenter
     ripgrep
     fd
     gcc

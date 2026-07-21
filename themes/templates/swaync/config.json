@@ -1,0 +1,37 @@
+{
+  "$schema": "/tmp/schema.json",
+  "position": "top-right",
+  "control-center": "top-right",
+  "keyboard-shortcuts": true,
+  "image-visibility": "transition",
+  "notification-window-width": 340,
+  "timeout": 5,
+  "timeout-low": 3,
+  "timeout-critical": 0,
+  "fit-to-screen": true,
+  "control-center-margin-top": 10,
+  "control-center-margin-bottom": 10,
+  "control-center-margin-right": 10,
+  "control-center-margin-left": 0,
+  "notification-2fa-action": true,
+  "notification-inline-replies": true,
+  "widgets": [
+    "title",
+    "dnd",
+    "notifications"
+  ],
+  "widget-config": {
+    "title": {
+      "text": "Notifications",
+      "clear-all-button": true,
+      "button-text": "Clear All"
+    },
+    "dnd": {
+      "text": "Do Not Disturb"
+    },
+    "notifications": {
+      "scroll-up": "up",
+      "scroll-down": "down"
+    }
+  }
+}
