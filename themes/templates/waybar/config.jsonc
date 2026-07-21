@@ -25,8 +25,8 @@
     },
 
     "clock": {
-        "format": "  {:%H:%M}",
-        "format-alt": "  {:%Y-%m-%d %H:%M:%S}",
+        "format": "\uf017 {:%H:%M}",
+        "format-alt": "\uf306 {:%Y-%m-%d %H:%M:%S}",
         "tooltip-format": "<tt><small>{calendar}</small></tt>",
         "calendar": {
             "mode": "year",
@@ -45,32 +45,31 @@
     "custom/fcitx5": {
         "exec": "~/.config/waybar/scripts/fcitx5-status.sh",
         "interval": 1,
-        "format": " {}",
+        "format": "\uf11c {}",
         "on-click": "~/.config/waybar/scripts/fcitx5-cycle.sh",
         "tooltip": false
     },
 
     "backlight": {
         "device": "amdgpu_bl1",
-        "format": "{icon} {percent}%",
-        "format-icons": ["", "", "", "", "", "", "", "", ""],
+        "format": "\uf185 {percent}%",
         "on-scroll-up": "brightnessctl set +5%",
         "on-scroll-down": "brightnessctl set 5%-",
         "tooltip-format": "Brightness: {percent}%"
     },
 
     "pulseaudio": {
-        "format": "{icon} {volume}%",
+        "format": "\uf028 {volume}%",
         "format-icons": {
-            "headphone": "",
-            "hands-free": "",
-            "headset": "",
-            "phone": "",
-            "portable": "",
-            "car": "",
-            "default": ["", "", ""]
+            "headphone": "\uf025",
+            "hands-free": "\uf590",
+            "headset": "\uf590",
+            "phone": "\uf095",
+            "portable": "\uf0fa",
+            "car": "\uf1b9",
+            "default": ["\uf026", "\uf027", "\uf028"]
         },
-        "format-muted": "  muted",
+        "format-muted": "\uf6a9 muted",
         "on-click": "pavucontrol",
         "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
         "scroll-step": 5,
@@ -78,19 +77,19 @@
     },
 
     "network": {
-        "format-wifi": " {signalStrength}%",
-        "format-ethernet": "  {ifname}",
-        "format-disconnected": "  Offline",
-        "format-alt": "  {ifname}: {ipaddr}/{cidr}",
+        "format-wifi": "\uf1eb {signalStrength}%",
+        "format-ethernet": "\uf0ac {ifname}",
+        "format-disconnected": "\uf057 Offline",
+        "format-alt": "\uf0ac {ifname}: {ipaddr}/{cidr}",
         "tooltip-format": "{ifname}: {ipaddr}\nGateway: {gateway}\nDNS: {dns}",
         "on-click": "nm-connection-editor",
         "on-click-right": "bash -c 'nmcli radio wifi && nmcli radio wifi off || nmcli radio wifi on'"
     },
 
     "bluetooth": {
-        "format": "",
-        "format-disabled": "  off",
-        "format-connected": "  {num_connections}",
+        "format": "\uf293",
+        "format-disabled": "\uf293 off",
+        "format-connected": "\uf294 {num_connections}",
         "tooltip-format": "{device_enumerate}\n{device_battery_battery_percentage}%",
         "on-click": "blueman-manager",
         "on-click-right": "bash -c 'bluetoothctl show Powered | grep -q yes && bluetoothctl power off || bluetoothctl power on'"
@@ -98,15 +97,14 @@
 
     "battery": {
         "format": "{icon} {capacity}%",
-        "format-icons": ["", "", "", "", "", "", "", "", "", ""],
-        "format-charging": "  {capacity}%",
-        "format-full": "  Full",
-        "format-time": "{time}",
+        "format-icons": ["\uf244", "\uf243", "\uf242", "\uf241", "\uf240"],
+        "format-charging": "\uf0e7 {capacity}%",
+        "format-full": "\uf240 Full",
+        "tooltip-format": "{time}\nPower: {power}W\nCapacity: {capacity}%\nHealth: {health}",
         "states": {
             "warning": 30,
             "critical": 15
-        },
-        "tooltip-format": "{time}\nPower: {power}W\nCapacity: {capacity}%\nHealth: {health}"
+        }
     },
 
     "tray": {
