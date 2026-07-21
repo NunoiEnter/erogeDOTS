@@ -6,7 +6,7 @@ stdenv.mkDerivation {
 
   src = fetchurl {
     url = "https://github.com/iinsertNameHere/catnap/releases/download/v2.1.1/catnap-v2.1.1-x86_64";
-    hash = "sha256-00yp2anqsnxc0s1za4ylcl65qrwxpdp4byy8xrj1f31xx6fvfnp4";
+    hash = "sha256-5Fq3nek9DBdk7sj7RW67nWdcDGXUE/WDBqxbja0S1wM=";
   };
 
   dontUnpack = true;
