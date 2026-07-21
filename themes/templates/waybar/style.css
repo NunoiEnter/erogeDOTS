@@ -14,7 +14,7 @@
 window#waybar {
     background: {{WAYBAR_BG_GRADIENT}};
     border: 1px solid {{WAYBAR_BORDER}};
-    border-radius: 12px;
+    border-radius: 0px;
     box-shadow: 0 2px 8px {{WAYBAR_SHADOW}};
 }
 
@@ -65,21 +65,6 @@ window#waybar {
     color: {{BG}};
     font-weight: 700;
     font-size: 14px;
-}
-
-/* ── Input Method (fcitx5) ── */
-#custom-fcitx5 {
-    padding: 4px 10px;
-    margin: 4px 2px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    color: {{PRIMARY_LIGHT}};
-    font-weight: 600;
-}
-
-#custom-fcitx5:hover {
-    background: {{PRIMARY}};
-    color: {{BG}};
 }
 
 /* ── Backlight ── */
@@ -162,14 +147,25 @@ window#waybar {
     background: rgba(255, 255, 255, 0.15);
 }
 
-#battery.warning {
+/* good: 50-100% — white/default */
+#battery.good {
     color: {{WAYBAR_TEXT}};
-    opacity: 0.8;
 }
 
+/* warning: 16-49% — yellow */
+#battery.warning {
+    color: #e6c855;
+}
+
+/* critical: 6-15% — red */
 #battery.critical {
-    background: {{PRIMARY}};
-    color: {{BG}};
+    color: #e65555;
+}
+
+/* below critical: 0-5% — red + alert */
+#battery:not(.good):not(.warning):not(.critical) {
+    color: #ff3333;
+    font-weight: 700;
 }
 
 #battery.charging {

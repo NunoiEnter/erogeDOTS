@@ -29,8 +29,8 @@ layout {
 
     focus-ring {
         width 4
-        active-color "#ff8fb1"
-        inactive-color "#505050"
+        active-color "#e6c855"
+        inactive-color "#332830"
     }
 
     shadow {
@@ -40,14 +40,17 @@ layout {
         color "#0007"
     }
 
-    struts { }
+    struts {
+        top 44
+    }
 }
 
 spawn-at-startup "fcitx5" "-d"
 spawn-at-startup "awww-daemon"
-spawn-sh-at-startup "awww img ~/erogeDOTS/wallpapers/harumi.jpg --transition-type fade"
+spawn-sh-at-startup "awww img ~/erogeDOTS/wallpapers/nanami.jpg --transition-type fade"
 spawn-at-startup "waybar"
 spawn-at-startup "swaync"
+spawn-sh-at-startup "$HOME/erogeDOTS/scripts/battery-alert &"
 
 hotkey-overlay { }
 
