@@ -155,7 +155,7 @@ generate_configs() {
     parse_theme "$theme_name"
     validate_theme "$theme_name" || true
 
-    local apps=("niri" "waybar" "catnap" "fuzzel" "ghostty" "alacritty" "foot" "kitty")
+    local apps=("niri" "waybar" "catnap" "fuzzel" "swaync" "ghostty" "alacritty" "foot" "kitty")
     for app in "${apps[@]}"; do
         if [[ -d "$TEMPLATES_DIR/$app" ]]; then
             mkdir -p "$cache_dir/$app"
@@ -176,7 +176,7 @@ apply_theme() {
     local theme_name="$1"
     local cache_dir="$STATE_DIR/cache/$theme_name"
 
-    local apps=("niri" "waybar" "catnap" "fuzzel" "ghostty" "alacritty" "foot" "kitty")
+    local apps=("niri" "waybar" "catnap" "fuzzel" "swaync" "ghostty" "alacritty" "foot" "kitty")
 
     for app in "${apps[@]}"; do
         local target="$HOME/.config/$app"
@@ -257,6 +257,12 @@ restart_apps() {
     waybar >/dev/null 2>&1 &
     disown
     step "Waybar started"
+
+    # Reload swaync
+    if pgrep -x "swaync" > /dev/null 2>&1; then
+        swaync-client --reload-config 2>/dev/null || true
+        step "Swaync reloaded"
+    fi
 
     step "catnap: next launch uses new theme"
 }
