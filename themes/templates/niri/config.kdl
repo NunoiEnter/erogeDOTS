@@ -40,7 +40,9 @@ layout {
         color "{{NIRI_SHADOW}}"
     }
 
-    struts { }
+    struts {
+        top 44
+    }
 }
 
 spawn-at-startup "fcitx5" "-d"
@@ -48,6 +50,7 @@ spawn-at-startup "awww-daemon"
 spawn-sh-at-startup "awww img {{WALLPAPER}} --transition-type fade"
 spawn-at-startup "waybar"
 spawn-at-startup "swaync"
+spawn-sh-at-startup "$HOME/erogeDOTS/scripts/battery-alert &"
 
 hotkey-overlay { }
 

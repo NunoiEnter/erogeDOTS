@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# battery-alert — monitor battery and send swaync notification
+# Runs in background, checks every 60s
+
+STATE_DIR="$HOME/.config/theme"
+ALERT_FILE="$STATE_DIR/battery_alerted"
+
+notify() {
+    local level="$1"
+    local title="Battery Low"
+    local body="$level% remaining — plug in charger"
+
+    # Use swaync if available, fallback to notify-send
+    if command -v swaync-client &>/dev/null; then
+        swaync-client --notif "$title" "$body" 2>/dev/null
+    elif command -v notify-send &>/dev/null; then
+        notify-send -u critical -i battery-low "$title" "$body"
+    fi
+}
+
+check_battery() {
+    local capacity
+    capacity=$(cat /sys/class/power_supply/BAT0/capacity 2>/dev/null)
+    [[ -z "$capacity" ]] && return
+
+    local status
+    status=$(cat /sys/class/power_supply/BAT0/status 2>/dev/null)
+
+    # Don't alert while charging
+    [[ "$status" == "Charging" || "$status" == "Full" ]] && {
+        rm -f "$ALERT_FILE"
+        return
+    }
+
+    # Alert thresholds: 15%, 10%, 5%
+    if (( capacity <= 5 )); then
+        if [[ ! -f "$ALERT_FILE" ]] || [[ "$(cat "$ALERT_FILE")" != "5" ]]; then
+            notify "$capacity"
+            echo "5" > "$ALERT_FILE"
+        fi
+    elif (( capacity <= 10 )); then
+        if [[ ! -f "$ALERT_FILE" ]] || [[ "$(cat "$ALERT_FILE")" != "10" ]]; then
+            notify "$capacity"
+            echo "10" > "$ALERT_FILE"
+        fi
+    elif (( capacity <= 15 )); then
+        if [[ ! -f "$ALERT_FILE" ]] || [[ "$(cat "$ALERT_FILE")" != "15" ]]; then
+            notify "$capacity"
+            echo "15" > "$ALERT_FILE"
+        fi
+    fi
+}
+
+# Main loop
+while true; do
+    check_battery
+    sleep 60
+done

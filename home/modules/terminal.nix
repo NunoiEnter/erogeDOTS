@@ -29,6 +29,9 @@
     rustc
     brightnessctl
     blueman
+    bluez
+    bluez-tools
+    libnotify
     nerd-fonts.jetbrains-mono
   ];
 

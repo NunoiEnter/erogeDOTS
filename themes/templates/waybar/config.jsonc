@@ -2,13 +2,10 @@
     "layer": "top",
     "position": "top",
     "height": 38,
-    "margin-top": 6,
-    "margin-left": 10,
-    "margin-right": 10,
 
     "modules-left": ["niri/workspaces", "niri/window"],
     "modules-center": ["clock"],
-    "modules-right": ["custom/fcitx5", "backlight", "pulseaudio", "network", "bluetooth", "battery", "tray"],
+    "modules-right": ["backlight", "pulseaudio", "network", "bluetooth", "battery", "tray"],
 
     "niri/workspaces": {
         "format": "{icon}",
@@ -40,14 +37,6 @@
                 "today": "<span color='#ff8fb1'><b><u>{}</u></b></span>"
             }
         }
-    },
-
-    "custom/fcitx5": {
-        "exec": "~/.config/waybar/scripts/fcitx5-status.sh",
-        "interval": 1,
-        "format": "\uf11c {}",
-        "on-click": "~/.config/waybar/scripts/fcitx5-cycle.sh",
-        "tooltip": false
     },
 
     "backlight": {
@@ -102,8 +91,9 @@
         "format-full": "\uf240 Full",
         "tooltip-format": "{time}\nPower: {power}W\nCapacity: {capacity}%\nHealth: {health}",
         "states": {
-            "warning": 30,
-            "critical": 15
+            "good": 50,
+            "warning": 16,
+            "critical": 6
         }
     },
 
