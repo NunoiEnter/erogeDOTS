@@ -170,16 +170,10 @@ window#waybar {
 #battery.critical {
     background: {{PRIMARY}};
     color: {{BG}};
-    animation: pulse 1.5s ease-in-out infinite;
 }
 
 #battery.charging {
     color: {{PRIMARY_LIGHT}};
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
 }
 
 /* ── Tray ── */

@@ -148,16 +148,11 @@ window#waybar {
 }
 
 #battery.critical {
-    animation: pulse 1.5s ease-in-out infinite;
+    background: rgba(255, 80, 80, 0.3);
 }
 
 #battery.charging {
     opacity: 1;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
 }
 
 /* ── Tray ── */
