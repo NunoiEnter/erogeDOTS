@@ -2,11 +2,8 @@
    erogeDOTS — Visual Novel Aesthetic Waybar
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Font ── */
-@define-font vn_font "JetBrainsMono Nerd Font, Kosugi Maru, M PLUS Rounded 1c, Noto Sans Thai, Noto Sans JP, sans-serif";
-
 * {
-    font-family: vn_font;
+    font-family: "JetBrainsMono Nerd Font", "Kosugi Maru", "M PLUS Rounded 1c", "Noto Sans Thai", "Noto Sans JP", sans-serif;
     font-size: 13px;
     font-weight: 500;
     min-height: 0;
