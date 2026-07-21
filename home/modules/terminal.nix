@@ -1,7 +1,8 @@
-{ pkgs, ... }:
+{ pkgs, theme-picker, ... }:
 
 {
   home.packages = with pkgs; [
+    theme-picker
     ghostty
     kitty
     alacritty

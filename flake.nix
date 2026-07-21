@@ -14,8 +14,14 @@
   let
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
+    theme-picker = pkgs.callPackage ./pkgs/theme-picker/default.nix {};
   in
   {
+    packages.${system} = {
+      inherit theme-picker;
+      default = theme-picker;
+    };
+
     nixosConfigurations = {
       NixChan = nixpkgs.lib.nixosSystem {
         inherit system;
@@ -28,6 +34,7 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            home-manager.extraSpecialArgs = { inherit theme-picker; };
             home-manager.users.moni = import ./home/moni.nix;
           }
         ];
