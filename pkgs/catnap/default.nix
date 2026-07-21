@@ -1,0 +1,28 @@
+{ lib, stdenv, fetchurl }:
+
+stdenv.mkDerivation {
+  pname = "catnap";
+  version = "2.1.1";
+
+  src = fetchurl {
+    url = "https://github.com/iinsertNameHere/catnap/releases/download/v2.1.1/catnap-v2.1.1-x86_64";
+    hash = "sha256-00yp2anqsnxc0s1za4ylcl65qrwxpdp4byy8xrj1f31xx6fvfnp4";
+  };
+
+  dontUnpack = true;
+  dontBuild = true;
+  dontConfigure = true;
+
+  installPhase = ''
+    mkdir -p $out/bin
+    cp $src $out/bin/catnap
+    chmod +x $out/bin/catnap
+  '';
+
+  meta = with lib; {
+    description = "A small systemfetch written in nim";
+    homepage = "https://github.com/iinsertNameHere/catnap";
+    license = licenses.mit;
+    mainProgram = "catnap";
+  };
+}

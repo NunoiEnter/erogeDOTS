@@ -1,8 +1,9 @@
-{ pkgs, theme-picker, ... }:
+{ pkgs, theme-picker, catnap, ... }:
 
 {
   home.packages = with pkgs; [
     theme-picker
+    catnap
     ghostty
     kitty
     alacritty
@@ -38,7 +39,6 @@
 
   home.sessionPath = [
     "$HOME/erogeDOTS/scripts"
-    "$HOME/.local/bin"
   ];
 
   programs.zsh = {

@@ -16,8 +16,7 @@ fi
 
 cd "$TARGET"
 
-# 2. Apply NixOS config (includes home-manager + theme-picker)
-echo "Applying NixOS config..."
+# 2. Apply NixOS config (everything managed by Nix)
 sudo nixos-rebuild switch --flake .#NixChan
 
 echo ""

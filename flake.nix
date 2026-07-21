@@ -15,10 +15,11 @@
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
     theme-picker = pkgs.callPackage ./pkgs/theme-picker/default.nix {};
+    catnap = pkgs.callPackage ./pkgs/catnap/default.nix {};
   in
   {
     packages.${system} = {
-      inherit theme-picker;
+      inherit theme-picker catnap;
       default = theme-picker;
     };
 
@@ -34,7 +35,7 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit theme-picker; };
+            home-manager.extraSpecialArgs = { inherit theme-picker catnap; };
             home-manager.users.moni = import ./home/moni.nix;
           }
         ];
