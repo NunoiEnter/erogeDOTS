@@ -5,7 +5,7 @@
 
     "modules-left": ["niri/workspaces", "niri/window"],
     "modules-center": ["clock"],
-    "modules-right": ["backlight", "pulseaudio", "network", "bluetooth", "battery", "tray"],
+    "modules-right": ["backlight", "pulseaudio", "network", "battery", "tray"],
 
     "niri/workspaces": {
         "format": "{icon}",
