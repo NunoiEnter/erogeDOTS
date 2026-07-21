@@ -18,6 +18,7 @@ BLUE='\033[0;34m'
 MAGENTA='\033[0;35m'
 CYAN='\033[0;36m'
 DIM='\033[2m'
+BOLD='\033[1m'
 NC='\033[0m'
 
 # ── Helpers ────────────────────────────────────────────────────────
@@ -416,8 +417,8 @@ main() {
             echo -e "${MAGENTA}||                   |___/                               ${CYAN}||${NC}"
             echo -e "${MAGENTA}>>=======================================================<<${NC}"
             echo ""
-            echo -e "  ${MAGENTA}THEME ${CYAN}: ${NC}${COLORS[CHAR_FULL]:-$theme_name} ${CYAN}|${NC} ${COLORS[CHAR_GAME]:-unknown}"
-            echo -e "  ${MAGENTA}${COLORS[CHAR_NAME]:-}  ${NC}${DIM}${COLORS[CHAR_QUOTE]:-}${NC}"
+            echo -e "  ${MAGENTA}${BOLD}THEME${NC} ${CYAN}${BOLD}:${NC} ${BOLD}${COLORS[CHAR_FULL]:-$theme_name}${NC} ${CYAN}${BOLD}|${NC} ${YELLOW}${BOLD}${COLORS[CHAR_GAME]:-unknown}${NC}"
+            echo -e "  ${BOLD}${MAGENTA}${COLORS[CHAR_NAME]:-}${NC}  ${DIM}${COLORS[CHAR_QUOTE]:-}${NC}"
             echo ""
             ;;
     esac
