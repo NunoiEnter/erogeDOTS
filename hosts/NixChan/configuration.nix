@@ -21,6 +21,10 @@
     enable32Bit = true;
   };
 
+  hardware.bluetooth.enable = true;
+  hardware.bluetooth.powerOnBoot = true;
+  services.blueman.enable = true;
+
   programs.niri.enable = true;
   programs.zsh.enable = true;
   services.displayManager.sddm.enable = true;
