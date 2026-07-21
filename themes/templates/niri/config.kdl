@@ -41,7 +41,7 @@ layout {
     }
 
     struts {
-        top 44
+        top 38
     }
 }
 
