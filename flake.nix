@@ -8,7 +8,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     qylock.url = "github:Darkkal44/qylock";
-    affinity-nix.url = "github:mrshmllow/affinity-nix";
+    affinity-nix = {
+      url = "github:mrshmllow/affinity-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = { self, nixpkgs, home-manager, qylock, affinity-nix, ... }@inputs:
