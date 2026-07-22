@@ -16,6 +16,40 @@ let
       Icon=utilities-terminal
     '';
   };
+
+  mimeapps = ''
+    [Default Applications]
+    text/plain=nvim-terminal.desktop
+    text/x-python=nvim-terminal.desktop
+    text/x-csrc=nvim-terminal.desktop
+    text/x-chdr=nvim-terminal.desktop
+    text/x-java=nvim-terminal.desktop
+    text/html=nvim-terminal.desktop
+    text/css=nvim-terminal.desktop
+    text/javascript=nvim-terminal.desktop
+    text/x-shellscript=nvim-terminal.desktop
+    application/json=nvim-terminal.desktop
+    application/xml=nvim-terminal.desktop
+    application/x-nix=nvim-terminal.desktop
+    image/png=qimgv.desktop
+    image/jpeg=qimgv.desktop
+    image/gif=qimgv.desktop
+    image/webp=qimgv.desktop
+    image/svg+xml=qimgv.desktop
+    image/bmp=qimgv.desktop
+    image/tiff=qimgv.desktop
+    video/mp4=vlc.desktop
+    video/x-matroska=vlc.desktop
+    video/webm=vlc.desktop
+    video/x-msvideo=vlc.desktop
+    video/quicktime=vlc.desktop
+    audio/mpeg=vlc.desktop
+    audio/ogg=vlc.desktop
+    audio/flac=vlc.desktop
+    audio/x-wav=vlc.desktop
+    audio/aac=vlc.desktop
+    audio/mp4=vlc.desktop
+  '';
 in
 {
   home.packages = with pkgs; [
@@ -40,34 +74,14 @@ in
     nvim-desktop
   ];
 
-  # Default app associations
-  xdg.mimeApps = {
-    enable = true;
-    defaultApplications = {
-      "text/plain" = "nvim-terminal.desktop";
-      "text/x-python" = "nvim-terminal.desktop";
-      "text/x-csrc" = "nvim-terminal.desktop";
-      "text/x-chdr" = "nvim-terminal.desktop";
-      "text/x-java" = "nvim-terminal.desktop";
-      "text/html" = "nvim-terminal.desktop";
-      "text/css" = "nvim-terminal.desktop";
-      "text/javascript" = "nvim-terminal.desktop";
-      "text/x-shellscript" = "nvim-terminal.desktop";
-      "application/json" = "nvim-terminal.desktop";
-      "application/xml" = "nvim-terminal.desktop";
-      "application/x-nix" = "nvim-terminal.desktop";
-      "image/*" = "qimgv.desktop";
-      "video/*" = "vlc.desktop";
-      "audio/*" = "vlc.desktop";
-    };
-  };
+  # Write mimeapps.list to BOTH locations KDE checks
+  xdg.configFile."mimeapps.list".text = mimeapps;
+  xdg.dataFile."applications/mimeapps.list".text = mimeapps;
 
   # Dolphin dark theme
-  xdg.configFile = {
-    "kdeglobals".text = ''
-      [General]
-      ColorScheme=BreezeDark
-      Theme=Breeze Dark
-    '';
-  };
+  xdg.configFile."kdeglobals".text = ''
+    [General]
+    ColorScheme=BreezeDark
+    Theme=Breeze Dark
+  '';
 }
