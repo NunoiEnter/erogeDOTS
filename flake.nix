@@ -8,9 +8,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     qylock.url = "github:Darkkal44/qylock";
+    affinity-nix.url = "github:mrshmllow/affinity-nix";
   };
 
-  outputs = { self, nixpkgs, home-manager, qylock, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, qylock, affinity-nix, ... }@inputs:
   let
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
@@ -35,7 +36,7 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit theme-picker catnap; };
+            home-manager.extraSpecialArgs = { inherit system theme-picker catnap affinity-nix; };
             home-manager.users.moni = import ./home/moni.nix;
           }
         ];
