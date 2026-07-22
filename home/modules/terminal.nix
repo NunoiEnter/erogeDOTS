@@ -52,6 +52,9 @@
       tslist = "theme-switch list";
       tscurrent = "theme-switch current";
       tspreview = "theme-switch preview";
+      yt = "mpv --ytdl-format=bestvideo[height<=1080]+bestaudio/best";
+      ytmp3 = "yt-dlp -x --audio-format mp3";
+      ytsearch = "yt-dlp \"ytsearch10:";
     };
     initContent = ''
       setopt PROMPT_SUBST
