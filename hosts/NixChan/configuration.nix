@@ -27,7 +27,7 @@
 
   programs.niri.enable = true;
   programs.zsh.enable = true;
-  programs.flatpak.enable = true;
+  services.flatpak.enable = true;
   services.displayManager.sddm.enable = true;
   services.displayManager.sddm.wayland.enable = true;
 
