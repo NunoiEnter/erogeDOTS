@@ -41,6 +41,10 @@
     "$HOME/erogeDOTS/scripts"
   ];
 
+  home.sessionVariables = {
+    DISPLAY = ":0";
+  };
+
   programs.zsh = {
     enable = true;
     enableCompletion = true;
