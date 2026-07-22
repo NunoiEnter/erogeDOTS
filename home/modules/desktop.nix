@@ -65,6 +65,7 @@ in
     tree
     wine
     steam
+    steam-run
     heroic
     p7zip
     unrar
