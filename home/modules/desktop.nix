@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, system, affinity-nix, ... }:
 
 let
   # Wrapper: opens nvim in ghostty from Dolphin
@@ -73,6 +73,7 @@ in
     qimgv
     vlc
     nvim-desktop
+    affinity-nix.packages.${system}.v3
   ];
 
   # Write mimeapps.list to BOTH locations KDE checks
