@@ -56,6 +56,9 @@
   environment.systemPackages = with pkgs; [ vim git wget firefox ];
   
   nixpkgs.config.allowUnfree = true;
+  nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (builtins.parseDrvName pkg.name).name [
+    "affinity-v3" "wine" "steam" "heroic"
+  ];
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   
   system.stateVersion = "26.05"; 
