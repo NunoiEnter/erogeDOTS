@@ -35,15 +35,12 @@
     bluez-tools
     libnotify
     nerd-fonts.jetbrains-mono
+    xwayland-satellite
   ];
 
   home.sessionPath = [
     "$HOME/erogeDOTS/scripts"
   ];
-
-  home.sessionVariables = {
-    DISPLAY = ":0";
-  };
 
   programs.zsh = {
     enable = true;
