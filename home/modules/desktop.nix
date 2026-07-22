@@ -73,7 +73,7 @@ in
     qimgv
     vlc
     nvim-desktop
-    affinity-nix.packages.${system}.v3
+    affinity-nix.packages.${system}.affinity-v3
   ];
 
   # Write mimeapps.list to BOTH locations KDE checks
