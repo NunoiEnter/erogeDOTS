@@ -65,6 +65,11 @@ window-rule {
 }
 
 window-rule {
+    match app-id=r#"^com\.mitchellh\.ghostty$"#
+    focus-ring off
+}
+
+window-rule {
     match app-id=r#"^org\.wezfurlong\.wezterm$"#
     default-column-width {}
 }
