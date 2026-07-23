@@ -76,6 +76,7 @@ in
     yt-dlp
     ytfzf
     ytui-music
+    librewolf
     nvim-desktop
   ];
 
