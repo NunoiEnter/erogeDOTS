@@ -9,7 +9,7 @@
   boot.consoleLogLevel = 3;
   boot.initrd.verbose = false;
   boot.kernelParams = [ "quiet" "rd.udev.log_level=3" "rd.systemd.show_status=auto" ];
-  boot.loader.timeout = 0;
+  boot.loader.timeout = 5;
   networking.hostName = "NixChan";
   networking.networkmanager.enable = true;
 
@@ -57,7 +57,7 @@
   
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (builtins.parseDrvName pkg.name).name [
-    "affinity-v3" "wine" "steam" "heroic"
+    "wine" "steam" "heroic"
   ];
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   
