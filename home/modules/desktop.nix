@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, system, zen-browser, ... }:
 
 let
   # Wrapper: opens nvim in ghostty from Dolphin
@@ -77,6 +77,8 @@ in
     ytfzf
     ytui-music
     librewolf
+    zen-browser.packages.${system}.default
+    zed
     nvim-desktop
   ];
 
