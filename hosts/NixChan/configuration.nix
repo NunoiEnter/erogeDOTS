@@ -26,6 +26,8 @@
   services.blueman.enable = true;
 
   programs.niri.enable = true;
+  programs.xfce.enable = true;
+  services.xserver.desktopManager.gnome.enable = true;
   programs.zsh.enable = true;
   services.flatpak.enable = true;
   services.displayManager.sddm.enable = true;
