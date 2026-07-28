@@ -84,6 +84,7 @@
       train = "sl";
       mini = "catnap -c $HOME/.config/catnap/config-mini.cat";
       music = "rmpc";
+      bench = "$HOME/erogeDOTS/scripts/bench";
     };
     initContent = ''
       setopt PROMPT_SUBST
