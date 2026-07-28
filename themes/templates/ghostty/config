@@ -35,6 +35,9 @@ cursor-color = {{PRIMARY}}
 selection-background = {{PRIMARY}}
 selection-foreground = {{BG}}
 
+# Kitty image protocol for termusic album art
+env = KITTY_WINDOW_ID=1
+
 # Normal colors
 palette = 0=#15161e
 palette = 1=#f7768e

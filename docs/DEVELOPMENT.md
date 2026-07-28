@@ -292,7 +292,7 @@ tspreview                # theme-switch preview
 2. `themes/templates/` contains config templates with `{{VARIABLE}}` placeholders
 3. `theme-switch` generates configs by substituting variables
 4. Generated configs cached in `~/.config/theme/cache/<name>/`
-5. Symlinks point `~/.config/<app>` to generated configs
+5. Generated configs copied from cache to `~/.config/<app>/` (regular files, not symlinks)
 6. Affected apps restart (waybar) or reload (niri)
 
 ### Creating a New Theme
