@@ -309,7 +309,7 @@ picker_preview() {
         wallpaper="${wallpaper/#\~/$HOME}"
         if [[ -f "$wallpaper" ]] && command -v chafa &>/dev/null; then
             echo ""
-            chafa --size=30x10 "$wallpaper"
+            chafa --clear --size=30x10 "$wallpaper"
         fi
     fi
 }
@@ -340,6 +340,7 @@ picker() {
     local selected
     selected=$(printf '%s\n' "${themes[@]}" | \
         fzf --prompt="Theme > " \
+            --sync \
             --preview="$0 picker-preview {}" \
             --preview-window=right:40%:wrap \
             --height=40% \
