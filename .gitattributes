@@ -1,0 +1,6 @@
+# Language stats — prioritize Nix
+# https://github.com/github/linguist#overrides
+
+picker-rs/**         linguist-vendored
+*.md                 linguist-documentation
+*.jpg                linguist-documentation
