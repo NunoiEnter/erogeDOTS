@@ -298,20 +298,14 @@ picker_preview() {
     local theme_name="$1"
     parse_theme "$theme_name" 2>/dev/null || return
 
-    echo -e "${MAGENTA}$theme_name${NC}"
-    echo ""
-    echo -e "  Primary:    ${COLORS[PRIMARY]:-?}"
-    echo -e "  Background: ${COLORS[BG]:-?}"
-    echo -e "  Foreground: ${COLORS[FG]:-?}"
-
-    local wallpaper="${COLORS[WALLPAPER]:-}"
-    if [[ -n "$wallpaper" ]]; then
-        wallpaper="${wallpaper/#\~/$HOME}"
-        if [[ -f "$wallpaper" ]] && command -v chafa &>/dev/null; then
-            echo ""
-            chafa --size=30x10 "$wallpaper"
-        fi
-    fi
+    printf "\033[2J\033[H"  # clear screen
+    echo -e "${MAGENTA}  ╭─ $theme_name${NC}"
+    echo -e "${MAGENTA}  ├─ Primary:${NC}  ${COLORS[PRIMARY]:-?}"
+    echo -e "${MAGENTA}  ├─ BG:${NC}      ${COLORS[BG]:-?}"
+    echo -e "${MAGENTA}  ├─ FG:${NC}      ${COLORS[FG]:-?}"
+    echo -e "${MAGENTA}  ├─ Character:${NC} ${COLORS[CHAR_NAME]:-?}"
+    echo -e "${MAGENTA}  ├─ Game:${NC}     ${COLORS[CHAR_GAME]:-?}"
+    echo -e "${MAGENTA}  ╰─ Quote:${NC}   ${COLORS[CHAR_QUOTE]:-?}"
 }
 
 picker() {
@@ -341,7 +335,8 @@ picker() {
     selected=$(printf '%s\n' "${themes[@]}" | \
         fzf --prompt="Theme > " \
             --preview="$0 picker-preview {}" \
-            --preview-window=right:40%:wrap \
+            --preview-window="right:40%:wrap" \
+            --bind="ctrl-p:toggle-preview" \
             --height=40% \
             --border=rounded)
 
