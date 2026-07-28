@@ -10,6 +10,7 @@
     vscodium
     foliate
     chafa
+    imagemagick
     go
     yazi
     neovim
