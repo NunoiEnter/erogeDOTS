@@ -29,7 +29,6 @@
 
     nixosConfigurations = {
       NixChan = nixpkgs.lib.nixosSystem {
-        inherit system;
         modules = [
           ./hosts/NixChan/hardware-configuration.nix
           ./hosts/NixChan/configuration.nix
