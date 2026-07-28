@@ -64,8 +64,9 @@
     };
   };
 
-  # KMITL VPN — OpenVPN 3
-  environment.systemPackages = with pkgs; [ openvpn3 vim git wget firefox ];
+  # KMITL VPN — NetworkManager GUI (KDE system tray)
+  networking.networkmanager.plugins = with pkgs; [ networkmanager-openvpn ];
+  environment.systemPackages = with pkgs; [ vim git wget firefox ];
 
   users.users.moni = {
     isNormalUser = true;
