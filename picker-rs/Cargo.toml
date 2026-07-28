@@ -1,0 +1,16 @@
+[package]
+name = "theme-picker"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ratatui = "0.30"
+ratatui-image = { version = "11", default-features = false, features = ["image-defaults", "crossterm"] }
+crossterm = "0.29"
+image = "0.25"
+dirs = "6"
+
+[profile.release]
+opt-level = 3
+lto = true
+strip = true
