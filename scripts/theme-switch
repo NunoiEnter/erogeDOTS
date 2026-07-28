@@ -345,7 +345,15 @@ picker_preview() {
 }
 
 picker() {
-    # Use fzf (always — fast, no compile needed)
+    # Prefer compiled Rust binary (built once by install.sh)
+    local binary="$HOME/.local/bin/theme-picker"
+    if [[ -x "$binary" ]]; then
+        "$binary"
+        return
+    fi
+
+    # Fallback to fzf
+    step "No theme-picker binary — run: cd ~/erogeDOTS/picker-rs && cargo build --release"
     if ! command -v fzf &>/dev/null; then
         echo -e "${RED}fzf not installed${NC}"
         exit 1
