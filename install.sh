@@ -32,6 +32,10 @@ else
     echo "cargo not found — theme-picker will use fzf fallback"
 fi
 
+# 3.5. Symlink tspick → theme-switch picker
+ln -sf "$TARGET/scripts/tspick" "$HOME/.local/bin/tspick"
+echo "tspick symlinked to ~/.local/bin/tspick"
+
 # 4. Apply Zen browser font config (after first launch creates profile)
 ZEN_PROFILE=$(find "$HOME/.zen" -maxdepth 1 -name "*.default*" -type d 2>/dev/null | head -1)
 if [[ -n "$ZEN_PROFILE" ]] && [[ -f "$TARGET/config/zen-browser/user.js" ]]; then

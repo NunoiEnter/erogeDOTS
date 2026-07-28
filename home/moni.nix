@@ -17,17 +17,19 @@
   programs.home-manager.enable = true;
   home.stateVersion = "26.05";
 
-  # Restore active theme on home-manager activation
+  # Restore active theme on home-manager activation (only if cache missing)
   home.activation.restoreTheme = config.lib.homeManagerActivation.postActivationHook or "" + ''
     export PATH="$HOME/.local/bin:$PATH"
     STATE_FILE="$HOME/.config/theme/active"
     if [[ -f "$STATE_FILE" ]]; then
       THEME=$(cat "$STATE_FILE")
-      SCRIPTS="$HOME/erogeDOTS/scripts"
-      if [[ -x "$SCRIPTS/theme-switch" ]]; then
-        "$SCRIPTS/theme-switch" "$THEME" 2>/dev/null || true
+      CACHE_DIR="$HOME/.config/theme/cache/$THEME"
+      if [[ ! -d "$CACHE_DIR" ]]; then
+        SCRIPTS="$HOME/erogeDOTS/scripts"
+        if [[ -x "$SCRIPTS/theme-switch" ]]; then
+          "$SCRIPTS/theme-switch" "$THEME" 2>/dev/null || true
+        fi
       fi
-      # Reload ghostty config
       if command -v ghostty &>/dev/null; then
         pkill -x "ghostty" -USR1 2>/dev/null || true
       fi
