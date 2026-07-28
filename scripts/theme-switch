@@ -330,7 +330,7 @@ picker_preview() {
     local thumb="$cache_dir/thumb.png"
     if [[ -f "$thumb" ]] && command -v chafa &>/dev/null; then
         echo ""
-        chafa --clear --symbols=kitty --size=25x8 "$thumb"
+        chafa --clear --size=25x8 "$thumb"
     else
         local wallpaper="${COLORS[WALLPAPER]:-}"
         if [[ -n "$wallpaper" ]]; then
@@ -338,7 +338,7 @@ picker_preview() {
             if [[ -f "$wallpaper" ]] && command -v chafa &>/dev/null; then
                 echo ""
                 echo -e "${DIM}Loading preview...${NC}" >&2
-                chafa --clear --symbols=kitty --size=25x8 "$wallpaper"
+                chafa --clear --size=25x8 "$wallpaper"
             fi
         fi
     fi
