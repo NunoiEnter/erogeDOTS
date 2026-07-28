@@ -19,13 +19,12 @@
   let
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
-    theme-picker = pkgs.callPackage ./pkgs/theme-picker/default.nix {};
     catnap = pkgs.callPackage ./pkgs/catnap/default.nix {};
   in
   {
     packages.${system} = {
-      inherit theme-picker catnap;
-      default = theme-picker;
+      inherit catnap;
+      default = catnap;
     };
 
     nixosConfigurations = {
@@ -40,7 +39,7 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit system theme-picker catnap zen-browser; };
+            home-manager.extraSpecialArgs = { inherit catnap zen-browser; };
             home-manager.users.moni = import ./home/moni.nix;
           }
         ];

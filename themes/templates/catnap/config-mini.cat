@@ -1,0 +1,29 @@
+;   /\_/\   catnap mini — for floating terminal
+;  ( o.o )  user host uptime os de mem disk only
+;   > ^ <
+
+import "distros.cat"
+
+; -- Appearance ---------------------------------------------------------------
+$layout       = "inline"
+$border_style = "single"
+$border_color = {{CATNAP_PRIMARY}}
+$distroid     = ""
+$stats_margin_top = 0
+$graph_width = 0
+$location = ""
+
+; -- Stat list — minimal ------------------------------------------------------
+$stats = [
+    @{id="username"  icon=''  name="user"      color={{CATNAP_PRIMARY}}}
+    @{id="hostname"  icon=''  name="host"      color={{CATNAP_ACCENT}}}
+    @{id="uptime"    icon=''  name="up"        color={{CATNAP_PRIMARY}}}
+    @{id="separator"}
+
+    @{id="distro"    icon=''  name="os"        color={{CATNAP_PRIMARY}}}
+    @{id="desktop"   icon=''  name="de"        color={{CATNAP_ACCENT}}}
+    @{id="separator"}
+
+    @{id="memory"    icon=''   name="mem"       color={{CATNAP_PRIMARY}}}
+    @{id="disk_0"    icon=''   name="disk"      color={{CATNAP_ACCENT}}}
+]

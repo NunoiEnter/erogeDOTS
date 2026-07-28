@@ -26,8 +26,8 @@
   services.blueman.enable = true;
 
   programs.niri.enable = true;
-  programs.xfce.enable = true;
-  services.xserver.desktopManager.gnome.enable = true;
+  services.xserver.desktopManager.xfce.enable = true;
+  services.desktopManager.gnome.enable = true;
   programs.zsh.enable = true;
   services.flatpak.enable = true;
   services.displayManager.sddm.enable = true;
@@ -49,19 +49,74 @@
   powerManagement.enable = true;
   powerManagement.cpuFreqGovernor = "powersave";
 
+  # MPD for rmpc music player
+  services.mpd = {
+    enable = true;
+    settings = {
+      music_directory = "/home/moni/Music";
+      playlist_directory = "/home/moni/Music/playlists";
+      audio_output = [
+        { type = "pipewire"; name = "PipeWire Output"; }
+        { type = "pulse"; name = "PulseAudio Output"; }
+      ];
+      bind_to_address = "127.0.0.1";
+      port = 6600;
+    };
+  };
+
+  # KMITL VPN — OpenVPN 3
+  environment.systemPackages = with pkgs; [ openvpn3 vim git wget firefox ];
+
   users.users.moni = {
     isNormalUser = true;
     extraGroups = [ "networkmanager" "wheel" "video" "audio" ];
     shell = pkgs.zsh;
   };
 
-  environment.systemPackages = with pkgs; [ vim git wget firefox ];
-  
+  # Fonts
+  fonts = {
+    enableDefaultPackages = true;
+    packages = with pkgs; [
+      google-fonts
+      noto-fonts
+      noto-fonts-cjk-sans
+      noto-fonts-color-emoji
+      liberation_ttf
+      fira-code
+      fira-code-symbols
+      nerd-fonts.jetbrains-mono
+      nerd-fonts.fira-code
+    ];
+    fontconfig = {
+      defaultFonts = {
+        sansSerif = [ "Kanit" "Noto Sans" ];
+        serif = [ "Kanit" "Noto Serif" ];
+        monospace = [ "JetBrainsMono Nerd Font" "Fira Code" ];
+      };
+    };
+  };
+
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (builtins.parseDrvName pkg.name).name [
     "wine" "steam" "heroic"
   ];
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
-  
+  nix.settings = {
+    experimental-features = [ "nix-command" "flakes" ];
+    substituters = [
+      "https://cache.nixos.org"
+      "https://nix-community.cachix.org"
+      "https://cachix.cachix.org"
+    ];
+    trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      "cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWg4T3M2wMCcO6n4T0L2TNA="
+    ];
+    max-jobs = "auto";
+    cores = 0;
+    min-free = 1024;
+    max-free = 2048;
+  };
+
   system.stateVersion = "26.05"; 
 }
