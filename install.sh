@@ -36,13 +36,13 @@ fi
 ln -sf "$TARGET/scripts/tspick" "$HOME/.local/bin/tspick"
 echo "tspick symlinked to ~/.local/bin/tspick"
 
-# 4. Apply Zen browser font config (after first launch creates profile)
-ZEN_PROFILE=$(find "$HOME/.zen" -maxdepth 1 -name "*.default*" -type d 2>/dev/null | head -1)
+# 4. Apply Zen browser user.js (fonts + GPU perf)
+ZEN_PROFILE=$(find "$HOME/.config/zen" -maxdepth 2 -name "prefs.js" -type f 2>/dev/null | head -1 | xargs dirname 2>/dev/null)
 if [[ -n "$ZEN_PROFILE" ]] && [[ -f "$TARGET/config/zen-browser/user.js" ]]; then
     cp "$TARGET/config/zen-browser/user.js" "$ZEN_PROFILE/user.js"
-    echo "Zen browser font set to Kanit"
+    echo "Zen browser user.js applied (fonts + GPU acceleration)"
 else
-    echo "Launch Zen browser once, then re-run: cp ~/erogeDOTS/config/zen-browser/user.js ~/.zen/*.default*/user.js"
+    echo "Launch Zen browser once, then re-run: cp ~/erogeDOTS/config/zen-browser/user.js ~/.config/zen/*/user.js"
 fi
 
 echo ""
