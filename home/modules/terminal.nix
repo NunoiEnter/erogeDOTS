@@ -51,6 +51,7 @@
     pokemon-colorscripts
     sl
     rmpc
+    gimp-with-plugins
   ];
 
   home.sessionPath = [

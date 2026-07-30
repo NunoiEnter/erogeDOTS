@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# install-photogimp — PhotoGIMP patch for Photoshop-like UI in GIMP 3+
+# https://github.com/Diolinux/PhotoGIMP
+
+set -euo pipefail
+
+GIMP_CONFIG="$HOME/.config/GIMP/3.0"
+PHOTOGIMP_URL="https://github.com/Diolinux/PhotoGIMP/releases/download/3.0/PhotoGIMP-linux.zip"
+PHOTOGIMP_ZIP="/tmp/PhotoGIMP-linux.zip"
+STAMP_FILE="$GIMP_CONFIG/.photogimp-installed"
+
+# Check prerequisites
+if ! command -v unzip &>/dev/null; then
+    echo "unzip not found — install via nix (should be in base system)"
+    exit 1
+fi
+
+if [[ ! -d "$GIMP_CONFIG" ]]; then
+    echo "GIMP config not found at $GIMP_CONFIG"
+    echo "Run GIMP once and close it, then run this script."
+    exit 1
+fi
+
+if [[ -f "$STAMP_FILE" ]]; then
+    echo "PhotoGIMP already installed. Remove $STAMP_FILE to force reinstall."
+    exit 0
+fi
+
+echo "=== Downloading PhotoGIMP ==="
+curl -fsSL -o "$PHOTOGIMP_ZIP" "$PHOTOGIMP_URL" || {
+    echo "Download failed. Check internet or download manually:"
+    echo "  $PHOTOGIMP_URL"
+    echo "Then extract to ~/ (contents go to ~/.config/GIMP/3.0/ and ~/.local/share/)"
+    exit 1
+}
+
+echo "=== Extracting PhotoGIMP ==="
+cd /tmp
+unzip -o "$PHOTOGIMP_ZIP" -d "$HOME"
+echo "PhotoGIMP extracted to ~/.config/GIMP/3.0/ and ~/.local/share/"
+
+touch "$STAMP_FILE"
+echo "=== Done! Restart GIMP to see PhotoGIMP layout ==="
