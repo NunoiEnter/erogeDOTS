@@ -51,6 +51,7 @@
     pokemon-colorscripts
     sl
     rmpc
+    figma-linux
   ];
 
   home.sessionPath = [
