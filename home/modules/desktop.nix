@@ -50,6 +50,8 @@ let
     audio/x-wav=vlc.desktop
     audio/aac=vlc.desktop
     audio/mp4=vlc.desktop
+    x-scheme-handler/figma=figma-linux.desktop
+    x-scheme-handler/figmadesktop=figma-linux.desktop
   '';
 in
 {
