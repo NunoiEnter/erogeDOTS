@@ -45,6 +45,13 @@ else
     echo "Launch Zen browser once, then re-run: cp ~/erogeDOTS/config/zen-browser/user.js ~/.config/zen/*/user.js"
 fi
 
+# 5. PhotoGIMP — Photoshop-like UI for GIMP (after first GIMP launch)
+if [[ -d "$HOME/.config/GIMP/3.0" ]] && [[ ! -f "$HOME/.config/GIMP/3.0/.photogimp-installed" ]]; then
+    echo ""
+    echo "=== Installing PhotoGIMP ==="
+    "$TARGET/scripts/install-photogimp" || echo "PhotoGIMP skipped — run manually: $TARGET/scripts/install-photogimp"
+fi
+
 echo ""
 echo "=== Setup complete ==="
 echo "Run: theme-switch   (or: theme-switch <name>)"
