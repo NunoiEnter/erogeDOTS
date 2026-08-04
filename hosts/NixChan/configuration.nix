@@ -1,5 +1,25 @@
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
+let
+  # qylock quickshell shim fix: theme's isQuickshell = sddm.hostName === undefined.
+  # Shim lacks hostName -> all click actions guarded by !isQuickshell are dead.
+  # Also shim lacks suspend(). Patch both.
+  qylockQs = (inputs.qylock.legacyPackages.${pkgs.stdenv.hostPlatform.system}.mkQuickshell {
+    defaultTheme = "nothing";
+  }).overrideAttrs (old: {
+    postInstall = (old.postInstall or "") + ''
+      substituteInPlace "$out/share/qylock/shim/SddmShim.qml" \
+        --replace-fail \
+          '        signal loginSucceeded()' \
+          '        signal loginSucceeded()
+        property string hostName: "qylock"' \
+        --replace-fail \
+          '        function reboot()' \
+          '        function suspend() { Quickshell.execDetached(["bash", "-c", "if [ -d /run/systemd/system ]; then systemctl suspend; else loginctl suspend; fi"]); }
+        function reboot()'
+    '';
+  });
+in
 {
   imports = [ ../../modules/nixos/i18n.nix ];
   boot.loader.systemd-boot.enable = true;
@@ -36,6 +56,7 @@
   programs.qylock = {
     enable = true;
     theme = "nothing";
+    quickshell.enable = false;  # using patched shim via systemPackages
   };
 
   security.rtkit.enable = true;
@@ -58,8 +79,8 @@
   };
 
   services.upower.enable = true;
+  services.power-profiles-daemon.enable = true;
   powerManagement.enable = true;
-  powerManagement.cpuFreqGovernor = "powersave";
 
   # MPD for rmpc music player
   services.mpd = {
@@ -78,7 +99,11 @@
 
   # KMITL VPN — NetworkManager GUI (KDE system tray)
   networking.networkmanager.plugins = with pkgs; [ networkmanager-openvpn ];
-  environment.systemPackages = with pkgs; [ vim git wget firefox ];
+  environment.systemPackages = with pkgs; [
+    vim git wget firefox
+    inputs.noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default
+    qylockQs
+  ];
 
   users.users.moni = {
     isNormalUser = true;

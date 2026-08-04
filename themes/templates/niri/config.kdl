@@ -52,7 +52,7 @@ spawn-at-startup "awww-daemon"
 spawn-sh-at-startup "awww img {{WALLPAPER}} --transition-type fade"
 spawn-at-startup "waybar"
 spawn-at-startup "swaync"
-spawn-sh-at-startup "$HOME/erogeDOTS/scripts/battery-alert &"
+spawn-at-startup "noctalia-shell"
 
 hotkey-overlay { }
 
@@ -90,7 +90,9 @@ binds {
     Mod+Return hotkey-overlay-title="Open a Terminal" { spawn "ghostty"; }
     Mod+Shift+Return hotkey-overlay-title="Mini Terminal" { spawn "sh" "-c" "ghostty --title=mini -e sh -c 'export MINI=1; catnap -c $HOME/.config/catnap/config-mini.cat; exec zsh'"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
-    Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
+    Mod+Space hotkey-overlay-title="App Launcher: noctalia" { spawn "noctalia-shell" "ipc" "call" "launcher" "toggle"; }
+    Mod+P hotkey-overlay-title="Session Menu: noctalia" { spawn "noctalia-shell" "ipc" "call" "sessionMenu" "toggle"; }
+    Super+Alt+L allow-when-locked=true hotkey-overlay-title="Lock the Screen: qylock" { spawn "qylock-lock"; }
     Mod+Shift+Space hotkey-overlay-title="Cycle Input Method" {
         spawn-sh "~/.config/waybar/scripts/fcitx5-cycle.sh";
     }
