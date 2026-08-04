@@ -86,8 +86,25 @@ in
   ];
 
   # Write mimeapps.list to BOTH locations KDE checks
-  xdg.configFile."mimeapps.list".text = mimeapps;
+  # force: local file replaced HM symlink during figma fix
+  xdg.configFile."mimeapps.list" = {
+    text = mimeapps;
+    force = true;
+  };
   xdg.dataFile."applications/mimeapps.list".text = mimeapps;
+
+  # Protocol handler: figma:// redirect from browser back to app
+  xdg.dataFile."applications/figma-linux.desktop".text = ''
+    [Desktop Entry]
+    Comment=Unofficial Figma desktop application for Linux
+    Exec=figma-linux %U
+    Icon=figma-linux
+    Name=Figma Linux
+    Terminal=false
+    Type=Application
+    Version=1.5
+    MimeType=x-scheme-handler/figma;x-scheme-handler/figmadesktop;
+  '';
 
   # Dolphin dark theme
   xdg.configFile."kdeglobals".text = ''
