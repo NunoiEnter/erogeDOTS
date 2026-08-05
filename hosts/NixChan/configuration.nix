@@ -101,7 +101,6 @@ in
   networking.networkmanager.plugins = with pkgs; [ networkmanager-openvpn ];
   environment.systemPackages = with pkgs; [
     vim git wget firefox
-    inputs.noctalia.packages.${pkgs.stdenv.hostPlatform.system}.default
     qylockQs
   ];
 

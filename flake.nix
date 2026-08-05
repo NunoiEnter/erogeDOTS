@@ -1,11 +1,6 @@
 {
   description = "erogeDOTS - The Pro Edition";
 
-  nixConfig = {
-    extra-substituters = [ "https://noctalia.cachix.org" ];
-    extra-trusted-public-keys = [ "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4=" ];
-  };
-
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     home-manager = {
@@ -17,10 +12,6 @@
       url = "github:0xc000022070/zen-browser-flake";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
-    };
-    noctalia = {
-      url = "github:noctalia-dev/noctalia/legacy-v4";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 

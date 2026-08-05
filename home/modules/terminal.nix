@@ -52,6 +52,15 @@
     sl
     rmpc
     figma-linux
+    # lightweight stack: session menu, night light, clipboard, screenshots
+    wlogout
+    wlsunset
+    cliphist
+    swappy
+    grim
+    slurp
+    swaylock
+    jq
   ];
 
   home.sessionPath = [
