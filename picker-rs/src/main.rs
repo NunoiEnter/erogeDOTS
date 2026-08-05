@@ -76,6 +76,7 @@ fn parse_theme_conf(path: &Path) -> Theme {
         let value = value.trim().trim_matches('"');
 
         match key {
+            "name" => theme.name = value.to_string(),
             "primary" => theme.primary = value.to_string(),
             "primary_light" | "primary-light" => theme.primary_light = value.to_string(),
             "primary_dark" | "primary-dark" => theme.primary_dark = value.to_string(),
