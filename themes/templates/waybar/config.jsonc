@@ -1,11 +1,18 @@
 {
     "layer": "top",
     "position": "top",
-    "height": 38,
+    "height": 34,
+    "spacing": 6,
 
-    "modules-left": ["niri/workspaces", "niri/window"],
+    "modules-left": ["custom/launcher", "niri/workspaces", "niri/window"],
     "modules-center": ["clock"],
-    "modules-right": ["backlight", "pulseaudio", "network", "battery", "tray"],
+    "modules-right": ["mpris", "tray", "custom/notifications", "custom/clipboard", "network", "pulseaudio", "backlight", "battery", "custom/session"],
+
+    "custom/launcher": {
+        "format": "\uf0c9 ",
+        "on-click": "fuzzel",
+        "tooltip": false
+    },
 
     "niri/workspaces": {
         "format": "{icon}",
@@ -27,11 +34,39 @@
         "tooltip-format": "{:%A %d %B %Y}"
     },
 
-    "backlight": {
-        "device": "amdgpu_bl1",
-        "format": "\uf185 {percent}%",
-        "on-scroll-up": "brightnessctl set +5%",
-        "on-scroll-down": "brightnessctl set 5%-"
+    "mpris": {
+        "format": "{player_icon} {dynamic}",
+        "format-paused": "{status_icon} {dynamic}",
+        "player-icons": {
+            "default": "\uf001",
+            "mpv": "\uf001",
+            "spotify": "\uf1bc",
+            "firefox": "\uf269"
+        },
+        "status-icons": {
+            "paused": "\uf04c"
+        },
+        "max-length": 50
+    },
+
+    "custom/notifications": {
+        "format": "\uf0f3 {}",
+        "on-click": "swaync-client -t -sw",
+        "tooltip": false
+    },
+
+    "custom/clipboard": {
+        "format": "\uf0ea ",
+        "on-click": "cliphist list | fuzzel --dmenu | cliphist decode | wl-copy",
+        "tooltip": false
+    },
+
+    "network": {
+        "format-wifi": "\uf1eb {signalStrength}%",
+        "format-ethernet": "\uf0ac {ifname}",
+        "format-disconnected": "\uf057 Offline",
+        "on-click": "nm-connection-editor",
+        "on-click-right": "bash -c 'nmcli radio wifi && nmcli radio wifi off || nmcli radio wifi on'"
     },
 
     "pulseaudio": {
@@ -46,20 +81,11 @@
         "scroll-step": 5
     },
 
-    "network": {
-        "format-wifi": "\uf1eb {signalStrength}%",
-        "format-ethernet": "\uf0ac {ifname}",
-        "format-disconnected": "\uf057 Offline",
-        "on-click": "nm-connection-editor",
-        "on-click-right": "bash -c 'nmcli radio wifi && nmcli radio wifi off || nmcli radio wifi on'"
-    },
-
-    "bluetooth": {
-        "format": "\uf293",
-        "format-disabled": "\uf293 off",
-        "format-connected": "\uf294 {num_connections}",
-        "on-click": "blueman-manager",
-        "on-click-right": "bash -c 'bluetoothctl show Powered | grep -q yes && bluetoothctl power off || bluetoothctl power on'"
+    "backlight": {
+        "device": "amdgpu_bl1",
+        "format": "\uf185 {percent}%",
+        "on-scroll-up": "brightnessctl set +5%",
+        "on-scroll-down": "brightnessctl set 5%-"
     },
 
     "battery": {
@@ -74,8 +100,14 @@
         }
     },
 
+    "custom/session": {
+        "format": "\uf011 ",
+        "on-click": "wlogout",
+        "tooltip": false
+    },
+
     "tray": {
-        "icon-size": 18,
+        "icon-size": 16,
         "spacing": 8
     }
 }

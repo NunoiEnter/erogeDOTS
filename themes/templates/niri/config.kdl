@@ -52,7 +52,6 @@ spawn-at-startup "awww-daemon"
 spawn-sh-at-startup "awww img {{WALLPAPER}} --transition-type fade"
 spawn-at-startup "waybar"
 spawn-at-startup "swaync"
-spawn-at-startup "noctalia-shell"
 
 hotkey-overlay { }
 
@@ -90,8 +89,9 @@ binds {
     Mod+Return hotkey-overlay-title="Open a Terminal" { spawn "ghostty"; }
     Mod+Shift+Return hotkey-overlay-title="Mini Terminal" { spawn "sh" "-c" "ghostty --title=mini -e sh -c 'export MINI=1; catnap -c $HOME/.config/catnap/config-mini.cat; exec zsh'"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
-    Mod+Space hotkey-overlay-title="App Launcher: noctalia" { spawn "noctalia-shell" "ipc" "call" "launcher" "toggle"; }
-    Mod+P hotkey-overlay-title="Session Menu: noctalia" { spawn "noctalia-shell" "ipc" "call" "sessionMenu" "toggle"; }
+    Mod+Ctrl+V hotkey-overlay-title="Clipboard History" { spawn-sh "cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"; }
+    Mod+Shift+W hotkey-overlay-title="Session Menu: wlogout" { spawn "wlogout"; }
+    Mod+Ctrl+W hotkey-overlay-title="Toggle Night Light: wlsunset" { spawn-sh "pkill wlsunset || { wlsunset -l 13.736717 -L 100.523186 & }"; }
     Super+Alt+L allow-when-locked=true hotkey-overlay-title="Lock the Screen: qylock" { spawn "qylock-lock"; }
     Mod+Shift+Space hotkey-overlay-title="Cycle Input Method" {
         spawn-sh "~/.config/waybar/scripts/fcitx5-cycle.sh";
@@ -110,8 +110,8 @@ binds {
     XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+10%"; }
     XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "10%-"; }
 
-    Mod+O repeat=false { toggle-overview; }
-    Mod+Q repeat=false { close-window; }
+    Mod+O repeat=false hotkey-overlay-title="Overview" { toggle-overview; }
+    Mod+Q repeat=false hotkey-overlay-title="Close Window" { close-window; }
 
     Mod+Left { focus-column-left; }
     Mod+Down { focus-window-down; }
@@ -207,27 +207,28 @@ binds {
     Mod+Shift+R { switch-preset-column-width-back; }
     Mod+Ctrl+Shift+R { switch-preset-window-height; }
     Mod+Ctrl+R { reset-window-height; }
-    Mod+F { maximize-column; }
-    Mod+Shift+F { fullscreen-window; }
-    Mod+M { maximize-window-to-edges; }
-    Mod+Ctrl+F { expand-column-to-available-width; }
-    Mod+C { center-column; }
-    Mod+Ctrl+C { center-visible-columns; }
+    Mod+F hotkey-overlay-title="Maximize Column" { maximize-column; }
+    Mod+Shift+F hotkey-overlay-title="Fullscreen Window" { fullscreen-window; }
+    Mod+M hotkey-overlay-title="Maximize to Edges" { maximize-window-to-edges; }
+    Mod+Ctrl+F hotkey-overlay-title="Expand to Width" { expand-column-to-available-width; }
+    Mod+C hotkey-overlay-title="Center Column" { center-column; }
+    Mod+Ctrl+C hotkey-overlay-title="Center Columns" { center-visible-columns; }
     Mod+Minus { set-column-width "-10%"; }
     Mod+Equal { set-column-width "+10%"; }
     Mod+Shift+Minus { set-window-height "-10%"; }
     Mod+Shift+Equal { set-window-height "+10%"; }
 
-    Mod+V { toggle-window-floating; }
-    Mod+Shift+V { switch-focus-between-floating-and-tiling; }
-    Mod+W { toggle-column-tabbed-display; }
+    Mod+V hotkey-overlay-title="Toggle Floating" { toggle-window-floating; }
+    Mod+Shift+V hotkey-overlay-title="Float/Tile Switch" { switch-focus-between-floating-and-tiling; }
+    Mod+W hotkey-overlay-title="Toggle Tabbed" { toggle-column-tabbed-display; }
 
-    Print { screenshot; }
-    Ctrl+Print { screenshot-screen; }
-    Alt+Print { screenshot-window; }
+    Print hotkey-overlay-title="Screenshot" { screenshot; }
+    Ctrl+Print hotkey-overlay-title="Screenshot Screen" { screenshot-screen; }
+    Alt+Print hotkey-overlay-title="Screenshot Window" { screenshot-window; }
+    Shift+Print hotkey-overlay-title="Screenshot Annotate: swappy" { spawn-sh "grim -g \"$(slurp)\" - | swappy -f -"; }
 
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
-    Mod+Shift+E { quit; }
-    Ctrl+Alt+Delete { quit; }
-    Mod+Shift+P { power-off-monitors; }
+    Mod+Shift+E hotkey-overlay-title="Quit niri" { quit; }
+    Ctrl+Alt+Delete hotkey-overlay-title="Quit niri" { quit; }
+    Mod+Shift+P hotkey-overlay-title="Power Off Monitors" { power-off-monitors; }
 }

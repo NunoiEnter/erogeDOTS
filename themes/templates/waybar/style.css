@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════════════
-   erogeDOTS — Visual Novel Aesthetic Waybar
+   erogeDOTS — Noctalia-style Waybar
+   Floating centered bar, capsule widgets, Material3 surface_variant
    ═══════════════════════════════════════════════════════════════ */
 
 * {
@@ -10,46 +11,86 @@
     color: {{WAYBAR_TEXT}};
 }
 
-/* ── Main Bar ── */
+/* ── Floating Bar ── */
 window#waybar {
-    background: {{WAYBAR_BG_GRADIENT}};
+    background: {{BG}};
     border: 1px solid {{WAYBAR_BORDER}};
-    border-radius: 0px;
-    box-shadow: 0 2px 8px {{WAYBAR_SHADOW}};
+    border-radius: 12px;
+    box-shadow: 0 4px 16px {{WAYBAR_SHADOW}};
+}
+
+/* ── Shared Capsule (widget pill) ── */
+#clock,
+#mpris,
+#tray,
+#custom-launcher,
+#custom-notifications,
+#custom-clipboard,
+#custom-session,
+#network,
+#pulseaudio,
+#backlight,
+#battery,
+#window {
+    background: {{BG_SURFACE}};
+    border-radius: 999px;
+    margin: 4px 2px;
+    padding: 0 12px;
 }
 
 /* ── Workspaces ── */
-#workspaces button {
-    padding: 2px 8px;
+#workspaces {
+    background: {{BG_SURFACE}};
+    border-radius: 999px;
     margin: 4px 2px;
-    border-radius: 8px;
+    padding: 0 6px;
+}
+
+#workspaces button {
+    padding: 0 8px;
+    margin: 2px;
+    border-radius: 999px;
     background: transparent;
     color: {{WAYBAR_TEXT}};
-    border: 1px solid transparent;
+    border: none;
     transition: all 0.2s ease;
 }
 
 #workspaces button:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid {{PRIMARY}};
+    background: {{PRIMARY}};
+    opacity: 0.7;
 }
 
 #workspaces button.active {
     background: {{PRIMARY}};
     color: {{BG}};
-    border: 1px solid {{PRIMARY}};
     font-weight: 700;
+}
+
+/* ── Launcher / Icon Buttons ── */
+#custom-launcher {
+    background: {{PRIMARY}};
+    color: {{BG}};
+    font-size: 15px;
+    font-weight: 700;
+}
+
+#custom-launcher:hover {
+    background: {{PRIMARY_LIGHT}};
+}
+
+#custom-notifications:hover,
+#custom-clipboard:hover,
+#custom-session:hover {
+    background: {{PRIMARY_LIGHT}};
+    color: {{BG}};
 }
 
 /* ── Window Title ── */
 #window {
-    padding: 4px 12px;
-    margin: 4px 4px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    color: {{WAYBAR_TEXT}};
     font-style: italic;
     opacity: 0.9;
+    padding: 0 16px;
 }
 
 #window.empty {
@@ -58,111 +99,38 @@ window#waybar {
 
 /* ── Clock ── */
 #clock {
-    padding: 4px 14px;
-    margin: 4px;
-    border-radius: 8px;
-    background: {{PRIMARY}};
-    color: {{BG}};
     font-weight: 700;
     font-size: 14px;
+    padding: 0 16px;
 }
 
-/* ── Backlight ── */
-#backlight {
-    padding: 4px 10px;
-    margin: 4px 2px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    color: {{WAYBAR_TEXT}};
-}
-
-#backlight:hover {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-/* ── PulseAudio ── */
-#pulseaudio {
-    padding: 4px 10px;
-    margin: 4px 2px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    color: {{WAYBAR_TEXT}};
-}
-
-#pulseaudio:hover {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-#pulseaudio.muted {
-    color: {{WAYBAR_TEXT}};
-    opacity: 0.5;
+/* ── MPRIS ── */
+#mpris {
+    font-style: italic;
+    opacity: 0.9;
+    padding: 0 16px;
 }
 
 /* ── Network ── */
-#network {
-    padding: 4px 10px;
-    margin: 4px 2px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    color: {{WAYBAR_TEXT}};
-}
-
-#network:hover {
-    background: rgba(255, 255, 255, 0.15);
-}
-
 #network.disconnected {
-    color: {{WAYBAR_TEXT}};
     opacity: 0.4;
 }
 
-/* ── Bluetooth ── */
-#bluetooth {
-    padding: 4px 10px;
-    margin: 4px 2px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    color: {{WAYBAR_TEXT}};
-}
-
-#bluetooth:hover {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-#bluetooth.disabled {
-    color: {{WAYBAR_TEXT}};
-    opacity: 0.4;
+/* ── PulseAudio ── */
+#pulseaudio.muted {
+    opacity: 0.5;
 }
 
 /* ── Battery ── */
-#battery {
-    padding: 4px 10px;
-    margin: 4px 2px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    color: {{WAYBAR_TEXT}};
-}
-
-#battery:hover {
-    background: rgba(255, 255, 255, 0.15);
-}
-
-/* good: 50-100% — white/default */
-#battery.good {
-    color: {{WAYBAR_TEXT}};
-}
-
-/* warning: 16-49% — yellow */
 #battery.warning {
     color: #e6c855;
 }
 
-/* critical: 6-15% — red */
 #battery.critical {
     color: #e65555;
+    font-weight: 700;
 }
 
-/* below critical: 0-5% — red + alert */
 #battery:not(.good):not(.warning):not(.critical) {
     color: #ff3333;
     font-weight: 700;
@@ -173,13 +141,6 @@ window#waybar {
 }
 
 /* ── Tray ── */
-#tray {
-    padding: 4px 8px;
-    margin: 4px 2px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-}
-
 #tray > .passive {
     -gtk-icon-effect: dim;
     opacity: 0.5;
@@ -188,28 +149,17 @@ window#waybar {
 #tray > .needs-attention {
     -gtk-icon-effect: highlight;
     background: {{PRIMARY}};
-    border-radius: 8px;
 }
 
 /* ── Tooltip ── */
 tooltip {
     background: {{BG}};
     border: 1px solid {{WAYBAR_BORDER}};
-    border-radius: 8px;
+    border-radius: 10px;
     color: {{WAYBAR_TEXT}};
     padding: 8px;
 }
 
 tooltip label {
     color: {{WAYBAR_TEXT}};
-}
-
-/* ── Interactive Hover States ── */
-#backlight:hover,
-#pulseaudio:hover,
-#network:hover,
-#bluetooth:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid {{PRIMARY}};
-    transition: all 0.15s ease;
 }
