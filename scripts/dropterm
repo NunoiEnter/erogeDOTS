@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# dropterm — quake-style dropdown terminal, toggles from top-center (under waybar)
+# Show: moves to active workspace + focuses. Hide: parks on workspace 5.
+set -euo pipefail
+
+PARK_WS=5
+
+win=$(niri msg -j windows | jq -r '.[] | select(.title == "dropdown") | .id' | head -1)
+
+if [[ -z "$win" ]]; then
+    exec ghostty --title=dropdown -e zsh
+fi
+
+focused=$(niri msg -j windows | jq -r --arg w "$win" '.[] | select(.id == ($w|tonumber)) | .is_focused' | head -1)
+active_idx=$(niri msg -j workspaces | jq -r '[.[] | select(.is_focused == true)] | .[0].idx')
+
+if [[ "$focused" == "true" ]]; then
+    # visible + focused → park it away
+    niri msg action move-window-to-workspace "$PARK_WS" --window-id "$win"
+else
+    # hidden → drop it on the active workspace and focus
+    niri msg action move-window-to-workspace "$active_idx" --window-id "$win"
+    niri msg action focus-window --window-id "$win"
+fi
