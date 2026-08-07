@@ -87,10 +87,22 @@ window-rule {
     clip-to-geometry true
 }
 
+// Dropdown terminal — Mod+grave toggles quake-style terminal under the bar
+window-rule {
+    match app-id=r#"^com\.mitchellh\.ghostty$"# title="^dropdown$"
+    open-floating true
+    default-floating-position x=0 y=52 relative-to="top"
+    default-column-width { fixed 900; }
+    default-window-height { fixed 500; }
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+
 binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
     Mod+Return hotkey-overlay-title="Open a Terminal" { spawn "ghostty"; }
     Mod+Shift+Return hotkey-overlay-title="Mini Terminal" { spawn "sh" "-c" "ghostty --title=mini -e sh -c 'export MINI=1; catnap -c $HOME/.config/catnap/config-mini.cat; exec zsh'"; }
+    Mod+grave hotkey-overlay-title="Dropdown Terminal" { spawn-sh "dropterm"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
     Mod+Ctrl+V hotkey-overlay-title="Clipboard History" { spawn-sh "cliphist-pick"; }
     Mod+Shift+W hotkey-overlay-title="Session Menu: wlogout" { spawn "wlogout"; }
