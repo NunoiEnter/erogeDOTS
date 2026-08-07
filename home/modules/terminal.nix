@@ -8,6 +8,7 @@
     alacritty
     foot
     vscodium
+    zed-editor
     foliate
     chafa
     imagemagick
