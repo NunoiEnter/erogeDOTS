@@ -99,6 +99,34 @@ bash <(curl -s https://raw.githubusercontent.com/NunoiEnter/erogeDOTS/main/insta
 That clones the repo, runs `sudo nixos-rebuild switch --flake .#NixChan`, then
 compiles the Rust theme-picker once into `~/.local/bin/theme-picker`.
 
+### How the picker build actually works
+
+The **install.sh script does the compiling** — you don't touch cargo yourself:
+
+1. `git clone` the repo → `~/erogeDOTS`
+2. `sudo nixos-rebuild switch` — installs EVERYTHING including `cargo` (it's in
+   my `home/modules/terminal.nix` packages). This order matters: cargo must exist
+   *before* the build step.
+3. `cd picker-rs && cargo build --release` — compiles the Rust picker from source
+   (`picker-rs/src/main.rs`)
+4. `cp target/release/theme-picker ~/.local/bin/` — drops the binary into PATH
+
+**When does it build?** Only **once, during install.sh**. Nixos-rebuild NEVER
+recompiles it — that's the point: picker is Rust, not a Nix package, so rebuilds
+stay fast. The binary just sits in `~/.local/bin/theme-picker` and keeps working.
+
+**When would I rebuild it manually?** Only if you edit the picker source
+(`picker-rs/src/main.rs`, e.g. add a theme option) — then:
+
+```bash
+cd ~/erogeDOTS/picker-rs
+cargo build --release
+cp target/release/theme-picker ~/.local/bin/
+```
+
+**No cargo?** install.sh falls back to fzf-based picker (no Rust build). Only
+matters on a machine without the toolchain.
+
 ### Already cloned — just rebuild
 
 ```bash
