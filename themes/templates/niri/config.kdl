@@ -56,7 +56,9 @@ spawn-sh-at-startup "wl-paste --type text --watch cliphist store"
 spawn-sh-at-startup "wl-paste --type image --watch cliphist store"
 spawn-sh-at-startup "wl-paste --primary --type text --watch cliphist store"
 
-hotkey-overlay { }
+hotkey-overlay {
+    skip-at-startup
+}
 
 screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
 
