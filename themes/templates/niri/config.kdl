@@ -92,7 +92,7 @@ binds {
     Mod+Return hotkey-overlay-title="Open a Terminal" { spawn "ghostty"; }
     Mod+Shift+Return hotkey-overlay-title="Mini Terminal" { spawn "sh" "-c" "ghostty --title=mini -e sh -c 'export MINI=1; catnap -c $HOME/.config/catnap/config-mini.cat; exec zsh'"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
-    Mod+Ctrl+V hotkey-overlay-title="Clipboard History" { spawn-sh "cliphist list | fuzzel --dmenu | cliphist decode | wl-copy"; }
+    Mod+Ctrl+V hotkey-overlay-title="Clipboard History" { spawn-sh "cliphist-pick"; }
     Mod+Shift+W hotkey-overlay-title="Session Menu: wlogout" { spawn "wlogout"; }
     Mod+Ctrl+W hotkey-overlay-title="Toggle Night Light: wlsunset" { spawn-sh "pkill wlsunset || { wlsunset -l 13.736717 -L 100.523186 & }"; }
     Super+Alt+L allow-when-locked=true hotkey-overlay-title="Lock the Screen: qylock" { spawn "qylock-lock"; }

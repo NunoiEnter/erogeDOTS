@@ -39,6 +39,10 @@ fi
 ln -sf "$TARGET/scripts/tspick" "$HOME/.local/bin/tspick"
 echo "tspick symlinked to ~/.local/bin/tspick"
 
+# 3.6. Symlink cliphist-pick (image-aware clipboard picker)
+ln -sf "$TARGET/scripts/cliphist-pick" "$HOME/.local/bin/cliphist-pick"
+echo "cliphist-pick symlinked to ~/.local/bin/cliphist-pick"
+
 # 4. Apply Zen browser user.js (fonts + GPU perf)
 ZEN_PROFILE=$(find "$HOME/.config/zen" -maxdepth 2 -name "prefs.js" -type f 2>/dev/null | head -1 | xargs dirname 2>/dev/null)
 if [[ -n "$ZEN_PROFILE" ]] && [[ -f "$TARGET/config/zen-browser/user.js" ]]; then
