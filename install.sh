@@ -22,6 +22,9 @@ sudo nixos-rebuild switch --flake .#NixChan
 # 3. Build Rust theme-picker (compiled once at install, not on every rebuild)
 echo ""
 echo "=== Building theme-picker ==="
+# nixos-rebuild put cargo in the user profile — make sure it's on PATH even
+# if the current shell was started before this install
+export PATH="/etc/profiles/per-user/$USER/bin:$PATH"
 if command -v cargo &>/dev/null; then
     cd "$TARGET/picker-rs"
     cargo build --release
@@ -48,4 +51,4 @@ fi
 echo ""
 echo "=== Setup complete ==="
 echo "Run: theme-switch   (or: theme-switch <name>)"
-echo "Themes: harumi, nanami, natsume, nene"
+echo "Themes: sana (Sana Inui), harumi, nanami, natsume, nene"
