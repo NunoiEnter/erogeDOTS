@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# cliphist-pick — pick from clipboard history, paste text or image correctly
+# images need wl-copy --type <mime>; text must NOT get a type flag
+
+item="$(cliphist list | fuzzel --dmenu)" || exit 1
+
+case "$item" in
+    *"png"*)   mime="image/png" ;;
+    *"jpg"*)   mime="image/jpeg" ;;
+    *"jpeg"*)  mime="image/jpeg" ;;
+    *"webp"*)  mime="image/webp" ;;
+    *"gif"*)   mime="image/gif" ;;
+esac
+
+if [[ -n "$mime" ]]; then
+    echo "$item" | cliphist decode | wl-copy --type "$mime"
+else
+    echo "$item" | cliphist decode | wl-copy
+fi
