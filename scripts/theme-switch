@@ -257,10 +257,22 @@ restart_apps() {
         step "Niri reloaded"
     fi
 
-    # Reload ghostty (config is re-read automatically, but send signal to running instances)
+    # Reload terminals (kill — they re-read config on next launch)
     if pgrep -x "ghostty" > /dev/null 2>&1; then
-        pkill -x "ghostty" -USR1 2>/dev/null || true
-        step "Ghostty reloaded"
+        pkill -x "ghostty" 2>/dev/null || true
+        step "Ghostty reloaded (reopen terminals for new colors)"
+    fi
+    if pgrep -x "kitty" > /dev/null 2>&1; then
+        pkill -x "kitty" 2>/dev/null || true
+        step "Kitty reloaded (reopen terminals for new colors)"
+    fi
+    if pgrep -x "alacritty" > /dev/null 2>&1; then
+        pkill -x "alacritty" 2>/dev/null || true
+        step "Alacritty reloaded (reopen terminals for new colors)"
+    fi
+    if pgrep -x "foot" > /dev/null 2>&1; then
+        pkill -x "foot" 2>/dev/null || true
+        step "Foot reloaded (reopen terminals for new colors)"
     fi
 
     # Restart waybar
