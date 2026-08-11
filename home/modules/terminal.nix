@@ -30,6 +30,8 @@
     fzf
     cargo
     rustc
+    bun
+    gh
     brightnessctl
     blueman
     bluez
