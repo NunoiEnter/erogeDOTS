@@ -1,4 +1,4 @@
-# ⚠️ erogeDOTS — VER.1.1.b
+# ⚠️ erogeDOTS — VER.1.2
 
 > **⚠️ WARNING: MY PERSONAL DOTFILES — NOT FOR YOU ⚠️**
 >
@@ -25,12 +25,12 @@ swaync, fuzzel — way lighter, still pretty.
 
 ```
 erogeDOTS/
-├── flake.nix                  # the inputs (nixpkgs, home-manager, qylock)
+├── flake.nix                  # the inputs (nixpkgs, home-manager, qylock, rust-overlay)
 ├── install.sh                 # fresh-machine installer
 ├── hosts/NixChan/             # my machine: system config + hardware
 ├── home/modules/              # my home-manager stuff
-│   ├── desktop.nix            # waybar, mimeapps, firefox defaults, figma
-│   └── terminal.nix           # terminal tools + my aliases
+│   ├── desktop.nix            # waybar, mimeapps, firefox defaults, figma, AI web launchers
+│   └── terminal.nix           # terminal tools + my aliases (incl. claude-code, codex)
 ├── themes/                    # theme definitions
 │   ├── sana/ harumi/ nanami/ natsume/ nene/   # theme.conf each
 │   └── templates/             # app configs with {{color}} placeholders
@@ -39,12 +39,15 @@ erogeDOTS/
 │       └── catnap/ cava/ cmatrix/
 ├── scripts/
 │   ├── theme-switch           # the magic: theme → configs → switch
-│   └── tspick                 # theme picker launcher (uses theme-picker)
+│   ├── tspick                 # theme picker launcher (uses theme-picker)
+│   ├── cliphist-pick          # image-aware clipboard picker
+│   ├── dropterm               # quake dropdown terminal (Mod+grave)
+│   └── vnload / vnsave        # symlinks → Heroic-Saves helpers
 ├── picker-rs/                 # my Rust theme picker (compiled once)
 ├── pkgs/catnap/               # catnap package override
 ├── config/                    # static configs (nvim, openvpn, firefox, ...)
 ├── modules/nixos/             # shared nixos modules
-├── shells/                    # dev shells (rust, python, go, docker, ...)
+├── shells/                    # dev shells (full, common, rust, python, go, docker, security, tester, webapp)
 ├── wallpapers/                # theme wallpapers
 └── docs/                      # my notes (dev, install, vpn)
 ```
@@ -72,11 +75,19 @@ erogeDOTS/
 - **picker-rs** — my Rust picker with live wallpaper previews
 - Themes: `sana`, `harumi`, `nanami`, `natsume`, `nene`
 
+### AI tools
+
+- **claude-code** — Anthropic CLI (`claude`), from nixpkgs
+- **codex** — OpenAI CLI (`codex`), from nixpkgs
+- **Claude / ChatGPT launchers** — no native Linux GUIs in nixpkgs, so
+  firefox web-app entries (`claude.ai`, `chatgpt.com`) in the app menu
+
 ### Keybinds I actually use
 
 | Key | Action |
 |---|---|
 | `Mod+Return` | terminal (ghostty) |
+| `Mod+grave` | dropdown terminal (quake-style under waybar) |
 | `Mod+D` | app launcher (fuzzel) |
 | `Mod+Ctrl+V` | clipboard history |
 | `Mod+Shift+W` | session menu (wlogout) |
@@ -156,4 +167,4 @@ pkill waybar; waybar &
 
 ---
 
-**VER.1.1.b** — personal, WIP, waifu-powered. えへへ 💕
+**VER.1.2** — personal, WIP, waifu-powered. えへへ 💕
