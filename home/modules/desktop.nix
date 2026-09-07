@@ -105,6 +105,30 @@ in
     MimeType=x-scheme-handler/figma;x-scheme-handler/figmadesktop;
   '';
 
+  # Web app launchers: Claude + ChatGPT (no native Linux apps in nixpkgs)
+  xdg.dataFile."applications/claude-webapp.desktop".text = ''
+    [Desktop Entry]
+    Comment=Claude by Anthropic (web app)
+    Exec=firefox --new-window https://claude.ai %U
+    Icon=claude
+    Name=Claude
+    Terminal=false
+    Type=Application
+    Version=1.5
+    Categories=Network;Chat;
+  '';
+  xdg.dataFile."applications/chatgpt-webapp.desktop".text = ''
+    [Desktop Entry]
+    Comment=ChatGPT by OpenAI (web app)
+    Exec=firefox --new-window https://chatgpt.com %U
+    Icon=chatgpt
+    Name=ChatGPT
+    Terminal=false
+    Type=Application
+    Version=1.5
+    Categories=Network;Chat;
+  '';
+
   # Dolphin dark theme
   xdg.configFile."kdeglobals".text = ''
     [General]

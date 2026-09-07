@@ -27,6 +27,8 @@
     btop
     upower
     opencode
+    claude-code
+    codex
     fzf
     cargo
     rustc
