@@ -83,7 +83,7 @@
       tspick = "theme-switch picker";
       yt = "mpv --ytdl-format=bestvideo[height<=1080]+bestaudio/best";
       ytmp3 = "yt-dlp -x --audio-format mp3";
-      ytsearch = "yt-dlp \"ytsearch10:";
+      ytsearch = "yt-dlp \"ytsearch10:\"";
       cmx = "cmatrix -C \${CMATRIX_COLOR:-cyan}";
       cave = "cava -p ~/.config/cava/config";
       hwood = "hollywood";
