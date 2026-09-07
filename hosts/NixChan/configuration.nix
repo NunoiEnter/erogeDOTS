@@ -23,7 +23,7 @@ in
 {
   imports = [ ../../modules/nixos/i18n.nix ];
   boot.loader.systemd-boot.enable = true;
-  boot.loader.systemd-boot.configurationLimit = 2;
+  boot.loader.systemd-boot.configurationLimit = 5;
   boot.loader.efi.canTouchEfiVariables = true;
 
   boot.consoleLogLevel = 3;
