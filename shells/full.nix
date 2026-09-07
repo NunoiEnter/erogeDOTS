@@ -22,7 +22,7 @@ pkgs.mkShell {
     # Python
     pkgs.python3
     pkgs.python3Packages.ruff
-    pkgs.python3Packages.pyright
+    pkgs.pyright
     pkgs.uv
     pkgs.python3Packages.black
     pkgs.python3Packages.mypy
@@ -37,7 +37,7 @@ pkgs.mkShell {
 
     # Nix
     pkgs.nil
-    pkgs.nixfmt-rfc-style
+    pkgs.nixfmt
 
     # Common
     pkgs.git
@@ -46,7 +46,7 @@ pkgs.mkShell {
     pkgs.fd
     pkgs.jq
     pkgs.yq-go
-    pkgs.nodePackages.prettier
+    pkgs.prettier
     pkgs.shfmt
     pkgs.shellcheck
     pkgs.htop
