@@ -25,11 +25,11 @@ swaync, fuzzel — way lighter, still pretty.
 
 ```
 erogeDOTS/
-├── flake.nix                  # the inputs (nixpkgs, home-manager, qylock, zen)
+├── flake.nix                  # the inputs (nixpkgs, home-manager, qylock)
 ├── install.sh                 # fresh-machine installer
 ├── hosts/NixChan/             # my machine: system config + hardware
 ├── home/modules/              # my home-manager stuff
-│   ├── desktop.nix            # waybar, mimeapps, zen, figma
+│   ├── desktop.nix            # waybar, mimeapps, firefox defaults, figma
 │   └── terminal.nix           # terminal tools + my aliases
 ├── themes/                    # theme definitions
 │   ├── sana/ harumi/ nanami/ natsume/ nene/   # theme.conf each
@@ -42,7 +42,7 @@ erogeDOTS/
 │   └── tspick                 # theme picker launcher (uses theme-picker)
 ├── picker-rs/                 # my Rust theme picker (compiled once)
 ├── pkgs/catnap/               # catnap package override
-├── config/                    # static configs (nvim, openvpn, zen, ...)
+├── config/                    # static configs (nvim, openvpn, firefox, ...)
 ├── modules/nixos/             # shared nixos modules
 ├── shells/                    # dev shells (rust, python, go, docker, ...)
 ├── wallpapers/                # theme wallpapers

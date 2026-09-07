@@ -1,5 +1,5 @@
-// erogeDOTS — Zen browser performance & font config
-// Copy to ~/.config/zen/<profile>/user.js after first launch
+// erogeDOTS — Firefox performance & font config
+// Copy to ~/.config/mozilla/firefox/<profile>/user.js after first launch
 
 // ── GPU Acceleration (Wayland + AMD) ─────────────────────────
 user_pref("gfx.webrender.all", true);

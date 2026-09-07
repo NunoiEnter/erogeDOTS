@@ -1,4 +1,4 @@
-{ pkgs, zen-browser, ... }:
+{ pkgs, ... }:
 
 let
   # Wrapper: opens nvim in ghostty from Dolphin
@@ -19,11 +19,11 @@ let
 
   mimeapps = ''
     [Default Applications]
-    x-scheme-handler/http=zen-beta.desktop
-    x-scheme-handler/https=zen-beta.desktop
-    x-scheme-handler/about=zen-beta.desktop
-    text/html=zen-beta.desktop
-    application/xhtml+xml=zen-beta.desktop
+    x-scheme-handler/http=firefox.desktop
+    x-scheme-handler/https=firefox.desktop
+    x-scheme-handler/about=firefox.desktop
+    text/html=firefox.desktop
+    application/xhtml+xml=firefox.desktop
     text/plain=nvim-terminal.desktop
     text/x-python=nvim-terminal.desktop
     text/css=nvim-terminal.desktop
@@ -80,7 +80,6 @@ in
     ytfzf
     ytui-music
     librewolf
-    zen-browser.packages.${pkgs.stdenv.hostPlatform.system}.default
     zed-editor
     nvim-desktop
   ];

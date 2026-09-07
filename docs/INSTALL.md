@@ -136,7 +136,7 @@ theme-switch nanami
 
 ```
 erogeDOTS/
-├── flake.nix                    # Flake: nixpkgs, home-manager, zen-browser
+├── flake.nix                    # Flake: nixpkgs, home-manager, qylock
 ├── flake.lock                   # Locked inputs
 ├── install.sh                   # One-command installer
 ├── hosts/NixChan/

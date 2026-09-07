@@ -8,14 +8,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     qylock.url = "github:Darkkal44/qylock";
-    zen-browser = {
-      url = "github:0xc000022070/zen-browser-flake";
-      inputs.nixpkgs.follows = "nixpkgs";
-      inputs.home-manager.follows = "home-manager";
-    };
   };
 
-  outputs = { self, nixpkgs, home-manager, qylock, zen-browser, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, qylock, ... }@inputs:
   let
     system = "x86_64-linux";
     pkgs = nixpkgs.legacyPackages.${system};
@@ -39,7 +34,7 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit catnap zen-browser; };
+            home-manager.extraSpecialArgs = { inherit catnap; };
             home-manager.users.moni = import ./home/moni.nix;
           }
         ];
@@ -55,6 +50,7 @@
       tester = import ./shells/tester.nix { inherit pkgs; };
       docker = import ./shells/docker.nix { inherit pkgs; };
       security = import ./shells/security.nix { inherit pkgs; };
+      webapp = import ./shells/webapp.nix { inherit pkgs; };
     };
   };
 }
