@@ -151,8 +151,8 @@ in
     ];
     max-jobs = "auto";
     cores = 0;
-    min-free = 1024;
-    max-free = 2048;
+    min-free = "1G";
+    max-free = "10G";
   };
 
   system.stateVersion = "26.05"; 
