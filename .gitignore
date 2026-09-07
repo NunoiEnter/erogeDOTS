@@ -1,2 +1,8 @@
 docs/SESSION-SUMMARY.md
 scripts/bench
+result
+result-*
+.direnv/
+target/
+*.zwc
+__pycache__/
