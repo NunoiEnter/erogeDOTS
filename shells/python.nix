@@ -4,7 +4,7 @@ pkgs.mkShell {
   nativeBuildInputs = with pkgs; [
     python3
     python3Packages.ruff
-    python3Packages.pyright
+    pyright
     uv
     python3Packages.black
     python3Packages.isort

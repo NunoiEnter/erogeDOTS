@@ -10,9 +10,9 @@ pkgs.mkShell {
     neovim
 
     # Formatters
-    nixfmt-rfc-style
+    nixfmt
     shfmt
-    nodePackages.prettier
+    prettier
 
     # Linters
     shellcheck

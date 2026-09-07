@@ -8,12 +8,19 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     qylock.url = "github:Darkkal44/qylock";
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, home-manager, qylock, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, qylock, rust-overlay, ... }@inputs:
   let
     system = "x86_64-linux";
-    pkgs = nixpkgs.legacyPackages.${system};
+    pkgs = import nixpkgs {
+      inherit system;
+      overlays = [ rust-overlay.overlays.default ];
+    };
     catnap = pkgs.callPackage ./pkgs/catnap/default.nix {};
   in
   {

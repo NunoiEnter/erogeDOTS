@@ -16,11 +16,12 @@ pkgs.mkShell {
     dirb
     whatweb
     sqlmap
-    wpscan
+    # wpscan dropped: unfree license breaks `nix flake check`;
+    # re-add with per-shell allowUnfreePredicate if needed
 
     # Exploitation
     metasploit
-    searchsploit
+    exploitdb
 
     # Password attacks
     hydra
@@ -34,7 +35,7 @@ pkgs.mkShell {
     # Forensics
     binwalk
     foremost
-    strings
+    binutils
     file
     exiftool
 
@@ -48,7 +49,7 @@ pkgs.mkShell {
     nuclei-templates
 
     # OSINT
-    theHarvester
+    theharvester
     sherlock
 
     # Cryptography

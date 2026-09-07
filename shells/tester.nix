@@ -23,12 +23,12 @@ pkgs.mkShell {
 
     # Browser automation
     nodejs
-    nodePackages.pnpm
+    pnpm
     playwright-driver
     chromium
 
     # Mobile / Device testing
-    adb-cli
+    android-tools
 
     # Coverage & Reports
     lcov
