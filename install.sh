@@ -43,13 +43,13 @@ echo "tspick symlinked to ~/.local/bin/tspick"
 ln -sf "$TARGET/scripts/cliphist-pick" "$HOME/.local/bin/cliphist-pick"
 echo "cliphist-pick symlinked to ~/.local/bin/cliphist-pick"
 
-# 4. Apply Zen browser user.js (fonts + GPU perf)
-ZEN_PROFILE=$(find "$HOME/.config/zen" -maxdepth 2 -name "prefs.js" -type f 2>/dev/null | head -1 | xargs dirname 2>/dev/null)
-if [[ -n "$ZEN_PROFILE" ]] && [[ -f "$TARGET/config/zen-browser/user.js" ]]; then
-    cp "$TARGET/config/zen-browser/user.js" "$ZEN_PROFILE/user.js"
-    echo "Zen browser user.js applied (fonts + GPU acceleration)"
+# 4. Apply Firefox user.js (fonts + GPU perf)
+FIREFOX_PROFILE=$(find "$HOME/.config/mozilla/firefox" -maxdepth 2 -name "prefs.js" -type f 2>/dev/null | head -1 | xargs dirname 2>/dev/null)
+if [[ -n "$FIREFOX_PROFILE" ]] && [[ -f "$TARGET/config/firefox/user.js" ]]; then
+    cp "$TARGET/config/firefox/user.js" "$FIREFOX_PROFILE/user.js"
+    echo "Firefox user.js applied (fonts + GPU acceleration)"
 else
-    echo "Launch Zen browser once, then re-run: cp ~/erogeDOTS/config/zen-browser/user.js ~/.config/zen/*/user.js"
+    echo "Launch Firefox once, then re-run: cp ~/erogeDOTS/config/firefox/user.js ~/.config/mozilla/firefox/*/user.js"
 fi
 
 echo ""
