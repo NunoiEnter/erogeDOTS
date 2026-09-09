@@ -13,6 +13,7 @@
   cups,
   dbus,
   expat,
+  gdk-pixbuf,
   glib,
   gtk3,
   libdrm,
@@ -81,6 +82,7 @@ buildFHSEnv {
     cups
     dbus
     expat
+    gdk-pixbuf
     glib
     gtk3
     libdrm
