@@ -22,10 +22,11 @@
       overlays = [ rust-overlay.overlays.default ];
     };
     catnap = pkgs.callPackage ./pkgs/catnap/default.nix {};
+    chatgpt = pkgs.callPackage ./pkgs/chatgpt/default.nix {};
   in
   {
     packages.${system} = {
-      inherit catnap;
+      inherit catnap chatgpt;
       default = catnap;
     };
 

@@ -79,8 +79,8 @@ erogeDOTS/
 
 - **claude-code** — Anthropic CLI (`claude`), from nixpkgs
 - **codex** — OpenAI CLI (`codex`), from nixpkgs
-- **Claude / ChatGPT launchers** — no native Linux GUIs in nixpkgs, so
-  firefox web-app entries (`claude.ai`, `chatgpt.com`) in the app menu
+- **ChatGPT** — official Linux desktop app, packaged from OpenAI's RPM
+- **Claude launcher** — Firefox web-app entry (`claude.ai`) in the app menu
 
 ### Keybinds I actually use
 

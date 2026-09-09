@@ -1,6 +1,8 @@
 { pkgs, ... }:
 
 let
+  chatgpt = pkgs.callPackage ../../pkgs/chatgpt { };
+
   # Wrapper: opens nvim in ghostty from Dolphin
   nvim-desktop = pkgs.writeTextFile {
     name = "nvim-terminal.desktop";
@@ -81,6 +83,7 @@ in
     ytui-music
     librewolf
     zed-editor
+    chatgpt
     nvim-desktop
   ];
 
@@ -105,7 +108,7 @@ in
     MimeType=x-scheme-handler/figma;x-scheme-handler/figmadesktop;
   '';
 
-  # Web app launchers: Claude + ChatGPT (no native Linux apps in nixpkgs)
+  # Claude has no native Linux app in nixpkgs.
   xdg.dataFile."applications/claude-webapp.desktop".text = ''
     [Desktop Entry]
     Comment=Claude by Anthropic (web app)
@@ -117,18 +120,6 @@ in
     Version=1.5
     Categories=Network;Chat;
   '';
-  xdg.dataFile."applications/chatgpt-webapp.desktop".text = ''
-    [Desktop Entry]
-    Comment=ChatGPT by OpenAI (web app)
-    Exec=firefox --new-window https://chatgpt.com %U
-    Icon=chatgpt
-    Name=ChatGPT
-    Terminal=false
-    Type=Application
-    Version=1.5
-    Categories=Network;Chat;
-  '';
-
   # Dolphin dark theme
   xdg.configFile."kdeglobals".text = ''
     [General]
