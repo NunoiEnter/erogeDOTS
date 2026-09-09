@@ -20,6 +20,7 @@
     pkgs = import nixpkgs {
       inherit system;
       overlays = [ rust-overlay.overlays.default ];
+      config.allowUnfree = true;
     };
     catnap = pkgs.callPackage ./pkgs/catnap/default.nix {};
     chatgpt = pkgs.callPackage ./pkgs/chatgpt/default.nix {};
