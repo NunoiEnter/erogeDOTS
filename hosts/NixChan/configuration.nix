@@ -32,6 +32,13 @@ in
   boot.loader.timeout = 5;
   networking.hostName = "NixChan";
   networking.networkmanager.enable = true;
+  networking.firewall.allowedTCPPorts = [ 22 ];
+
+  services.openssh = {
+    enable = true;
+    # Key-only after iPad key installed: set false, rebuild.
+    settings.PasswordAuthentication = true;
+  };
 
   time.timeZone = "Asia/Bangkok";
   i18n.defaultLocale = "en_US.UTF-8";
