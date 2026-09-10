@@ -82,6 +82,7 @@ in
     ytfzf
     ytui-music
     librewolf
+    google-chrome
     zed-editor
     chatgpt
     nvim-desktop
