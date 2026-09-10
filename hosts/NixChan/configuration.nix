@@ -82,21 +82,6 @@ in
   services.power-profiles-daemon.enable = true;
   powerManagement.enable = true;
 
-  # MPD for rmpc music player
-  services.mpd = {
-    enable = true;
-    settings = {
-      music_directory = "/home/moni/Music";
-      playlist_directory = "/home/moni/Music/playlists";
-      audio_output = [
-        { type = "pipewire"; name = "PipeWire Output"; }
-        { type = "pulse"; name = "PulseAudio Output"; }
-      ];
-      bind_to_address = "127.0.0.1";
-      port = 6600;
-    };
-  };
-
   # KMITL VPN — NetworkManager GUI (KDE system tray)
   networking.networkmanager.plugins = with pkgs; [ networkmanager-openvpn ];
   environment.systemPackages = with pkgs; [
@@ -135,7 +120,7 @@ in
 
   nixpkgs.config.allowUnfree = true;
   nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (builtins.parseDrvName pkg.name).name [
-    "wine" "steam" "heroic"
+    "wine" "steam" "heroic" "google-chrome"
   ];
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];

@@ -1,6 +1,23 @@
 { pkgs, catnap, ... }:
 
 {
+  # Run MPD as the desktop user so it can read ~/Music and reach PipeWire.
+  services.mpd = {
+    enable = true;
+    musicDirectory = "/home/moni/Music";
+    playlistDirectory = "/home/moni/Music/playlists";
+    network = {
+      listenAddress = "127.0.0.1";
+      port = 6600;
+    };
+    extraConfig = ''
+      audio_output {
+        type "pipewire"
+        name "PipeWire Output"
+      }
+    '';
+  };
+
   home.packages = with pkgs; [
     catnap
     ghostty
