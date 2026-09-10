@@ -33,6 +33,9 @@ in
   networking.hostName = "NixChan";
   networking.networkmanager.enable = true;
   networking.firewall.allowedTCPPorts = [ 22 ];
+  networking.firewall.trustedInterfaces = [ "tailscale0" ];
+
+  services.tailscale.enable = true;
 
   services.openssh = {
     enable = true;
