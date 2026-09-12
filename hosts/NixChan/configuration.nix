@@ -23,7 +23,7 @@ in
 {
   imports = [ ../../modules/nixos/i18n.nix ];
   boot.loader.systemd-boot.enable = true;
-  boot.loader.systemd-boot.configurationLimit = 5;
+  boot.loader.systemd-boot.configurationLimit = 2;
   boot.loader.efi.canTouchEfiVariables = true;
 
   boot.consoleLogLevel = 3;
@@ -41,6 +41,7 @@ in
     enable = true;
     # Key-only after iPad key installed: set false, rebuild.
     settings.PasswordAuthentication = true;
+    settings.PermitRootLogin = "no";
   };
 
   time.timeZone = "Asia/Bangkok";
