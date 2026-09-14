@@ -24,10 +24,11 @@
     };
     catnap = pkgs.callPackage ./pkgs/catnap/default.nix {};
     chatgpt = pkgs.callPackage ./pkgs/chatgpt/default.nix {};
+    dynamic-island = pkgs.callPackage ./pkgs/dynamic-island/default.nix {};
   in
   {
     packages.${system} = {
-      inherit catnap chatgpt;
+      inherit catnap chatgpt dynamic-island;
       default = catnap;
     };
 
@@ -43,7 +44,7 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit catnap; };
+            home-manager.extraSpecialArgs = { inherit catnap dynamic-island; };
             home-manager.users.moni = import ./home/moni.nix;
           }
         ];
