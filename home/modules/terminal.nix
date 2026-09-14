@@ -1,4 +1,4 @@
-{ pkgs, catnap, dynamic-island, ... }:
+{ pkgs, catnap, music-pill, ... }:
 
 {
   # Run MPD as the desktop user so it can read ~/Music and reach PipeWire.
@@ -20,7 +20,7 @@
 
   home.packages = with pkgs; [
     catnap
-    dynamic-island
+    music-pill
     ghostty
     kitty
     alacritty
