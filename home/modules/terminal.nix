@@ -1,4 +1,4 @@
-{ pkgs, catnap, ... }:
+{ pkgs, catnap, dynamic-island, ... }:
 
 {
   # Run MPD as the desktop user so it can read ~/Music and reach PipeWire.
@@ -20,6 +20,7 @@
 
   home.packages = with pkgs; [
     catnap
+    dynamic-island
     ghostty
     kitty
     alacritty
@@ -73,6 +74,7 @@
     pokemon-colorscripts
     sl
     rmpc
+    playerctl
     figma-linux
     # lightweight stack: session menu, night light, clipboard, screenshots
     wlogout
