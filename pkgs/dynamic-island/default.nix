@@ -1,4 +1,5 @@
 { lib
+, stdenv
 , python3
 , wrapGAppsHook4
 , gtk4
@@ -13,10 +14,9 @@ let
     pycairo
   ]);
 in
-python3.pkgs.buildPythonApplication {
+stdenv.mkDerivation {
   pname = "dynamic-island";
   version = "1.0.0";
-  format = "other";
 
   src = ../../scripts;
 
@@ -25,7 +25,7 @@ python3.pkgs.buildPythonApplication {
     glib
   ];
 
-  propagatedBuildInputs = [
+  buildInputs = [
     pythonEnv
     gtk4
     gtk4-layer-shell
@@ -44,7 +44,7 @@ python3.pkgs.buildPythonApplication {
 
   preFixup = ''
     gappsWrapperArgs+=(
-      --prefix PATH : ${lib.makeBinPath [ playerctl ]}
+      --prefix PATH : ${lib.makeBinPath [ playerctl pythonEnv ]}
       --set GI_TYPELIB_PATH "$GI_TYPELIB_PATH"
     )
   '';
