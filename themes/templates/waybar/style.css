@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════
-   erogeDOTS — Noctalia-style Waybar
-   Floating centered bar, capsule widgets, Material3 surface_variant
+   erogeDOTS — Minimal Middle Island Waybar
+   Transparent bar, single centered pill, flat modules, unixporn rice
+   Theme vars shared across all themes (sana/harumi/nanami/natsume/nene/meguru/tsumuki)
    ═══════════════════════════════════════════════════════════════ */
 
 * {
@@ -11,117 +12,169 @@
     color: {{WAYBAR_TEXT}};
 }
 
-/* ── Floating Bar ── */
+/* ── Transparent fullscreen bar, island floats middle ── */
 window#waybar {
-    background: {{BG}};
-    border: 1px solid {{WAYBAR_BORDER}};
-    border-radius: 12px;
-    box-shadow: 0 4px 16px {{WAYBAR_SHADOW}};
+    background: transparent;
+    border: none;
+    box-shadow: none;
 }
 
-/* ── Shared Capsule (widget pill) ── */
+window#waybar.hidden {
+    opacity: 0.2;
+}
+
+/* ── Empty side containers stay invisible ── */
+.modules-left,
+.modules-right {
+    background: transparent;
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* ── The island pill ── */
+.modules-center {
+    background: {{BG}};
+    border: 1px solid {{WAYBAR_BORDER}};
+    border-radius: 18px;
+    box-shadow: 0 4px 20px {{WAYBAR_SHADOW}};
+    padding: 4px 10px;
+    margin: 0;
+}
+
+/* ── Flat modules inside island ── */
+#custom-launcher,
+#workspaces,
 #clock,
 #mpris,
-#tray,
-#custom-launcher,
 #custom-notifications,
 #custom-clipboard,
-#custom-session,
 #network,
 #pulseaudio,
-#backlight,
 #battery,
-#window {
-    background: {{BG_SURFACE}};
-    border-radius: 999px;
-    margin: 4px 2px;
-    padding: 0 12px;
+#tray,
+#custom-session {
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    margin: 0;
+    padding: 0 10px;
+}
+
+/* ── Thin divider feel via border on key modules ── */
+#clock,
+#network {
+    border-left: 1px solid {{WAYBAR_BORDER}};
+    border-right: 1px solid {{WAYBAR_BORDER}};
+    border-radius: 0;
+}
+
+/* ── Launcher ── */
+#custom-launcher {
+    color: {{PRIMARY}};
+    font-size: 15px;
+    font-weight: 700;
+    padding-left: 6px;
+}
+
+#custom-launcher:hover {
+    color: {{PRIMARY_LIGHT}};
 }
 
 /* ── Workspaces ── */
 #workspaces {
-    background: {{BG_SURFACE}};
-    border-radius: 999px;
-    margin: 4px 2px;
-    padding: 0 6px;
+    padding: 0 4px;
 }
 
 #workspaces button {
     padding: 0 8px;
-    margin: 2px;
+    margin: 2px 1px;
     border-radius: 999px;
     background: transparent;
     color: {{WAYBAR_TEXT}};
     border: none;
+    opacity: 0.55;
     transition: all 0.2s ease;
 }
 
 #workspaces button:hover {
-    background: {{PRIMARY}};
-    opacity: 0.7;
+    opacity: 1;
+    background: {{BG_SURFACE}};
 }
 
 #workspaces button.active {
     background: {{PRIMARY}};
     color: {{BG}};
+    opacity: 1;
     font-weight: 700;
-}
-
-/* ── Launcher / Icon Buttons ── */
-#custom-launcher {
-    background: {{PRIMARY}};
-    color: {{BG}};
-    font-size: 15px;
-    font-weight: 700;
-}
-
-#custom-launcher:hover {
-    background: {{PRIMARY_LIGHT}};
-}
-
-#custom-notifications:hover,
-#custom-clipboard:hover,
-#custom-session:hover {
-    background: {{PRIMARY_LIGHT}};
-    color: {{BG}};
-}
-
-/* ── Window Title ── */
-#window {
-    font-style: italic;
-    opacity: 0.9;
-    padding: 0 16px;
-}
-
-#window.empty {
-    background: transparent;
+    padding: 0 12px;
 }
 
 /* ── Clock ── */
 #clock {
     font-weight: 700;
     font-size: 14px;
-    padding: 0 16px;
 }
 
-/* ── MPRIS ── */
+/* ── Media (now playing, click opens dropdown) ── */
 #mpris {
     font-style: italic;
-    opacity: 0.9;
-    padding: 0 16px;
+    color: {{PRIMARY_LIGHT}};
 }
 
-/* ── Network ── */
-#network.disconnected {
+#mpris.paused {
+    opacity: 0.7;
+}
+
+/* ── Dropdown menu ── */
+menu {
+    background: {{BG}};
+    border: 1px solid {{WAYBAR_BORDER}};
+    border-radius: 14px;
+    padding: 6px;
+}
+
+menuitem {
+    border-radius: 10px;
+    padding: 6px 12px;
+    color: {{WAYBAR_TEXT}};
+}
+
+menuitem:hover {
+    background: {{PRIMARY}};
+    color: {{BG}};
+}
+
+menu separator {
+    background: {{WAYBAR_BORDER}};
     opacity: 0.4;
 }
 
-/* ── PulseAudio ── */
+/* ── Icon buttons hover ── */
+#custom-notifications:hover,
+#custom-clipboard:hover,
+#custom-session:hover {
+    background: {{BG_SURFACE}};
+}
+
+#custom-session {
+    color: {{PRIMARY}};
+    padding-right: 6px;
+}
+
+#custom-session:hover {
+    color: {{PRIMARY_LIGHT}};
+}
+
+/* ── States ── */
+#network.disconnected {
+    opacity: 0.5;
+}
+
 #pulseaudio.muted {
     opacity: 0.5;
 }
 
-/* ── Battery ── */
 #battery.warning {
     color: #e6c855;
 }
@@ -131,16 +184,15 @@ window#waybar {
     font-weight: 700;
 }
 
-#battery:not(.good):not(.warning):not(.critical) {
-    color: #ff3333;
-    font-weight: 700;
-}
-
 #battery.charging {
     color: {{PRIMARY_LIGHT}};
 }
 
 /* ── Tray ── */
+#tray {
+    padding: 0 6px;
+}
+
 #tray > .passive {
     -gtk-icon-effect: dim;
     opacity: 0.5;

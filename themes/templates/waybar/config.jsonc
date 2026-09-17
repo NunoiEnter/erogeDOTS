@@ -1,15 +1,17 @@
 {
     "layer": "top",
     "position": "top",
-    "height": 34,
-    "spacing": 6,
+    "height": 38,
+    "spacing": 0,
+    "margin-top": 10,
+    "margin-bottom": 0,
 
-    "modules-left": ["custom/launcher", "niri/workspaces", "niri/window"],
-    "modules-center": ["clock"],
-    "modules-right": ["mpris", "tray", "custom/notifications", "custom/clipboard", "network", "pulseaudio", "backlight", "battery", "custom/session"],
+    "modules-left": [],
+    "modules-center": ["custom/launcher", "niri/workspaces", "clock", "mpris", "custom/notifications", "custom/clipboard", "network", "pulseaudio", "battery", "tray", "custom/session"],
+    "modules-right": [],
 
     "custom/launcher": {
-        "format": "\uf0c9 ",
+        "format": " ",
         "on-click": "fuzzel",
         "tooltip": false
     },
@@ -22,77 +24,73 @@
         }
     },
 
-    "niri/window": {
-        "format": " {}",
-        "max-length": 40,
-        "separate-outputs": true
+    "clock": {
+        "format": "{:%H:%M}",
+        "format-alt": "{:%a %m/%d %H:%M}",
+        "tooltip-format": "{:%A %d %B %Y %H:%M}"
     },
 
-    "clock": {
-        "format": "\uf017 {:%H:%M}",
-        "format-alt": "\uf306 {:%Y-%m-%d %H:%M:%S}",
-        "tooltip-format": "{:%A %d %B %Y}"
+    "custom/notifications": {
+        "format": " {}",
+        "on-click": "swaync-client -t -sw",
+        "tooltip": false
+    },
+
+    "custom/clipboard": {
+        "format": " ",
+        "on-click": "cliphist list | fuzzel --dmenu | cliphist decode | wl-copy",
+        "tooltip": false
     },
 
     "mpris": {
         "format": "{player_icon} {dynamic}",
         "format-paused": "{status_icon} {dynamic}",
         "player-icons": {
-            "default": "\uf001",
-            "mpv": "\uf001",
-            "spotify": "\uf1bc",
-            "firefox": "\uf269"
+            "default": "",
+            "mpv": "",
+            "spotify": "",
+            "firefox": ""
         },
         "status-icons": {
-            "paused": "\uf04c"
+            "paused": ""
         },
-        "max-length": 50
-    },
-
-    "custom/notifications": {
-        "format": "\uf0f3 {}",
-        "on-click": "swaync-client -t -sw",
-        "tooltip": false
-    },
-
-    "custom/clipboard": {
-        "format": "\uf0ea ",
-        "on-click": "cliphist list | fuzzel --dmenu | cliphist decode | wl-copy",
-        "tooltip": false
+        "max-length": 35,
+        "tooltip-format": "{player} — {dynamic}",
+        "menu": "on-click",
+        "menu-file": "~/.config/waybar/media_menu.xml",
+        "menu-actions": {
+            "play_pause": "playerctl play-pause",
+            "previous": "playerctl previous",
+            "next": "playerctl next",
+            "stop": "playerctl stop"
+        }
     },
 
     "network": {
-        "format-wifi": "\uf1eb {signalStrength}%",
-        "format-ethernet": "\uf0ac {ifname}",
-        "format-disconnected": "\uf057 Offline",
+        "format-wifi": " {signalStrength}%",
+        "format-ethernet": " {ifname}",
+        "format-disconnected": " Offline",
         "on-click": "nm-connection-editor",
         "on-click-right": "bash -c 'nmcli radio wifi && nmcli radio wifi off || nmcli radio wifi on'"
     },
 
     "pulseaudio": {
-        "format": "\uf028 {volume}%",
+        "format": " {volume}%",
         "format-icons": {
-            "headphone": "\uf025",
-            "default": ["\uf026", "\uf027", "\uf028"]
+            "headphone": "",
+            "default": ["", "", ""]
         },
-        "format-muted": "\uf6a9 muted",
+        "format-muted": " muted",
         "on-click": "pavucontrol",
         "on-click-right": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle",
         "scroll-step": 5
     },
 
-    "backlight": {
-        "device": "amdgpu_bl1",
-        "format": "\uf185 {percent}%",
-        "on-scroll-up": "brightnessctl set +5%",
-        "on-scroll-down": "brightnessctl set 5%-"
-    },
-
     "battery": {
         "format": "{icon} {capacity}%",
-        "format-icons": ["\uf244", "\uf243", "\uf242", "\uf241", "\uf240"],
-        "format-charging": "\uf0e7 {capacity}%",
-        "format-full": "\uf240 Full",
+        "format-icons": ["", "", "", "", ""],
+        "format-charging": " {capacity}%",
+        "format-full": " Full",
         "states": {
             "good": 50,
             "warning": 16,
@@ -101,13 +99,13 @@
     },
 
     "custom/session": {
-        "format": "\uf011 ",
+        "format": " ",
         "on-click": "wlogout",
         "tooltip": false
     },
 
     "tray": {
-        "icon-size": 16,
-        "spacing": 8
+        "icon-size": 15,
+        "spacing": 6
     }
 }
