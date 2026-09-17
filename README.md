@@ -298,8 +298,18 @@ Edit colors in `themes/<name>/theme.conf`; edit layout/behavior in
 ## 📚 My notes
 
 - `agent.md` — agent identity plus full working reference for this repo
+- `docs/LOGS.md` — append-only work log, newest at bottom; every finished fix lands here
 - `docs/DEVELOPMENT.md`, `docs/INSTALL.md`
 - `docs/larper.md`, `docs/vpn-instructions.md`
+
+### 🤖 Agent sessions (`/erodots`)
+
+Any opencode session can load this machine's context by running `/erodots`.
+It loads the `eroricer` skill (source of truth in
+`.opencode/skills/eroricer/SKILL.md`, symlinked into the global opencode config
+so it works from any directory), reads `agent.md` plus recent `docs/LOGS.md`
+entries, and reports theme + git state. After each fix, the agent appends a log
+entry so the next session knows what was done.
 
 ---
 

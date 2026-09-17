@@ -137,6 +137,19 @@ Mod+O overview.
   and waybar templates, new sunshine package, meguru/tsumuki themes, waybar media_menu);
   docs-only commits should stage only `agent.md` and `README.md`.
 
+## Session Bootstrap (eroricer skill + /erodots command)
+
+- Skill source of truth: `.opencode/skills/eroricer/SKILL.md` (committed to this repo).
+  Global symlinks at `~/.config/opencode/skills/eroricer` and
+  `~/.config/opencode/commands/erodots.md` point at the repo copies so `/erodots`
+  works from any session and any directory; inside this repo the project-local
+  copies are discovered automatically.
+- Any session types `/erodots` to load machine context: this file in full, the last
+  ~10 `docs/LOGS.md` entries, plus `git status` and recent log.
+- `docs/LOGS.md` is append-only (newest at bottom) and is the cross-session memory.
+  Every finished fix appends one entry there; doc-affecting fixes update this file
+  and `README.md` in the same commit.
+
 ## Sudo Authorization
 
 The user has granted the agent permission to run dotfile-related sudo commands
