@@ -39,3 +39,28 @@ what happened without the old chat history.
   `name`, command file resolves, symlinks resolve with `readlink -f`
 - Commit: shipped in the commit carrying this entry (see `git log --oneline -3`)
 - Open: none
+
+## 2026-09-17 — Dirty tree committed (waybar island, xrdp, discord, 2 themes)
+
+- Changed: `themes/templates/waybar/` (config.jsonc + style.css redesign, new
+  media_menu.xml), `themes/templates/niri/config.kdl` (playerctld autostart),
+  `hosts/NixChan/configuration.nix` (xrdp XFCE session, sunshine disabled),
+  `home/modules/desktop.nix` (discord), `pkgs/sunshine/`, `themes/meguru/`,
+  `themes/tsumuki/`, `flake.lock` bump
+- Why: pending desktop work was sitting uncommitted; reviewed each diff, all legit
+- Verified: `git diff` per file before staging; waybar island + mpris menu coherent
+  with media_menu.xml; tree clean after commit
+- Commit: `789d85c`
+- Open: meguru/tsumuki wallpapers still missing; run `theme-switch` to regenerate
+  live configs from the new templates on next rebuild
+
+## 2026-09-17 — eroricer skill made to survive new devices via install.sh
+
+- Changed: `install.sh` step 3.7 symlinks repo `.opencode/skills/eroricer` and
+  `.opencode/commands/erodots.md` into `~/.config/opencode/`
+- Why: skill source travels with git, but global symlinks lived only in
+  `~/.config`, so a fresh device install lost `/erodots` outside the repo
+- Verified: `bash -n install.sh` syntax OK; snippet re-ran idempotently and both
+  symlinks resolve with `readlink -f`
+- Commit: shipped in the commit carrying this entry
+- Open: none

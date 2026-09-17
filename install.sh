@@ -43,6 +43,15 @@ echo "tspick symlinked to ~/.local/bin/tspick"
 ln -sf "$TARGET/scripts/cliphist-pick" "$HOME/.local/bin/cliphist-pick"
 echo "cliphist-pick symlinked to ~/.local/bin/cliphist-pick"
 
+# 3.7. Link eroricer skill + /erodots command into opencode config
+# The repo copies under .opencode/ are the source of truth (they travel with
+# git). These symlinks make the skill and command available in every session,
+# from any directory — including fresh devices where ~/.config is empty.
+mkdir -p "$HOME/.config/opencode/skills" "$HOME/.config/opencode/commands"
+ln -sfn "$TARGET/.opencode/skills/eroricer" "$HOME/.config/opencode/skills/eroricer"
+ln -sfn "$TARGET/.opencode/commands/erodots.md" "$HOME/.config/opencode/commands/erodots.md"
+echo "eroricer skill + /erodots linked into ~/.config/opencode"
+
 # 4. Apply Firefox user.js (fonts + GPU perf)
 FIREFOX_PROFILE=$(find "$HOME/.config/mozilla/firefox" -maxdepth 2 -name "prefs.js" -type f 2>/dev/null | head -1 | xargs dirname 2>/dev/null)
 if [[ -n "$FIREFOX_PROFILE" ]] && [[ -f "$TARGET/config/firefox/user.js" ]]; then
