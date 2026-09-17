@@ -1,4 +1,4 @@
-{ config, pkgs, inputs, ... }:
+{ config, pkgs, inputs, lib, ... }:
 
 let
   # qylock quickshell shim fix: theme's isQuickshell = sddm.hostName === undefined.
@@ -36,6 +36,21 @@ in
   networking.firewall.trustedInterfaces = [ "tailscale0" ];
 
   services.tailscale.enable = true;
+
+  # Windows Remote Desktop Connection opens a separate XFCE session.
+  services.xrdp = {
+    enable = true;
+    openFirewall = true;
+    defaultWindowManager = ''
+      unset DBUS_SESSION_BUS_ADDRESS WAYLAND_DISPLAY
+      export XDG_SESSION_TYPE=x11
+      export XDG_CURRENT_DESKTOP=XFCE
+      export XDG_SESSION_DESKTOP=xfce
+      exec ${pkgs.dbus}/bin/dbus-run-session -- ${pkgs.xfce4-session}/bin/xfce4-session
+    '';
+  };
+  security.pam.services.xrdp-sesman.allowNullPassword = lib.mkForce false;
+  services.sunshine.enable = false;
 
   services.openssh = {
     enable = true;

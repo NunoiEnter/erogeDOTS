@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- erogeDOTS waybar media dropdown — GtkBuilder menu for mpris module.
+     Copied verbatim to every theme cache by theme-switch (no placeholders).
+     Actions map to menu-actions in config.jsonc. Style via menu/menuitem in style.css. -->
+<interface>
+  <object class="GtkMenu" id="menu">
+    <child>
+      <object class="GtkMenuItem" id="play_pause">
+        <property name="label">⏯  Play / Pause</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="previous">
+        <property name="label">⏮  Previous</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="next">
+        <property name="label">⏭  Next</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="delimiter1"/>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="stop">
+        <property name="label">⏹  Stop</property>
+      </object>
+    </child>
+  </object>
+</interface>

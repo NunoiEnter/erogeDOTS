@@ -86,6 +86,7 @@ in
     zed-editor
     chatgpt
     nvim-desktop
+     discord
   ];
 
   # Write mimeapps.list to BOTH locations KDE checks
