@@ -64,3 +64,35 @@ what happened without the old chat history.
   symlinks resolve with `readlink -f`
 - Commit: shipped in the commit carrying this entry
 - Open: none
+
+## 2026-09-17 — Keyboard language switch fixed (Alt+Shift) + stale fcitx5 profile
+
+- Changed: `modules/nixos/i18n.nix` gains `fcitx5.settings.globalOptions` with
+  `Hotkey.TriggerKeys = "Control+space Alt+Shift_L"` and
+  `EnumerateWithTriggerKeys = "True"`; deleted stale `~/.config/fcitx5/profile`
+  (backup at `/tmp/fcitx5-profile.bak`); restarted fcitx5
+- Why: two stacked causes. The user profile held EN only and shadows
+  `/etc/xdg/fcitx5/profile` (user file wins, no merge), so JP/TH never appeared.
+  And no trigger key was ever declared, so nothing switched at all.
+- Verified: generated `/etc/xdg/fcitx5/config` built from the flake contains the
+  exact `[Hotkey]` section; after restart `fcitx5-remote -s` cycles
+  keyboard-us/mozc/keyboard-th with zero errors in the fcitx5 log. Trigger syntax
+  checked against fcitx5 upstream `key.cpp` (whitespace-separated key list,
+  `Alt+`/`Shift+` prefixes, `Shift_L` keysym all valid).
+- Commit: shipped in the commit carrying this entry
+- Open: needs `sudo nixos-rebuild switch --flake ~/erogeDOTS#NixChan` (sudo
+  password prompt, could not run headless) to activate Alt+Shift; until then
+  default Ctrl+Space works. Note: plain `pkill -x fcitx5` did not stop the old
+  daemon, `kill -9 <pid>` did.
+
+## 2026-09-17 — install.sh verifies eroricer so every install ends ready
+
+- Changed: `install.sh` step 3.8 checks SKILL.md frontmatter (`name` + `description`),
+  the `/erodots` command file, and that the global skill symlink resolves to the
+  repo copy; exits 1 with an error if anything is off
+- Why: step 3.7 linked the files but never confirmed, so a broken skill could
+  slip through a fresh install unnoticed
+- Verified: `bash -n install.sh` clean; verify block run standalone prints
+  the ready message
+- Commit: shipped in the commit carrying this entry
+- Open: none

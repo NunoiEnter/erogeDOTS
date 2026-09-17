@@ -52,6 +52,19 @@ ln -sfn "$TARGET/.opencode/skills/eroricer" "$HOME/.config/opencode/skills/erori
 ln -sfn "$TARGET/.opencode/commands/erodots.md" "$HOME/.config/opencode/commands/erodots.md"
 echo "eroricer skill + /erodots linked into ~/.config/opencode"
 
+# 3.8. Verify eroricer is loadable (fail loudly, install is the only chance)
+SKILL_FILE="$TARGET/.opencode/skills/eroricer/SKILL.md"
+if [[ -f "$SKILL_FILE" ]] \
+    && grep -q "^name: eroricer$" "$SKILL_FILE" \
+    && grep -q "^description: " "$SKILL_FILE" \
+    && [[ -f "$HOME/.config/opencode/commands/erodots.md" ]] \
+    && [[ "$(readlink -f "$HOME/.config/opencode/skills/eroricer")" == "$TARGET/.opencode/skills/eroricer" ]]; then
+    echo "eroricer verified — type /erodots in any opencode session"
+else
+    echo "ERROR: eroricer skill verification failed (see step 3.7)" >&2
+    exit 1
+fi
+
 # 4. Apply Firefox user.js (fonts + GPU perf)
 FIREFOX_PROFILE=$(find "$HOME/.config/mozilla/firefox" -maxdepth 2 -name "prefs.js" -type f 2>/dev/null | head -1 | xargs dirname 2>/dev/null)
 if [[ -n "$FIREFOX_PROFILE" ]] && [[ -f "$TARGET/config/firefox/user.js" ]]; then

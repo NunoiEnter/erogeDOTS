@@ -31,6 +31,23 @@
       "Groups/0/Items/1".Name = "mozc";
       "Groups/0/Items/2".Name = "keyboard-th";
     };
+
+    # Alt+Shift cycles EN -> JP -> TH like Windows (Ctrl+Space kept as backup).
+    # TriggerKeys is space-separated: fcitx5 keyListFromString splits on
+    # whitespace. EnumerateWithTriggerKeys makes the trigger walk the group
+    # instead of just toggling on/off. Native True capitalization, passed
+    # through verbatim by the INI generator.
+    #
+    # If the IM list ever looks stuck on EN again, a stale
+    # ~/.config/fcitx5/profile is shadowing /etc/xdg/fcitx5/profile (user file
+    # wins, no merge). Fix: delete the user profile, restart fcitx5, and edit
+    # the group list here — never in the GUI configtool.
+    fcitx5.settings.globalOptions = {
+      Hotkey = {
+        TriggerKeys = "Control+space Alt+Shift_L";
+        EnumerateWithTriggerKeys = "True";
+      };
+    };
   };
 
   environment.sessionVariables = {
