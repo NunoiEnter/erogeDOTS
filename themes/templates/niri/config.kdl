@@ -53,7 +53,6 @@ spawn-sh-at-startup "awww img {{WALLPAPER}} --transition-type fade"
 spawn-at-startup "waybar"
 spawn-at-startup "swaync"
 spawn-at-startup "playerctld" "daemon"
-spawn-sh-at-startup "$HOME/.local/bin/music-pill"
 spawn-sh-at-startup "wl-paste --type text --watch cliphist store"
 spawn-sh-at-startup "wl-paste --type image --watch cliphist store"
 spawn-sh-at-startup "wl-paste --primary --type text --watch cliphist store"
@@ -107,7 +106,6 @@ binds {
     Mod+Return hotkey-overlay-title="Open a Terminal" { spawn "ghostty"; }
     Mod+Shift+Return hotkey-overlay-title="Mini Terminal" { spawn "sh" "-c" "ghostty --title=mini -e sh -c 'export MINI=1; catnap -c $HOME/.config/catnap/config-mini.cat; exec zsh'"; }
     Mod+grave hotkey-overlay-title="Dropdown Terminal" { spawn-sh "dropterm"; }
-    Mod+Shift+M hotkey-overlay-title="Toggle Music Widget" { spawn "music-pill" "toggle"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
     Mod+Ctrl+V hotkey-overlay-title="Clipboard History" { spawn-sh "cliphist-pick"; }
     Mod+Shift+W hotkey-overlay-title="Session Menu: wlogout" { spawn "wlogout"; }

@@ -65,19 +65,8 @@ else
     exit 1
 fi
 
-# 3.9. Build music-pill-rs (native layer-shell media pill, no Python/GTK)
-# Same pattern as the theme-picker: compiled once here, not a Nix package,
-# so rebuilds stay fast. Binary lands in ~/.local/bin/music-pill, which the
-# niri template autostarts by absolute path.
-if command -v cargo &>/dev/null; then
-    cd "$TARGET/music-pill-rs"
-    cargo build --release
-    mkdir -p "$HOME/.local/bin"
-    cp target/release/music-pill-rs "$HOME/.local/bin/music-pill"
-    echo "music-pill (rust) built: $HOME/.local/bin/music-pill"
-else
-    echo "cargo not found — skipping music-pill-rs (no pill until cargo exists)"
-fi
+# 3.9. (retired) Music widget experiments (Python pill, Rust pill, eww card)
+# were removed; media controls live in waybar's mpris module for now.
 cd "$TARGET"
 
 # 4. Apply Firefox user.js (fonts + GPU perf)
