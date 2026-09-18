@@ -153,3 +153,19 @@ what happened without the old chat history.
 - Commit: shipped in the commit carrying this entry
 - Open: hover-open path itself could not be exercised headless (no mouse), only
   code-reviewed; user to confirm by hovering the tab
+
+## 2026-09-18 — Music widget experiments removed for now
+
+- Changed: deleted `music-pill-rs/`, `themes/templates/eww/`, `scripts/eww-start`;
+  reverted theme-switch eww integration, niri autostart/hotkey, install.sh 3.9
+  build block; killed eww daemon, removed live `~/.config/eww`, regenerated
+  theme so live niri is widget-free. Media controls remain in waybar mpris.
+- Why: user call — custom pill felt unsmooth, eww card prototype ate hours on
+  yuck layout fights (empty image path kills the window, fixed window heights
+  clip content, scale widgets break measurement). Parked, not abandoned: full
+  history in git (`ce69578`, `d022c2f`) and prior log entries.
+- Verified: live niri config has no widget lines, no eww dir, daemon dead,
+  `bash -n install.sh` clean, tree holds only the user's own rustdesk edits
+- Commit: shipped in the commit carrying this entry
+- Open: desktop.nix eww package line rides with the user's uncommitted rustdesk
+  work (theirs to commit); revisit widget when there's a calm window
