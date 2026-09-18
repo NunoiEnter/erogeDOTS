@@ -1,4 +1,4 @@
-{ pkgs, catnap, music-pill, ... }:
+{ pkgs, catnap, ... }:
 
 {
   # Run MPD as the desktop user so it can read ~/Music and reach PipeWire.
@@ -20,7 +20,6 @@
 
   home.packages = with pkgs; [
     catnap
-    music-pill
     ghostty
     kitty
     alacritty

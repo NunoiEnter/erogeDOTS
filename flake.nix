@@ -24,11 +24,10 @@
     };
     catnap = pkgs.callPackage ./pkgs/catnap/default.nix {};
     chatgpt = pkgs.callPackage ./pkgs/chatgpt/default.nix {};
-    music-pill = pkgs.callPackage ./pkgs/music-pill/default.nix {};
   in
   {
     packages.${system} = {
-      inherit catnap chatgpt music-pill;
+      inherit catnap chatgpt;
       default = catnap;
     };
 
@@ -44,7 +43,7 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit catnap music-pill; };
+            home-manager.extraSpecialArgs = { inherit catnap; };
             home-manager.users.moni = import ./home/moni.nix;
           }
         ];

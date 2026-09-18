@@ -65,6 +65,21 @@ else
     exit 1
 fi
 
+# 3.9. Build music-pill-rs (native layer-shell media pill, no Python/GTK)
+# Same pattern as the theme-picker: compiled once here, not a Nix package,
+# so rebuilds stay fast. Binary lands in ~/.local/bin/music-pill, which the
+# niri template autostarts by absolute path.
+if command -v cargo &>/dev/null; then
+    cd "$TARGET/music-pill-rs"
+    cargo build --release
+    mkdir -p "$HOME/.local/bin"
+    cp target/release/music-pill-rs "$HOME/.local/bin/music-pill"
+    echo "music-pill (rust) built: $HOME/.local/bin/music-pill"
+else
+    echo "cargo not found — skipping music-pill-rs (no pill until cargo exists)"
+fi
+cd "$TARGET"
+
 # 4. Apply Firefox user.js (fonts + GPU perf)
 FIREFOX_PROFILE=$(find "$HOME/.config/mozilla/firefox" -maxdepth 2 -name "prefs.js" -type f 2>/dev/null | head -1 | xargs dirname 2>/dev/null)
 if [[ -n "$FIREFOX_PROFILE" ]] && [[ -f "$TARGET/config/firefox/user.js" ]]; then

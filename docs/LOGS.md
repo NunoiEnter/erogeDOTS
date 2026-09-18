@@ -110,3 +110,28 @@ what happened without the old chat history.
 - Open: needs ONE last passworded `sudo nixos-rebuild switch --flake
   ~/erogeDOTS#NixChan` to activate (also picks up the Alt+Shift fcitx5 trigger
   from the previous commit); after that agent sudo runs prompt-free
+
+## 2026-09-18 — music-pill rewritten in Rust (Python/GTK gone)
+
+- Changed: new `music-pill-rs/` crate (wayland-client layer-shell, SHM pixel
+  buffers, cosmic-text, image, ureq); `install.sh` step 3.9 builds it once to
+  `~/.local/bin/music-pill`; niri template autostarts it by absolute path;
+  deleted `scripts/music-pill`, `pkgs/music-pill/`, and their flake +
+  terminal.nix wiring; README/agent.md updated
+- Why: old pill never rendered art (`_load_album_art` was dead code, never
+  called), was never autostarted, and the user asked for Rust instead of Python
+- Verified: live screenshots show art disc, JP title/artist, prev/play/next;
+  clicks wired (left play-pause, right next, middle previous, scroll volume);
+  installed binary runs with zero env setup; flake still evaluates
+- Commit: shipped in the commit carrying this entry
+- Open: needs `sudo nixos-rebuild switch` (removes old nix pill package,
+  keeps everything else); volume slider from the old expanded mode was dropped
+  (scroll covers it). Bugs found along the way, for the record:
+  stale single-IM fcitx5 profile aside, the Rust pill first died on every run
+  because it attached SHM buffers before the first configure (Smithay client
+  error, connection killed) — fixed by drawing only after configure — plus an
+  O_WRONLY shm file the compositor could not mmap (now O_RDWR), and NUL bytes
+  in playerctl argv which execve forbids (fields now queried separately).
+- Left untouched: `home/modules/desktop.nix` (rustdesk) and
+  `hosts/NixChan/configuration.nix` (rustdesk ports/uinput) have the user's own
+  uncommitted changes; not mine, not staged

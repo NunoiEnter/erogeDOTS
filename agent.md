@@ -53,7 +53,7 @@ re-run `theme-switch $(cat ~/.config/theme/active)`.
 
 - `flake.nix`: inputs nixpkgs nixos-unstable, home-manager (follows nixpkgs), qylock,
   rust-overlay. Outputs `nixosConfigurations.NixChan`, 9 devShells (full, rust, python,
-  go, common, tester, docker, security, webapp), packages catnap + chatgpt + music-pill.
+  go, common, tester, docker, security, webapp), packages catnap + chatgpt.
 - `install.sh`: fresh-machine installer. Clones repo, runs
   `sudo nixos-rebuild switch --flake .#NixChan`, builds `picker-rs` once with cargo into
   `~/.local/bin/theme-picker`, symlinks `tspick` and `cliphist-pick`, applies
@@ -87,9 +87,11 @@ re-run `theme-switch $(cat ~/.config/theme/active)`.
   active workspace and parking workspace 5. Bound to Mod+grave.
 - `scripts/cliphist-pick`: image-aware clipboard picker via `cliphist list | fuzzel`,
   uses `wl-copy --type <mime>` for images and plain `wl-copy` for text.
-- `scripts/music-pill`: GTK4 layer-shell floating pill (Python). MPRIS via
-  playerctl/dbus-send, LRCLIB synced lyrics, compact/expanded/lyrics modes, auto-hide
-  when stopped. Packaged by `pkgs/music-pill`.
+- `music-pill-rs/`: Rust layer-shell media pill (no Python/GTK). Raw wayland-client,
+  pixel-pushed SHM, cosmic-text shaping, MPRIS via playerctl CLI, LRCLIB lyrics.
+  Built once by install.sh step 3.9 into `~/.local/bin/music-pill`, autostarted
+  by absolute path from the niri template. Left-click play/pause, right next,
+  middle previous, scroll volume. Auto-hides when stopped.
 - `scripts/vnload` / `scripts/vnsave`: Heroic/Wine save sync. Snapshots per-game Roaming
   folders into cloud storage with timestamp dirs, newest-first picker, prune to keep
   limit, pre-restore backup. Requires `vnlib.sh` sibling (referenced but untracked here;
@@ -101,7 +103,6 @@ re-run `theme-switch $(cat ~/.config/theme/active)`.
   wallpaper preview, arrow/j/k navigation, Enter calls `theme-switch <name>`.
 - `pkgs/catnap/default.nix`: prebuilt catnap 2.1.1 binary via fetchurl.
 - `pkgs/chatgpt/default.nix`: official ChatGPT RPM repackaged as FHSEnv with desktop item.
-- `pkgs/music-pill/default.nix`: wraps `scripts/music-pill` with gtk4-layer-shell GI paths.
 - `pkgs/sunshine/default.nix`: Sunshine RPM as FHSEnv (currently disabled in host config
   with `services.sunshine.enable = false`).
 - `shells/`: `nix develop .#<name>` environments: full, rust, python, go, common, tester,
