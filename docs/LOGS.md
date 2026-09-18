@@ -135,3 +135,21 @@ what happened without the old chat history.
 - Left untouched: `home/modules/desktop.nix` (rustdesk) and
   `hosts/NixChan/configuration.nix` (rustdesk ports/uinput) have the user's own
   uncommitted changes; not mine, not staged
+
+## 2026-09-18 — music-pill is now a hover/hotkey square card
+
+- Changed: `music-pill-rs` rewritten around open/close state. Collapsed = 56px
+  art tab top-right (input region limited to the tab so the rest passes
+  through). Hover or click on the tab opens a 360px square card: big art with
+  scrim, title, artist/synced-lyric line, progress bar with times, prev/play/X
+  controls. Pointer leave closes after 800ms unless pinned. `music-pill
+  toggle|show|hide` talks to the running instance over a unix socket;
+  `Mod+Shift+M` bound in the niri template. Rounded corners fixed (proper
+  corner-center test), per-channel subpixel text blending.
+- Why: pill strip always visible was noise; user wants on-demand square widget
+- Verified: screenshots of collapsed tab, expanded card (art, times 2:35/4:59,
+  buttons), and toggle-close back to tab; socket IPC both directions;
+  theme-switch regen applied the hotkey live
+- Commit: shipped in the commit carrying this entry
+- Open: hover-open path itself could not be exercised headless (no mouse), only
+  code-reviewed; user to confirm by hovering the tab
