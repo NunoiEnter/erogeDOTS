@@ -6,3 +6,11 @@ result-*
 target/
 *.zwc
 __pycache__/
+
+# secrets - never commit real VPN creds
+config/openvpn/*.ovpn
+*.ovpn
+*.key
+*.pem
+.env
+.env.*
