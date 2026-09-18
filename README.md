@@ -202,7 +202,7 @@ Full details: `docs/DEVELOPMENT.md`.
 | `tspick` | Shortcut to the interactive picker |
 | `dropterm` | Toggle quake terminal under waybar |
 | `cliphist-pick` | Clipboard history with correct image/text paste |
-| `music-pill` (`~/.local/bin`, built from `music-pill-rs/`) | Native media pill: art disc, title/artist/lyric, prev/play/next, scroll = volume |
+| `music-pill` (`~/.local/bin`, built from `music-pill-rs/`) | Square media card: hidden tab top-right, hover or `Mod+Shift+M` opens art/title/lyrics/progress/controls |
 | `vnload [game]` / `vnsave [game]` | Restore/snapshot Heroic save folders |
 | `bench` | Illustrative rebuild-speed comparison |
 

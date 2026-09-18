@@ -87,11 +87,12 @@ re-run `theme-switch $(cat ~/.config/theme/active)`.
   active workspace and parking workspace 5. Bound to Mod+grave.
 - `scripts/cliphist-pick`: image-aware clipboard picker via `cliphist list | fuzzel`,
   uses `wl-copy --type <mime>` for images and plain `wl-copy` for text.
-- `music-pill-rs/`: Rust layer-shell media pill (no Python/GTK). Raw wayland-client,
-  pixel-pushed SHM, cosmic-text shaping, MPRIS via playerctl CLI, LRCLIB lyrics.
-  Built once by install.sh step 3.9 into `~/.local/bin/music-pill`, autostarted
-  by absolute path from the niri template. Left-click play/pause, right next,
-  middle previous, scroll volume. Auto-hides when stopped.
+- `music-pill-rs/`: Rust layer-shell media widget (no Python/GTK). Hidden art tab
+  top-right; hover or `Mod+Shift+M` (`music-pill toggle` over a unix socket)
+  opens a square card with art, title, artist/synced-lyric, progress bar,
+  prev/play/next. MPRIS via playerctl CLI, LRCLIB lyrics. Built once by
+  install.sh step 3.9 into `~/.local/bin/music-pill`, autostarted by absolute
+  path from the niri template. Scroll = volume, auto-hides when stopped.
 - `scripts/vnload` / `scripts/vnsave`: Heroic/Wine save sync. Snapshots per-game Roaming
   folders into cloud storage with timestamp dirs, newest-first picker, prune to keep
   limit, pre-restore backup. Requires `vnlib.sh` sibling (referenced but untracked here;
