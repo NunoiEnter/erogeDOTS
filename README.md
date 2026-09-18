@@ -80,14 +80,13 @@ erogeDOTS/
 │   ├── tspick                 # wrapper: theme-switch picker
 │   ├── cliphist-pick          # image-aware clipboard picker
 │   ├── dropterm               # quake dropdown terminal (Mod+grave)
-│   ├── music-pill             # GTK4 floating music + lyrics pill
+│   ├── music-pill-rs/           # Rust layer-shell media pill (no Python/GTK)
 │   ├── vnload / vnsave        # Heroic/Wine save snapshot sync helpers
 │   └── bench                  # illustrative build-speed comparison output
 ├── picker-rs/                 # Rust TUI theme picker (src/main.rs)
 ├── pkgs/
 │   ├── catnap/                # prebuilt catnap binary package
 │   ├── chatgpt/               # official ChatGPT RPM as FHSEnv
-│   ├── music-pill/            # wrapper for scripts/music-pill
 │   └── sunshine/              # Sunshine RPM as FHSEnv (currently disabled)
 ├── config/                    # static configs
 │   ├── nvim/                  # LazyVim config, symlinked by Home-Manager
@@ -105,7 +104,7 @@ erogeDOTS/
 
 | Path | What it does |
 |---|---|
-| `flake.nix` | Declares `nixosConfigurations.NixChan`, 9 devShells, and `catnap`/`chatgpt`/`music-pill` packages. Uses `rust-overlay` for dev shells. |
+| `flake.nix` | Declares `nixosConfigurations.NixChan`, 9 devShells, and `catnap`/`chatgpt` packages. Uses `rust-overlay` for dev shells. |
 | `install.sh` | Clone -> `nixos-rebuild switch` -> `cargo build --release` picker-rs -> copy to `~/.local/bin/theme-picker` -> symlink `tspick`/`cliphist-pick` -> apply Firefox `user.js`. Uses fzf fallback when cargo is absent. |
 | `hosts/NixChan/configuration.nix` | systemd-boot limit 2, NetworkManager + openvpn, Tailscale + SSH 22, xrdp XFCE session, PipeWire, Bluetooth, SDDM Wayland, niri + XFCE + GNOME, patched qylock shim, Kanit/Noto/JetBrainsMono fonts, flakes, allowUnfree. |
 | `home/moni.nix` | Imports terminal + desktop modules, symlinks `config/nvim`, restores theme on activation. |
@@ -136,7 +135,7 @@ erogeDOTS/
 | **wlsunset** | night light, manual toggle (`Mod+Ctrl+W`) |
 | **cliphist** | clipboard history (`Mod+Ctrl+V`) |
 | **grim + slurp + swappy** | screenshots + region annotate (`Print` family) |
-| **music-pill** | floating MPRIS pill with LRCLIB synced lyrics, auto-hides when stopped |
+| **music-pill** | Rust layer-shell pill with album art, LRCLIB synced lyrics, click controls, auto-hides when stopped |
 | **awww** | wallpaper daemon with fade transitions |
 
 ### Theming
@@ -203,7 +202,7 @@ Full details: `docs/DEVELOPMENT.md`.
 | `tspick` | Shortcut to the interactive picker |
 | `dropterm` | Toggle quake terminal under waybar |
 | `cliphist-pick` | Clipboard history with correct image/text paste |
-| `music-pill` | Floating music overlay with three modes |
+| `music-pill` (`~/.local/bin`, built from `music-pill-rs/`) | Native media pill: art disc, title/artist/lyric, prev/play/next, scroll = volume |
 | `vnload [game]` / `vnsave [game]` | Restore/snapshot Heroic save folders |
 | `bench` | Illustrative rebuild-speed comparison |
 
