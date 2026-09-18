@@ -96,3 +96,17 @@ what happened without the old chat history.
   the ready message
 - Commit: shipped in the commit carrying this entry
 - Open: none
+
+## 2026-09-17 — Scoped passwordless sudo for agent rebuilds
+
+- Changed: `hosts/NixChan/configuration.nix` gains `security.sudo.extraRules`
+  granting moni NOPASSWD for `nixos-rebuild`, `nix-collect-garbage`,
+  `nix-store`, `nix` (absolute `/run/current-system/sw/bin/` paths);
+  `agent.md` sudo section documents the new no-prompt state
+- Why: agent sessions run headless, sudo password prompts block rebuilds
+- Verified: `nix eval` of `security.sudo.extraRules` shows the moni rule next
+  to untouched defaults (root ALL, wheel still passworded)
+- Commit: shipped in the commit carrying this entry
+- Open: needs ONE last passworded `sudo nixos-rebuild switch --flake
+  ~/erogeDOTS#NixChan` to activate (also picks up the Alt+Shift fcitx5 trigger
+  from the previous commit); after that agent sudo runs prompt-free

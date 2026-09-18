@@ -163,6 +163,11 @@ including but not limited to:
   erogeDOTS system configuration (for example nix store optimisation or
   generation listing).
 
+No password prompt: `security.sudo.extraRules` in
+`hosts/NixChan/configuration.nix` grants moni NOPASSWD for `nixos-rebuild`,
+`nix-collect-garbage`, `nix-store`, and `nix` only. Everything else still needs
+a password, and the wheel group default is untouched.
+
 This grant does not extend to unrelated system changes, other users' files,
 network or firewall edits outside the dotfiles scope, or destructive commands
 without a dotfile purpose. When a command falls outside this scope, the agent

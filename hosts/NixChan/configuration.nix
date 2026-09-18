@@ -121,6 +121,22 @@ in
     shell = pkgs.zsh;
   };
 
+  # Passwordless sudo, scoped to NixOS system management only.
+  # Lets the erogeDOTS agent (running as moni) rebuild, verify, and clean up
+  # this machine's config without a password prompt. Everything else still
+  # needs a password. Single-user desktop trade-off, accepted deliberately.
+  security.sudo.extraRules = [
+    {
+      users = [ "moni" ];
+      commands = [
+        { command = "/run/current-system/sw/bin/nixos-rebuild"; options = [ "NOPASSWD" ]; }
+        { command = "/run/current-system/sw/bin/nix-collect-garbage"; options = [ "NOPASSWD" ]; }
+        { command = "/run/current-system/sw/bin/nix-store"; options = [ "NOPASSWD" ]; }
+        { command = "/run/current-system/sw/bin/nix"; options = [ "NOPASSWD" ]; }
+      ];
+    }
+  ];
+
   # Fonts
   fonts = {
     enableDefaultPackages = true;
