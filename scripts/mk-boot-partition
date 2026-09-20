@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# mk-boot-partition - create separate 1G vfat /boot XBOOTLDR at end of disk
+# Run from NixOS LIVE USB, NOT from running NixChan.
+# Requires: boot live USB, not mounted root, backup done.
+set -euo pipefail
+DISK=/dev/nvme0n1
+P5=/dev/nvme0n1p5
+ESP_UUID=86AC-1287
+echo "=== mk-boot-partition 1G XBOOTLDR ==="
+echo "Disk $DISK p5 $P5"
+lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS | cat
+echo
+echo "Check free at end: parted $DISK print free"
+parted $DISK print free
+echo
+read -p "Continue? This will shrink p5 ext4 by 1G and create p6 1G vfat. Type YES: " ans
+[[ "$ans" == "YES" ]] || { echo "abort"; exit 1; }
+
+echo ">> e2fsck -f $P5"
+e2fsck -f "$P5"
+echo ">> resize2fs shrink 1G (326G -> 325G)"
+# current p5 326.9G, shrink to 325G leaves 1.9G free, we use 1G for p6 + margin
+resize2fs "$P5" 325G
+echo ">> parted resizepart 5 325G"
+parted "$DISK" ---pretend-input-tty resizepart 5 325G
+parted "$DISK" print
+echo ">> mkpart p6 1G vfat XBOOTLDR"
+parted "$DISK" mkpart XBOOTLDR fat32 325G 326G
+parted "$DISK" print
+echo ">> mkfs.vfat -F32 -n XBOOTLDR /dev/nvme0n1p6"
+mkfs.vfat -F32 -n XBOOTLDR /dev/nvme0n1p6
+lsblk -o NAME,SIZE,TYPE,FSTYPE,LABEL,MOUNTPOINTS
+blkid /dev/nvme0n1p6
+echo
+echo "Done. New p6 UUID:"
+blkid -o value -s UUID /dev/nvme0n1p6
+echo "Label XBOOTLDR"
+echo
+echo "Next: mount for install"
+echo "  mount /dev/nvme0n1p5 /mnt"
+echo "  mount /dev/nvme0n1p6 /mnt/boot"
+echo "  mount /dev/disk/by-uuid/$ESP_UUID /mnt/efi"
+echo "Then update flake:"
+echo "  fileSystems.\"/boot\" = { device = \"/dev/disk/by-label/XBOOTLDR\"; fsType = \"vfat\"; options = [\"fmask=0077\" \"dmask=0077\"] ; };"
+echo "  fileSystems.\"/efi\" = { device = \"/dev/disk/by-uuid/$ESP_UUID\"; fsType = \"vfat\"; };"
+echo "  boot.loader.systemd-boot.enable = true; boot.loader.grub.enable = false; limit 10; efiSysMountPoint = \"/efi\";"
+echo "  nixos-rebuild switch --flake ~/erogeDOTS#NixChan"
