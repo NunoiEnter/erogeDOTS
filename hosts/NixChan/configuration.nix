@@ -211,8 +211,9 @@ in
   nix.gc = {
     automatic = true;
     dates = "weekly";
-    options = "--delete-older-than 7d";
+    options = "--delete-older-than 30d"; # keep ~10 gens (boot limit 10) when rebuild every 3d
   };
+  nix.optimise.automatic = true;
 
   system.stateVersion = "26.05"; 
 }
