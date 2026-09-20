@@ -86,8 +86,7 @@ erogeDOTS/
 ├── picker-rs/                 # Rust TUI theme picker (src/main.rs)
 ├── pkgs/
 │   ├── catnap/                # prebuilt catnap binary package
-│   ├── chatgpt/               # official ChatGPT RPM as FHSEnv
-│   └── sunshine/              # Sunshine RPM as FHSEnv (currently disabled)
+│   └── chatgpt/               # official ChatGPT RPM as FHSEnv
 ├── config/                    # static configs
 │   ├── nvim/                  # LazyVim config, symlinked by Home-Manager
 │   ├── firefox/user.js        # fonts + GPU perf, applied after first launch
