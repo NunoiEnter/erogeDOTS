@@ -169,3 +169,11 @@ what happened without the old chat history.
 - Commit: shipped in the commit carrying this entry
 - Open: desktop.nix eww package line rides with the user's uncommitted rustdesk
   work (theirs to commit); revisit widget when there's a calm window
+
+## 2026-09-20 — Boot 1G fix: ESP at /efi, /boot on root via GRUB, keep 10 gens
+
+- Changed: `hosts/NixChan/hardware-configuration.nix` (`/boot` vfat 86AC-1287 -> `/efi` vfat), `hosts/NixChan/configuration.nix` (systemd-boot limit 2 -> GRUB enable true efiSupport nodev useOSProber limit 10 efiSysMountPoint /efi, nix.gc 7d -> 30d + nix.optimise.automatic true), `scripts/mk-boot-partition` (new 1G XBOOTLDR helper for live USB), plus rustdesk ports/uinput/firewall and nix settings from prior dirty tree
+- Why: 96M ESP (Windows default `nvme0n1p1`) overflowed `100%` `OSError 28 No space left` on `systemd-boot` `copyfileobj` each gen `~40M` `limit 2` still overflow
+- Verified: `df -h /boot` `321G ext4` `48G->62G free` after `nix-collect-garbage -d` `13.1G 11762 paths` + `/efi 96M 72% 28M free`, `ls /boot/grub` `grub.cfg`, `ls /efi/EFI/NixOS-efi/grubx64.efi` active `0x0005`, `bootctl status` GRUB first, `nix eval` `grub.configurationLimit 10` `gc 30d`, `sudo -n nixos-rebuild switch` `Done` `d076...`, `efivarfs` GRUB boot-order
+- Commit: `eb5e1d5` (boot 1G GRUB) + `e8664bd` (keep 10 GC 30d) + this log entry
+- Open: real `1G vfat p6 XBOOTLDR` at `/boot` needs live USB `bash scripts/mk-boot-partition` (shrink `p5 326G->325G`, mkpart 1G) to get physical separate `vfat` if want; old `/efi/EFI/systemd` + `/efi/EFI/nixos` still on ESP `~20M` can `sudo rm -rf` after stable GRUB boot

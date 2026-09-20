@@ -25,11 +25,7 @@ re-coloring the whole desktop. Lightweight niri stack chosen over Noctalia/Qt6 b
 
 ## How It Works (3 Layers)
 
-1. **NixOS system layer** (`hosts/NixChan/configuration.nix`): systemd-boot (limit 2),
-   NetworkManager + openvpn plugin (KMITL VPN), Tailscale + SSH port 22 (iPad remote),
-   xrdp with separate XFCE session, PipeWire (44.1/48k, resample quality 4), Bluetooth,
-   SDDM on Wayland, niri + XFCE + GNOME installed, qylock with patched SddmShim.qml
-   (hostName + suspend fix), fonts Kanit/Noto/JetBrainsMono, flakes enabled, allowUnfree.
+1. **NixOS system layer** (`hosts/NixChan/configuration.nix`): GRUB (limit 10, efiSupport nodev, osProber, ESP at /efi 96M `86AC-1287`, /boot on root ext4 `b98194e0` 321G effective 1G+), NetworkManager + openvpn plugin (KMITL VPN), Tailscale + SSH port 22 (iPad remote), xrdp with separate XFCE session, PipeWire (44.1/48k, resample quality 4), Bluetooth, SDDM on Wayland, niri + XFCE + GNOME installed, qylock with patched SddmShim.qml (hostName + suspend fix), fonts Kanit/Noto/JetBrainsMono, flakes enabled, allowUnfree, nix.gc 30d + optimise automatic.
 2. **Home-Manager user layer** (`home/moni.nix` + `home/modules/`): declares user packages,
    zsh, MIME associations, and symlinks. Static configs (nvim) are symlinked from the Nix
    store. Themed configs are NOT symlinked; they are generated files.
