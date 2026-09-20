@@ -64,6 +64,7 @@ in
     obs-studio
     waybar
     fuzzel
+    eww
     awww
     wl-clipboard
     noto-fonts-cjk-sans
@@ -87,6 +88,7 @@ in
     chatgpt
     nvim-desktop
      discord
+    rustdesk
   ];
 
   # Write mimeapps.list to BOTH locations KDE checks

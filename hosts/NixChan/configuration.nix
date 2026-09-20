@@ -22,9 +22,18 @@ let
 in
 {
   imports = [ ../../modules/nixos/i18n.nix ];
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.systemd-boot.configurationLimit = 2;
+  # Boot 1G fix: ESP 96M -> /efi, /boot on root ext4 (26G free) via GRUB. GRUB reads ext4, systemd-boot cannot.
+  # No repartition, no Windows move, 1G+ effective. Limit 10 safe now.
+  boot.loader.systemd-boot.enable = lib.mkForce false;
+  boot.loader.grub = {
+    enable = true;
+    efiSupport = true;
+    device = "nodev";
+    useOSProber = true; # detect Windows
+    configurationLimit = 10;
+  };
   boot.loader.efi.canTouchEfiVariables = true;
+  boot.loader.efi.efiSysMountPoint = "/efi";
 
   boot.consoleLogLevel = 3;
   boot.initrd.verbose = false;
@@ -32,7 +41,8 @@ in
   boot.loader.timeout = 5;
   networking.hostName = "NixChan";
   networking.networkmanager.enable = true;
-  networking.firewall.allowedTCPPorts = [ 22 ];
+  networking.firewall.allowedTCPPorts = [ 22 21115 21116 21117 21118 21119 ];
+  networking.firewall.allowedUDPPorts = [ 21116 ];
   networking.firewall.trustedInterfaces = [ "tailscale0" ];
 
   services.tailscale.enable = true;
@@ -115,9 +125,15 @@ in
     qylockQs
   ];
 
+  # RustDesk Wayland remote input: uinput device + input group.
+  boot.kernelModules = [ "uinput" ];
+  services.udev.extraRules = ''
+    KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
+  '';
+
   users.users.moni = {
     isNormalUser = true;
-    extraGroups = [ "networkmanager" "wheel" "video" "audio" ];
+    extraGroups = [ "networkmanager" "wheel" "video" "audio" "input" ];
     shell = pkgs.zsh;
   };
 
@@ -166,8 +182,13 @@ in
   ];
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
-    substituters = [
-      "https://cache.nixos.org"
+    substituters = lib.mkForce [
+      "https://cache.nixos.org/"
+      "https://nix-community.cachix.org"
+      "https://cachix.cachix.org"
+    ];
+    trusted-substituters = [
+      "https://cache.nixos.org/"
       "https://nix-community.cachix.org"
       "https://cachix.cachix.org"
     ];
@@ -176,10 +197,21 @@ in
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       "cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWg4T3M2wMCcO6n4T0L2TNA="
     ];
+    fallback = true;
+    connect-timeout = 15;
+    stalled-download-timeout = 30;
+    download-attempts = 3;
+    http-connections = 8;
+    max-substitution-jobs = 4;
     max-jobs = "auto";
     cores = 0;
-    min-free = "1G";
-    max-free = "10G";
+    min-free = "5G";
+    max-free = "20G";
+  };
+  nix.gc = {
+    automatic = true;
+    dates = "weekly";
+    options = "--delete-older-than 7d";
   };
 
   system.stateVersion = "26.05"; 

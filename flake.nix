@@ -60,6 +60,7 @@
       docker = import ./shells/docker.nix { inherit pkgs; };
       security = import ./shells/security.nix { inherit pkgs; };
       webapp = import ./shells/webapp.nix { inherit pkgs; };
+      pg-computer = import ./shells/pg-computer.nix { inherit pkgs; };
     };
   };
 }

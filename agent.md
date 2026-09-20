@@ -104,8 +104,6 @@ re-run `theme-switch $(cat ~/.config/theme/active)`.
   wallpaper preview, arrow/j/k navigation, Enter calls `theme-switch <name>`.
 - `pkgs/catnap/default.nix`: prebuilt catnap 2.1.1 binary via fetchurl.
 - `pkgs/chatgpt/default.nix`: official ChatGPT RPM repackaged as FHSEnv with desktop item.
-- `pkgs/sunshine/default.nix`: Sunshine RPM as FHSEnv (currently disabled in host config
-  with `services.sunshine.enable = false`).
 - `shells/`: `nix develop .#<name>` environments: full, rust, python, go, common, tester,
   docker, security, webapp. See `docs/DEVELOPMENT.md`.
 - `config/nvim/`: LazyVim stub (`init.lua` -> `config.lazy`), symlinked by Home-Manager.

@@ -18,7 +18,9 @@
       fsType = "ext4";
     };
 
-  fileSystems."/boot" =
+  # ESP 96M too small for NixOS kernels - keep ESP at /efi, let /boot be on root (ext4, 26G free) via GRUB
+  # Longterm 1G+ effective without repartition. GRUB reads ext4, systemd-boot cannot.
+  fileSystems."/efi" =
     { device = "/dev/disk/by-uuid/86AC-1287";
       fsType = "vfat";
       options = [ "fmask=0077" "dmask=0077" ];

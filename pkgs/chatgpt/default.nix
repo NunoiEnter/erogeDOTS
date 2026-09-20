@@ -45,7 +45,7 @@ let
 
     src = fetchurl {
       url = "https://persistent.oaistatic.com/codex-app-prod/linux/rpm/latest/chatgpt.x86_64.rpm";
-      hash = "sha256-QvWilN+o4C0QJmEzl4qCy8aGJpeutgnCqJCXT5YW7LI=";
+      hash = "sha256-zNEDFmRCiVnZ/P7+x6griif0DTHZ/PUYilF9Fvvn2Kc=";
     };
 
     nativeBuildInputs = [ rpmextract ];
