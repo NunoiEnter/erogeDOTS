@@ -177,3 +177,19 @@ what happened without the old chat history.
 - Verified: `df -h /boot` `321G ext4` `48G->62G free` after `nix-collect-garbage -d` `13.1G 11762 paths` + `/efi 96M 72% 28M free`, `ls /boot/grub` `grub.cfg`, `ls /efi/EFI/NixOS-efi/grubx64.efi` active `0x0005`, `bootctl status` GRUB first, `nix eval` `grub.configurationLimit 10` `gc 30d`, `sudo -n nixos-rebuild switch` `Done` `d076...`, `efivarfs` GRUB boot-order
 - Commit: `eb5e1d5` (boot 1G GRUB) + `e8664bd` (keep 10 GC 30d) + this log entry
 - Open: real `1G vfat p6 XBOOTLDR` at `/boot` needs live USB `bash scripts/mk-boot-partition` (shrink `p5 326G->325G`, mkpart 1G) to get physical separate `vfat` if want; old `/efi/EFI/systemd` + `/efi/EFI/nixos` still on ESP `~20M` can `sudo rm -rf` after stable GRUB boot
+
+## 2026-09-21 — Install Arduino IDE 2.x
+
+- Changed: `home/modules/desktop.nix` (`arduino-ide` 2.3.10 + `arduino-cli` 1.5.1), `hosts/NixChan/configuration.nix` (`extraGroups` add `dialout`)
+- Why: user requested Arduino IDE for board upload
+- Verified: `sudo nixos-rebuild switch --flake ~/erogeDOTS#NixChan` generation 150 `2026-09-21 11:05:29` `Done` `i7gwfxn1`, `which arduino-ide` `/etc/profiles/per-user/moni/bin/arduino-ide`, `which arduino-cli` same, `id moni` shows `dialout`, `nix eval` version `2.3.10`, 37 derivations built, 29 paths fetched 402 MiB
+- Commit: unpushed (this batch)
+- Open: needs re-login (logout/login or reboot) for new `dialout` group to apply to current shell; after that serial `ttyACM0/ttyUSB0` works without sudo per NixOS wiki `users.users.<name>.extraGroups = [ "dialout" ]`
+
+## 2026-09-21 — System-apply now user-terminal-only
+
+- Changed: `agent.md` (`## Sudo Authorization` -> `## Sudo / System Apply Policy`, agent never runs `nixos-rebuild`/`nix-collect-garbage` headless, must print command for user terminal), `.opencode/skills/eroricer/SKILL.md` (`Sudo scope` -> `Sudo / apply scope — user-terminal-only`)
+- Why: user requested rebuild/GC/etc must be done in user terminal, agent must always send command instead of auto-running
+- Verified: `git diff` shows new policy in both files, `grep -n "user-terminal-only" agent.md` and `SKILL.md` present, no functional Nix change
+- Commit: unpushed (this batch)
+- Open: none — future `nixos-rebuild switch|test|boot` and `nix-collect-garbage` will be presented as `sudo nixos-rebuild switch --flake ~/erogeDOTS#NixChan` for user to paste; `security.sudo.extraRules` NOPASSWD remains for paste convenience only

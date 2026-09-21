@@ -89,6 +89,8 @@ in
     nvim-desktop
      discord
     rustdesk
+    arduino-ide
+    arduino-cli
   ];
 
   # Write mimeapps.list to BOTH locations KDE checks

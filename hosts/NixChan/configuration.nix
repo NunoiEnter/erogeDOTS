@@ -133,7 +133,7 @@ in
 
   users.users.moni = {
     isNormalUser = true;
-    extraGroups = [ "networkmanager" "wheel" "video" "audio" "input" ];
+    extraGroups = [ "networkmanager" "wheel" "video" "audio" "input" "dialout" ];
     shell = pkgs.zsh;
   };
 
