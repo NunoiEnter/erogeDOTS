@@ -143,12 +143,17 @@ reload_desktop() {
 
 apply_theme() {
     local name="$1"
+    info "loading theme: $name"
     require_theme "$name"
+    info "rendering configs"
     mkdir -p "$STATE_DIR"
     render_configs "$name"
+    info "installing configs"
     install_configs "$name"
+    info "saving state"
     write_state "$name"
     rm -f "${XDG_CACHE_HOME:-$HOME/.cache}"/fastfetch-*.out 2>/dev/null || true
+    info "reloading desktop"
     [[ "${EROGEDOTS_NO_RESTART:-0}" == 1 ]] || reload_desktop
     printf "${GREEN}✓${NC} theme: %s\n" "$name"
     info "terminal colors update in newly opened terminals"

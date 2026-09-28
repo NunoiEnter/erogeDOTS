@@ -217,7 +217,6 @@ in
     autosuggestion.enable = false;
     syntaxHighlighting.enable = false;
     shellAliases = {
-      ts = "theme-switch";
       tslist = "theme-switch list";
       tscurrent = "theme-switch current";
       tspreview = "theme-switch preview";
@@ -244,11 +243,17 @@ in
       pkmn = "pokemon-colorscripts -r 1 --no-title | lolcat";
       shout = "figlet -f small -c | lolcat";
       train = "sl";
+      sc = "soruce ~/.zshrc" ;
     };
     initContent = ''
       setopt PROMPT_SUBST
       PROMPT='%F{magenta}%m%f %F{white}%~%%f '
       [[ -f "$HOME/.config/theme/env" ]] && source "$HOME/.config/theme/env"
+      # ts wrapper: switch theme, then reload theme vars in THIS shell.
+      # (A script can't touch its parent shell, so `source` must live here.)
+      ts() {
+        theme-switch "$@" && source "$HOME/.config/theme/env"
+      }
       # Deferred shell init: runs on first prompt (after fetch paints),
       # so window animation + fetch appear together. Split hooks: slow compinit
       # can never cancel the fast plugins, even with Ctrl-C.
@@ -297,11 +302,11 @@ in
         command clear "$@"
         [[ -n "''${_FF_LAST:-}" && -f "$_FF_LAST" ]] && cat "$_FF_LAST"
       }
-      # Responsive: full NixOwOS logo on 81x41 or bigger,
+      # Responsive: full NixOwOS logo needs 80x19,
       # else compact mini logo (fits 61 cols, 10 rows), skip when tiny.
       if [[ "''${EROGEDOTS_NO_FASTFETCH:-0}" != 1 ]]; then
         _ff_c="''${COLUMNS:-80}" _ff_l="''${LINES:-24}"
-        if (( _ff_c >= 81 )) && (( _ff_l >= 41 )) && [[ -z "''${MINI:-}" ]]; then
+        if (( _ff_c >= 80 )) && (( _ff_l >= 19 )) && [[ -z "''${MINI:-}" ]]; then
           _eroge_fetch "" full
         elif (( _ff_l >= 10 )); then
           _eroge_fetch "$HOME/.config/fastfetch/compact.jsonc" compact
