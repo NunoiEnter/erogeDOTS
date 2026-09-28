@@ -56,67 +56,67 @@ Only the blank Discord example is tracked. `.gitignore` blocks common secret
 files, but ignore rules cannot remove a secret from old Git history. Rotate any
 credential that was ever committed before publishing.
 
-## Layout: what each file does
+## แต่ละไฟล์เอาไว้ทำอะไร
 
-Core:
+ส่วนหลักของระบบ:
 
-| File | Purpose |
+| ไฟล์ | ใช้ทำอะไร |
 |---|---|
-| `flake.nix` | Pins inputs, discovers hosts, exports packages and dev shells. |
-| `flake.lock` | Exact dependency revisions for repeatable builds. |
-| `nixos.nix` | Shared NixOS system: users, Nix, network, SSH, desktop, audio, power, locale, fonts, Steam. |
-| `home/moni.nix` | All Home Manager packages, GNOME-adjacent desktop apps, Kitty/Alacritty/Ghostty/Foot, shell, MIME defaults, Firefox, Discord service. |
-| `install.sh` | Unattended host detection, generation, check, build, switch, theme, verification. |
-| `shells.nix` | All named development environments in one file. |
-| `.gitignore` | Keeps builds, local OpenCode state, and secret file types out of Git. |
-| `.gitattributes` | GitHub language/display hints. |
-| `LICENSE` | MIT terms for repository code. |
+| `flake.nix` | เป็นจุดเริ่มต้นของโปรเจกต์ บอก Nix ว่าจะใช้แหล่งแพ็กเกจอะไร มีเครื่องไหนบ้าง และมีโปรแกรมหรือชุดเครื่องมืออะไรให้สร้างได้ |
+| `flake.lock` | ล็อกเวอร์ชันของทุก dependency เพื่อให้ติดตั้งวันนี้หรือย้ายไปอีกเครื่องแล้วได้ผลเหมือนเดิม |
+| `nixos.nix` | ตั้งค่าระบบที่ใช้ร่วมกันทุกเครื่อง เช่น ผู้ใช้ เครือข่าย SSH เดสก์ท็อป เสียง พลังงาน ภาษา ฟอนต์ และ Steam |
+| `home/moni.nix` | ตั้งค่าส่วนของผู้ใช้ `moni` เช่น โปรแกรมทั่วไป Kitty, Alacritty, Ghostty, Foot, Zsh, Firefox, แอปเริ่มต้น และ Discord bot service |
+| `install.sh` | ตัวติดตั้งอัตโนมัติ ตรวจชื่อเครื่องและ hardware จากนั้นตรวจ config, build, เปิดใช้ระบบใหม่ และเช็กว่าติดตั้งสำเร็จ |
+| `shells.nix` | รวมชุดเครื่องมือสำหรับงานพัฒนา เช่น Rust, Python, Go, Web, Docker, Testing และ Security |
+| `.gitignore` | บอก Git ว่าไฟล์ไหนไม่ควรถูกอัปโหลด เช่นไฟล์ build, local cache และไฟล์ที่อาจมี secret |
+| `.gitattributes` | ช่วยให้ GitHub แสดงชนิดไฟล์และสถิติภาษาใน repo ได้เหมาะสม |
+| `LICENSE` | ระบุว่าโค้ดใน repo ใช้สัญญาอนุญาตแบบ MIT |
 
-Hosts and editor:
+ค่าของแต่ละเครื่องและ Neovim:
 
-| File | Purpose |
+| ไฟล์ | ใช้ทำอะไร |
 |---|---|
-| `hosts/NixChan/configuration.nix` | NixChan hostname and its GRUB/EFI choices. |
-| `hosts/NixChan/hardware-configuration.nix` | NixChan disks and detected hardware. |
-| `hosts/_template/configuration.nix` | Safe UEFI default copied for a new hostname. |
-| `config/nvim/init.lua` | Neovim entrypoint. |
-| `config/nvim/lua/config/*.lua` | Autocommands, keys, plugin loader, and options. |
-| `config/nvim/lua/plugins/init.lua` | Neovim plugin declarations. |
+| `hosts/NixChan/configuration.nix` | ค่าเฉพาะเครื่อง NixChan เช่นชื่อเครื่องและวิธีบูตด้วย GRUB/EFI |
+| `hosts/NixChan/hardware-configuration.nix` | ข้อมูล hardware และพาร์ทิชันของ NixChan ที่ NixOS ตรวจพบ |
+| `hosts/_template/configuration.nix` | แม่แบบสำหรับเพิ่มเครื่องใหม่ โดยเริ่มจากค่า UEFI และ systemd-boot ที่ปลอดภัย |
+| `config/nvim/init.lua` | ไฟล์แรกที่ Neovim โหลด แล้วส่งต่อไปยัง config ส่วนอื่น |
+| `config/nvim/lua/config/*.lua` | เก็บปุ่มลัด ตัวเลือก พฤติกรรมอัตโนมัติ และระบบโหลด plugin ของ Neovim |
+| `config/nvim/lua/plugins/init.lua` | รายชื่อและการตั้งค่า plugin ที่ Neovim ต้องใช้ |
 
-Packages:
+โปรแกรมที่สร้างเองใน repo:
 
-| File | Purpose |
+| ไฟล์ | ใช้ทำอะไร |
 |---|---|
-| `picker-rs/Cargo.toml` / `Cargo.lock` | Rust picker manifest and locked dependencies. |
-| `picker-rs/src/main.rs` | Interactive terminal theme picker. |
-| `picker-rs/default.nix` | Reproducible Nix build for the picker. |
-| `pkgs/chatgpt/default.nix` | Nix wrapper for the official ChatGPT Linux package. |
-| `pkgs/discord-opencode/Cargo.toml` / `Cargo.lock` | Discord bridge manifest and dependency lock. |
-| `pkgs/discord-opencode/default.nix` | Nix build for the Discord bridge. |
-| `pkgs/discord-opencode/discord-bot.env.example` | Blank, safe credential template. |
-| `pkgs/discord-opencode/src/*.rs` | Bridge config, Discord/OpenCode adapters, permissions, projects, repository, settings, and tasks. |
+| `picker-rs/Cargo.toml` / `Cargo.lock` | รายชื่อ library และเวอร์ชันที่ใช้สร้างโปรแกรมเลือกธีม |
+| `picker-rs/src/main.rs` | ตัวโปรแกรมเลือกธีมแบบหน้าจอใน terminal พร้อมดูสีและ wallpaper ก่อนเลือก |
+| `picker-rs/default.nix` | สอน Nix ว่าต้อง build และติดตั้ง theme picker อย่างไร |
+| `pkgs/chatgpt/default.nix` | แพ็ก ChatGPT Linux ให้ติดตั้งและเปิดผ่าน NixOS ได้ |
+| `pkgs/discord-opencode/Cargo.toml` / `Cargo.lock` | รายชื่อ library และเวอร์ชันของ Discord–OpenCode bridge |
+| `pkgs/discord-opencode/default.nix` | สอน Nix ให้ build Discord–OpenCode bridge |
+| `pkgs/discord-opencode/discord-bot.env.example` | ตัวอย่างชื่อค่าที่ bot ต้องใช้ เป็นไฟล์ว่างและไม่มี token จริง |
+| `pkgs/discord-opencode/src/*.rs` | โค้ดของ bot แยกตามหน้าที่ เช่น Discord, OpenCode, permission, project, settings และ task |
 
-Scripts:
+สคริปต์ที่ใช้ประจำ:
 
-| File | Purpose |
+| ไฟล์ | ใช้ทำอะไร |
 |---|---|
-| `scripts/theme-switch` | Validates a theme, renders templates, applies configs, wallpaper, and reloads apps. |
-| `scripts/cliphist-pick` | Clipboard history picker. |
-| `scripts/dropterm` | Toggleable drop-down Ghostty terminal. |
-| `scripts/fcitx5-cycle.sh` | Cycle English, Japanese, and Thai input. |
-| `scripts/larp` | Opens or closes the four-pane terminal wall. |
-| `scripts/ram` | Shows memory use and optionally stops safe user processes. |
-| `scripts/unzzz` | Starts/stops a user-level lid/sleep inhibitor. |
+| `scripts/theme-switch` | อ่านค่าธีม สร้าง config ของแต่ละแอป เปลี่ยน wallpaper และ reload แอปที่เกี่ยวข้อง |
+| `scripts/cliphist-pick` | เปิดรายการ clipboard เก่าให้ค้นหาและเลือกนำกลับมาใช้ |
+| `scripts/dropterm` | เปิดหรือซ่อน Ghostty แบบ terminal เลื่อนลงจากด้านบน |
+| `scripts/fcitx5-cycle.sh` | สลับภาษาพิมพ์ระหว่างอังกฤษ ญี่ปุ่น และไทย |
+| `scripts/larp` | เปิดหรือปิด terminal สี่ช่องสำหรับ fetch, นาฬิกา, CMatrix และ Cava |
+| `scripts/ram` | ดูว่าโปรแกรมไหนใช้ RAM และมีคำสั่งช่วยหยุด process ของผู้ใช้ที่ไม่จำเป็น |
+| `scripts/unzzz` | สั่งให้เครื่องตื่นต่อแม้ปิดฝา และยกเลิกโหมดนี้เมื่อต้องการ |
 
-Themes:
+ธีมและ wallpaper:
 
-| File | Purpose |
+| ไฟล์ | ใช้ทำอะไร |
 |---|---|
-| `themes/SCHEMA.md` | Supported theme keys and template rules. |
-| `themes/{harumi,nanami,natsume,nene,sana}/theme.conf` | Complete color, wallpaper, and character metadata. |
-| `themes/incomplete/{meguru,tsumuki}/theme.conf` | Parked themes whose wallpapers are missing; pickers ignore them. |
-| `themes/templates/<app>/*` | Source templates for Niri, Quickshell, terminals, Fuzzel, SwayNC, Fetch, Cava, and CMatrix. |
-| `wallpapers/*.jpg` | Wallpaper assets for complete themes. |
+| `themes/SCHEMA.md` | อธิบายว่าธีมหนึ่งชุดใส่ค่าอะไรได้บ้าง และค่าไหนจำเป็น |
+| `themes/{harumi,nanami,natsume,nene,sana}/theme.conf` | สี wallpaper ความโปร่งใส และข้อมูลตัวละครของแต่ละธีมที่ใช้งานได้แล้ว |
+| `themes/incomplete/{meguru,tsumuki}/theme.conf` | ธีมที่ยังขาด wallpaper จึงพักไว้ก่อนและไม่แสดงในตัวเลือกธีม |
+| `themes/templates/<app>/*` | แม่แบบ config ของ Niri, Quickshell, terminal และแอปอื่น ๆ ที่จะถูกเติมสีตามธีม |
+| `wallpapers/*.jpg` | รูปพื้นหลังของธีมที่ใช้งานได้ |
 
 ## Add another machine
 
