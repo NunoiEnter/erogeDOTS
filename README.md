@@ -1,4 +1,4 @@
-# ⚠️ erogeDOTS — VER.1.2
+# ⚠️ erogeDOTS — VER ALPHA 1.3
 
 > **⚠️ WARNING: MY PERSONAL DOTFILES — NOT FOR YOU ⚠️**
 >
@@ -25,8 +25,9 @@ swaync, fuzzel — way lighter, still pretty, now in Senren Banka visual-novel s
 
 Three layers, in order:
 
-1. **NixOS system** (`hosts/NixChan/configuration.nix`): bootloader, networking,
-   sound, Bluetooth, display manager, desktops, fonts, Nix settings.
+1. **NixOS system** (`hosts/NixChan/configuration.nix` + `hosts/NixChan/modules/`):
+   bootloader, networking, sound, Bluetooth, display manager, desktops, fonts,
+   Nix settings, users. Thin router — every domain lives in its own module file.
 2. **Home-Manager user** (`home/moni.nix`, `home/modules/`): user packages, zsh,
    MIME apps, symlinks. Static configs such as nvim come from the Nix store.
 3. **Theme runtime** (`scripts/theme-switch`, `themes/`): parses
@@ -51,18 +52,205 @@ theme-switch owns. Do not edit `~/.config/niri/config.kdl` directly; edit
 `themes/templates/niri/config.kdl` and re-run
 `theme-switch $(cat ~/.config/theme/active)`.
 
+## 📖 How NixOS actually works (beginner guide)
+
+New to NixOS? Read this once and the rest of this repo makes sense.
+
+### The big idea: declarative + immutable
+
+Normal Linux: you `apt install` things, edit files in `/etc`, and the system
+slowly drifts. You can never exactly reproduce it.
+
+NixOS: you **describe** the whole system in text files. Nix **builds** that
+description into immutable outputs under `/nix/store/` (paths like
+`/nix/store/abc123-firefox-...`). Old outputs are never overwritten — a rebuild
+just creates new ones and flips a pointer. That pointer flip is a **generation**,
+and you can boot back into any old generation from GRUB. That is why NixOS feels
+"unbreakable": a bad config is one reboot away from undone.
+
+```text
+your .nix files  ->  nix build  ->  /nix/store/<hash>-<name>  ->  activated as generation N
+                                          (read-only, never edited in place)
+```
+
+### The Nix language (30-second version)
+
+`.nix` files are written in the Nix expression language: lots of `{ }`,
+`[ ]`, `let ... in`, `with`. Two patterns cover 90% of this repo:
+
+```nix
+# 1. Attribute set = the config object. Keys map to values/modules.
+{ config, pkgs, ... }:
+{
+  programs.firefox.enable = true;
+  home.packages = [ pkgs.ripgrep pkgs.fzf ];
+}
+
+# 2. Lists + imports = composing modules together.
+{
+  imports = [
+    ./modules/boot.nix
+    ./modules/network.nix
+  ];
+}
+```
+
+`pkgs` = the package set from nixpkgs (tens of thousands of packages).
+`{ config, pkgs, ... }:` at the top = "this module receives these arguments".
+
+### configuration.nix vs flake.nix vs flake.lock
+
+Three files, three jobs. Beginners mix these up, so:
+
+| File | Job | Analogy |
+|---|---|---|
+| `configuration.nix` | **WHAT** your system is: bootloader, users, desktop, services, fonts | The recipe |
+| `flake.nix` | **WHERE** dependencies come from + **WHICH** machines exist: declares `inputs` (nixpkgs revision, home-manager, qylock, rust-overlay) and `outputs` (`nixosConfigurations.NixChan`, dev shells, local packages) | The cookbook index + pinned suppliers |
+| `flake.lock` | **EXACTLY WHICH** version of every input: commit hash + content hash for reproducible builds | The receipt with barcodes |
+
+Before flakes (the old way), you had a channel (`nixos-unstable` on your machine,
+constantly moving) and a single `/etc/nixos/configuration.nix`. Two machines
+rebuilt a week apart got different software. Flakes fix that:
+
+```nix
+# flake.nix (simplified) — this repo
+{
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs"; # one nixpkgs for all
+    qylock.url = "github:Darkkal44/qylock";
+    rust-overlay.url = "github:oxalica/rust-overlay";
+  };
+  outputs = { nixpkgs, home-manager, ... }: {
+    nixosConfigurations.NixChan = nixpkgs.lib.nixosSystem {
+      modules = [
+        ./hosts/NixChan/configuration.nix
+        home-manager.nixosModules.home-manager
+      ];
+    };
+  };
+}
+```
+
+- `inputs` = dependencies, as URLs.
+- `inputs.nixpkgs.follows = "nixpkgs"` = "don't fetch a second copy, reuse mine".
+- `outputs` = a function producing your machines, shells, and packages.
+- `nixosConfigurations.NixChan` = "the machine named NixChan, built from these modules".
+- Rebuild with `sudo nixos-rebuild switch --flake .#NixChan` = build that output, activate it.
+
+`flake.lock` records the exact commit (`rev`) and hash (`narHash`) of each input
+at the time you last updated. **Commit it.** Without it, clones resolve floating
+branches and diverge. Update it deliberately:
+
+```bash
+nix flake update            # bump everything (review the diff after)
+nix flake update nixpkgs     # bump one input only
+nix flake metadata           # show what is currently pinned
+```
+
+### System vs Home-Manager vs dev shells
+
+NixOS config splits by scope. This repo maps 1:1 onto it:
+
+- **System** (`hosts/NixChan/modules/*.nix`, 12 files): things needing root —
+  bootloader, kernel, networking, display manager, system-wide services
+  (`programs.steam`, PipeWire, TLP, SDDM). Applied with `nixos-rebuild switch`.
+- **Home-Manager** (`home/moni.nix` + `home/modules/*.nix`, 9 files): things
+  owned by user `moni` — shells, user packages, dotfiles, MIME handlers,
+  user services. Runs as part of the same rebuild (via the home-manager NixOS
+  module), no separate command needed here because `useGlobalPkgs` +
+  `useUserPackages` are on.
+- **Dev shells** (`shells/*.nix`, 10 shells): throwaway environments per task —
+  `nix develop .#rust`, `.#python`, `.#go`, `.#tester`, `.#docker`,
+  `.#security`, `.#webapp`, `.#common`, `.#pg-computer`, plus default/full.
+  They never touch your system; they just put tools on `PATH` while you are
+  inside the shell.
+
+```bash
+nix develop            # full shell (default)
+nix develop .#rust     # Rust toolchain only
+exit                   # leave, system unchanged
+```
+
+### Symlinks: how dotfiles actually land in ~/.config
+
+Everything in `/nix/store` is read-only, so NixOS does not "copy configs into
+place" — it **symlinks** them. Home-Manager's `home.file` declares the link:
+
+```nix
+# static file: source lives in the repo, linked read-only into home
+home.file = {
+  ".config/nvim".source = ../config/nvim;
+};
+# after rebuild: ~/.config/nvim -> /nix/store/<hash>-nvim/
+```
+
+Result: edit `config/nvim/` in the repo, rebuild, the symlink target updates.
+You never edit `~/.config/nvim` directly (it points at a read-only store path).
+
+Two flavors worth knowing:
+
+```nix
+{
+  # 1. Store symlink (default, read-only target — use for static configs)
+  ".config/nvim".source = ../config/nvim;
+
+  # 2. Out-of-store symlink (writable target — use when an app must write
+  #    to its own config, or you want live edits without rebuilds)
+  # ".config/some-app".source =
+  #   config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/erogeDOTS/config/some-app";
+}
+```
+
+**This repo's rule:** store symlinks for static content (nvim, mimeapps,
+kdeglobals); plain generated **files** (not symlinks) for anything `theme-switch`
+owns (niri, quickshell, swaync, fuzzel, ghostty, alacritty, foot, kitty, catnap,
+fetch, cava, cmatrix). Reason: the theme script must overwrite those files on
+every switch without a rebuild — a store symlink would be read-only and fight it.
+
+### How a rebuild flows (end to end)
+
+```text
+1. You edit a .nix file (or theme.conf for colors-only changes)
+2. nixos-rebuild evaluates flake.nix + lockfile -> builds new store paths
+3. New generation created (/nix/var/nix/profiles/system-*-link)
+4. Activation: services restarted, /etc + /run updated, home symlinks relinked
+5. home.activation.restoreTheme: if theme cache missing, re-run theme-switch
+6. Bad generation? Reboot, pick older entry in GRUB, or:
+   sudo nixos-rebuild switch --rollback
+```
+
+Colors-only change? Skip all of that — just `theme-switch <name>`. No sudo,
+no generation, instant.
+
+### Glossary for this repo
+
+- **nixpkgs**: the giant package collection (this repo tracks `nixos-unstable`).
+- **overlay** (`rust-overlay`): a layer adding/overriding packages (here: fresh
+  Rust toolchains for dev shells).
+- **module**: a `.nix` file exporting config; composed via `imports`.
+- **`specialArgs` / `extraSpecialArgs`**: extra arguments passed into modules
+  (this repo passes flake `inputs` to the system, and `catnap`/`chatgpt`/
+  `discord-opencode-bot` into home-manager so modules use them without
+  re-`callPackage`-ing).
+- **generation**: one activated system build; listed with
+  `sudo nix-env --list-generations --profile /nix/var/nix/profiles/system`.
+- **GC**: `nix.gc` (30 days here) deletes store paths older than X; run
+  `sudo nix-collect-garbage --delete-older-than 30d` to free space.
+
 ## 🧱 Where stuff lives
 
 ```text
 erogeDOTS/
 ├── flake.nix                  # inputs: nixpkgs, home-manager, qylock, rust-overlay
-├── flake.lock                 # locked inputs
+├── flake.lock                 # locked inputs (commit this, update deliberately)
 ├── install.sh                 # fresh-machine installer
 ├── agent.md                   # agent identity + full repo reference
 ├── hosts/NixChan/             # machine-specific system config
 │   ├── configuration.nix      # thin router, imports only
 │   ├── hardware-configuration.nix # MY hardware only, not portable
-│   └── modules/               # boot/network/desktop/audio/power/fonts/i18n/gaming/bluetooth/remote/nix-settings/users
+│   └── modules/               # 12 files: boot/network/desktop/audio/power/fonts/i18n/gaming/bluetooth/remote/nix-settings/users
 ├── home/
 │   ├── moni.nix               # user entry: 9 imports, nvim symlink, theme restore hook
 │   └── modules/
@@ -79,7 +267,7 @@ erogeDOTS/
 │   ├── sana/ harumi/ nanami/ natsume/ nene/  # 5 live themes
 │   ├── incomplete/            # meguru/ tsumuki/ parked (no wallpaper yet)
 │   ├── SCHEMA.md              # theme key contract
-│   └── templates/             # 11 apps with {{placeholders}}
+│   └── templates/             # 12 apps with {{placeholders}}
 │   ├── niri/ quickshell/ swaync/ fuzzel/
 │       ├── ghostty/ alacritty/ foot/ kitty/
 │       └── catnap/ fetch/ cava/ cmatrix/
@@ -87,6 +275,7 @@ erogeDOTS/
 │   ├── theme-switch           # parses theme.conf -> generates -> applies -> restarts
 │   ├── lib/common.sh          # DOTFILES autodetect + APPS list + safe sed
 │   ├── tspick                 # wrapper: theme-switch picker
+│   ├── larp                   # 2x2 hacker wall (fetch + clock + cmatrix + cava)
 │   ├── cliphist-pick          # image-aware clipboard picker
 │   ├── dropterm               # quake dropdown terminal (Mod+grave)
 │   ├── fcitx5-cycle.sh        # EN/JP/TH input cycle
@@ -95,13 +284,13 @@ erogeDOTS/
 │   └── mk-boot-partition      # LIVE-USB ONLY XBOOTLDR helper
 ├── picker-rs/                 # Rust TUI theme picker (src/main.rs)
 ├── pkgs/
-│   ├── catnap/               # prebuilt catnap binary (default shell fetch)
+│   ├── catnap/                # prebuilt catnap binary (default shell fetch)
 │   ├── chatgpt/               # official ChatGPT RPM as FHSEnv
-│   └── discord-opencode/      # Oko-chan Discord bridge (areofyl fetch comes from nixpkgs)
+│   └── discord-opencode/      # Oko-chan Discord bridge (Rust, flake-passed to home-manager)
 ├── config/                    # static configs
 │   ├── nvim/                  # LazyVim config, symlinked by Home-Manager
 │   └── firefox/user.js        # fonts + GPU perf, applied after first launch
-├── shells/                    # nix develop environments (default/full composes rust+python+go+common)
+├── shells/                    # 10 nix develop environments (default/full composes rust+python+go+common)
 ├── wallpapers/                # 5 live wallpapers (see themes table)
 ├── docs/                      # DEVELOPMENT, INSTALL, RETIRED, larper, vpn
 └── README.md                  # this file
@@ -112,20 +301,22 @@ erogeDOTS/
 | Path | What it does |
 |---|---|
 | `flake.nix` | Declares `nixosConfigurations.NixChan`, 10 devShells, and `catnap`/`chatgpt`/`discord-opencode-bot` packages. Uses `rust-overlay` for dev shells. |
+| `flake.lock` | Exact pinned revisions of all 4 inputs. Commit it; bump with `nix flake update`. |
 | `install.sh` | Clone -> `nixos-rebuild switch` -> `cargo build --release` picker-rs -> copy to `~/.local/bin/theme-picker` -> symlink `tspick`/`cliphist-pick` -> link skill -> apply Firefox `user.js`. Uses fzf fallback when cargo is absent. |
-| `hosts/NixChan/configuration.nix` | Thin router. GRUB, NetworkManager + openvpn, Tailscale + SSH 22, xrdp off, PipeWire, Bluetooth off, SDDM Wayland, niri + XFCE + GNOME, patched qylock shim, single-source fonts, flakes, allowUnfree, GC 30d. |
+| `hosts/NixChan/configuration.nix` | Thin router. Imports the 12 files in `modules/` only. |
+| `hosts/NixChan/modules/` | `boot` (GRUB, ESP at /efi), `network` (NM + VPN + Tailscale + SSH 22), `desktop` (niri + XFCE + GNOME, SDDM Wayland, flatpak, patched qylock shim), `audio` (PipeWire 44.1/48k), `power` (TLP), `fonts` (single source), `i18n` (fcitx5 EN/JP/TH), `gaming` (`programs.steam`), `bluetooth` (off for RAM), `remote` (xrdp off, uinput/udev), `nix-settings` (flakes, caches, GC 30d), `users` (moni groups + scoped NOPASSWD). |
 | `home/moni.nix` | Imports 9 home modules, symlinks `config/nvim`, restores theme on activation. |
 | `home/modules/shell.nix` | 4 terminals, zsh + core aliases, catnap on shell open (areofyl fetch rides along for `larp`). |
 | `home/modules/desktop.nix` | Session tools: Quickshell Senren Banka shell, fuzzel, awww, swaync, screenshots, clipboard, wlogout/wlsunset/swaylock. |
 | `home/modules/apps.nix` | Daily apps, ChatGPT package, Firefox default. `gaming.nix` holds wine/steam/heroic. `mime.nix` holds dual-location mimeapps, figma handler, Claude webapp, Dolphin dark theme, nvim-terminal entry. |
 | `themes/<name>/theme.conf` | Colors, bar border + icons, focus rings, terminal opacity, cava/cmatrix/fetch/catnap values, wallpaper path, character metadata. Schema: `themes/SCHEMA.md`. |
-| `themes/templates/<app>/` | Source templates with `{{PLACEHOLDERS}}` for all 11 themed apps. |
+| `themes/templates/<app>/` | Source templates with `{{PLACEHOLDERS}}` for all 12 themed apps. |
 | `scripts/theme-switch` | Full switcher: `list`, `current`, `preview`, `picker`, and direct `<theme>` apply with wallpaper + app reload. |
 | `picker-rs/src/main.rs` | Ratatui picker with wallpaper image preview; Enter calls `theme-switch`. |
 | `pkgs/*` | Local Nix packages for binaries not cleanly in nixpkgs. |
-| `shells/*` | Reproducible `nix develop .#<name>` toolsets. |
+| `shells/*` | Reproducible `nix develop .#<name>` toolsets (10 total). |
 | `config/nvim` | Editor config, store-symlinked, not theme-generated. |
-| `wallpapers/` | Active wallpaper assets. |
+| `wallpapers/` | Active wallpaper assets (5 jpgs). |
 
 ## 🥞 My stacks
 
@@ -201,6 +392,7 @@ nix develop .#docker     # containers + scan/lint tools
 nix develop .#security   # authorized-targets-only security toolkit
 nix develop .#common     # shared CLI tools only
 nix develop .#webapp     # webapp workflow
+nix develop .#pg-computer # computer-control MCP env
 ```
 
 Full details: `docs/DEVELOPMENT.md`.
@@ -211,10 +403,10 @@ Full details: `docs/DEVELOPMENT.md`.
 |---|---|
 | `theme-switch <theme>\|list\|current\|preview\|picker` | Generate + apply theme, restart affected apps |
 | `tspick` | Shortcut to the interactive picker |
+| `larp [open\|kill]` | 2x2 hacker wall: fetch + tty-clock + cmatrix + cava |
 | `dropterm` | Toggle quake terminal under bar |
 | `cliphist-pick` | Clipboard history with correct image/text paste |
 | `ram show\|diet\|watch` | RAM breakdown + safe diet |
-| `larp [open\|kill]` | 2x2 hacker wall: fetch + tty-clock + cmatrix + cava |
 | `unzzz start\|stop` / `zzz` | Stay awake with lid closed / hibernate |
 | `mk-boot-partition --i-know` | LIVE-USB ONLY XBOOTLDR helper |
 
@@ -323,4 +515,4 @@ entry so the next session knows what was done.
 
 ---
 
-**VER.1.2** — personal, WIP, waifu-powered. えへへ 💕
+**VER ALPHA 1.3** — personal, WIP, waifu-powered. えへへ 💕
