@@ -121,48 +121,23 @@ window-rule {
     clip-to-geometry true
 }
 
-// Larp wall — `larp` opens 2x2 quadrants (TL fetch, TR clock, BL matrix, BR cava).
-// Geometry assumes 1920x1080; bar occupies ~top 48px.
+// System monitor — Mod+Alt+B opens floating btm
 window-rule {
-    match app-id=r#"^com\.mitchellh\.ghostty$"# title="^larp-tl$"
+    match app-id=r#"^com\.mitchellh\.ghostty$"# title="^btm-monitor$"
     open-floating true
-    open-focused false
-    default-floating-position x=12 y=48 relative-to="top-left"
-    default-column-width { fixed 936; }
-    default-window-height { fixed 494; }
+    default-column-width { fixed 1000; }
+    default-window-height { fixed 660; }
     geometry-corner-radius 12
     clip-to-geometry true
 }
 
+// Larp wall — `larp` builds a tiled 2x2 on workspace 5 (Super+5 feel).
+// TL+BL in left column, TR+BR in right column. Placement script-driven:
+// both columns move to workspace 5 (created if missing), then focus it.
 window-rule {
-    match app-id=r#"^com\.mitchellh\.ghostty$"# title="^larp-tr$"
-    open-floating true
+    match app-id=r#"^com\.mitchellh\.ghostty$"# title=r#"^larp-(tl|tr|bl|br)$"#
     open-focused false
-    default-floating-position x=12 y=48 relative-to="top-right"
-    default-column-width { fixed 936; }
-    default-window-height { fixed 494; }
-    geometry-corner-radius 12
-    clip-to-geometry true
-}
-
-window-rule {
-    match app-id=r#"^com\.mitchellh\.ghostty$"# title="^larp-bl$"
-    open-floating true
-    open-focused false
-    default-floating-position x=12 y=12 relative-to="bottom-left"
-    default-column-width { fixed 936; }
-    default-window-height { fixed 494; }
-    geometry-corner-radius 12
-    clip-to-geometry true
-}
-
-window-rule {
-    match app-id=r#"^com\.mitchellh\.ghostty$"# title="^larp-br$"
-    open-floating true
-    open-focused false
-    default-floating-position x=12 y=12 relative-to="bottom-right"
-    default-column-width { fixed 936; }
-    default-window-height { fixed 494; }
+    default-column-width { proportion 0.5; }
     geometry-corner-radius 12
     clip-to-geometry true
 }
@@ -177,6 +152,7 @@ binds {
     Mod+Shift+T hotkey-overlay-title="Add Theme" { spawn "ghostty" "--title=theme-tools" "-e" "theme-switch" "add"; }
     Mod+Ctrl+D hotkey-overlay-title="Development Shell" { spawn "ghostty" "--title=dev-shell" "-e" "theme-picker" "dev"; }
     Mod+Alt+R hotkey-overlay-title="RAM Monitor" { spawn "ghostty" "--title=ram-watch" "-e" "ram" "watch"; }
+    Mod+Alt+B hotkey-overlay-title="System Monitor" { spawn "ghostty" "--title=btm-monitor" "-e" "btm"; }
     Mod+Alt+Z hotkey-overlay-title="Toggle Stay Awake" { spawn "unzzz" "toggle"; }
     Mod+S hotkey-overlay-title="Quick Settings" { spawn-sh "quickshell ipc -n call quick-settings toggle"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }

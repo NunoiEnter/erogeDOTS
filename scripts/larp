@@ -1,25 +1,104 @@
 #!/usr/bin/env bash
-# larp — 2x2 terminal wall.
-# TL areofyl fetch, TR tty-clock in theme color, BL cmatrix, BR cava.
+# larp — tiled 2x2 terminal wall on workspace 5 (Super+5 feel).
+# TL areofyl fetch, TR bottom, BL cmatrix, BR cava.
+# Left column TL+BL, right column TR+BR, stacked via consume-window-into-column.
 # Usage: larp | larp kill
 set -euo pipefail
+
+# Theme color for inner commands (expanded below).
+# shellcheck disable=SC1091
+source "${HOME}/.config/theme/env" 2>/dev/null || true
+
+WALL_WS=5
+
+win_id() { # title -> niri window id (empty if missing)
+  niri msg -j windows 2>/dev/null | jq -r --arg t "$1" '.[] | select(.title == $t) | .id' | head -1
+}
+
+wait_id() { # title -> wait up to ~10s, print id
+  local title="$1" id="" i
+  for ((i = 0; i < 50; i++)); do
+    id="$(win_id "$title")"
+    [[ -n "$id" ]] && { printf '%s\n' "$id"; return 0; }
+    sleep 0.2
+  done
+  return 1
+}
+
+spawn_one() { # title, command...
+  local title="$1"
+  shift
+  # shellcheck disable=SC2086
+  local cmd="source \"\$HOME/.config/theme/env\" 2>/dev/null; $* ; exec zsh"
+  if pgrep -x niri >/dev/null && command -v niri >/dev/null; then
+    niri msg action spawn -- ghostty --title="$title" -e bash -c "$cmd" >/dev/null
+  else
+    # shellcheck disable=SC2086
+    ghostty --title="$title" -e bash -c "$cmd" &
+    disown
+  fi
+}
 
 case "${1:-open}" in
   kill)
     pkill -f 'ghostty --title=larp-' 2>/dev/null || true
     ;;
   open)
-    run() { # title, command...
-      local title="$1"
-      shift
-      # shellcheck disable=SC2086
-      ghostty --title="$title" -e bash -c 'source "$HOME/.config/theme/env" 2>/dev/null; '"$*"' ; exec zsh' &
-      disown
-    }
-    run larp-tl 'while true; do fetch --infinite; sleep 0.3; done'
-    run larp-tr 'tty-clock -C ${CMATRIX_COLOR:-cyan} -s -g'
-    run larp-bl 'cmatrix -C ${CMATRIX_COLOR:-cyan}'
-    run larp-br 'cava -p ~/.config/cava/config'
+    command -v niri >/dev/null || { echo "larp needs niri running" >&2; exit 1; }
+    pkill -f 'ghostty --title=larp-' 2>/dev/null || true
+    sleep 0.3
+    # Left column: TL then BL to its right, consume BL into TL.
+    # (Focus left partner first: new windows open next to focus.)
+    spawn_one larp-tl 'while true; do fetch --infinite; sleep 0.3; done'
+    tl="$(wait_id larp-tl)" || exit 1
+    niri msg action focus-window --id "$tl" >/dev/null
+    spawn_one larp-bl 'cmatrix -C ${CMATRIX_COLOR:-cyan}'
+    wait_id larp-bl >/dev/null || exit 1
+    niri msg action focus-window --id "$tl" >/dev/null
+    niri msg action consume-window-into-column >/dev/null
+    # Right column: TR then BR to its right, consume BR into TR.
+    spawn_one larp-tr 'btm'
+    tr="$(wait_id larp-tr)" || exit 1
+    niri msg action focus-window --id "$tr" >/dev/null
+    spawn_one larp-br 'cava -p ~/.config/cava/config'
+    wait_id larp-br >/dev/null || exit 1
+    niri msg action focus-window --id "$tr" >/dev/null
+    niri msg action consume-window-into-column >/dev/null
+    # Move both columns to one workspace: index 5 if it exists,
+    # else append a new workspace (out-of-range index appends) and join it.
+    # Left column first, then right column joins the same (last) workspace.
+    # niri references can be flaky, so verify and repair until converged.
+    ws_count() { niri msg -j workspaces 2>/dev/null | jq -r 'length // empty'; }
+    ws_of() { niri msg -j windows 2>/dev/null | jq -r --arg t "$1" '.[] | select(.title == $t) | .workspace_id // empty' | head -1; }
+    idx_of() { niri msg -j workspaces 2>/dev/null | jq -r --argjson id "$1" '.[] | select(.id == $id) | .idx // empty' | head -1; }
+    niri msg action focus-window --id "$tl" >/dev/null
+    n="$(ws_count)" || n=0
+    if (( n >= WALL_WS )); then
+      niri msg action move-column-to-workspace "$WALL_WS" >/dev/null
+      niri msg action focus-window --id "$tr" >/dev/null
+      niri msg action move-column-to-workspace "$WALL_WS" >/dev/null
+    else
+      niri msg action move-column-to-workspace "$WALL_WS" >/dev/null
+      niri msg action focus-window --id "$tr" >/dev/null
+      n="$(ws_count)" && [[ "$n" =~ ^[0-9]+$ ]] || n=1
+      niri msg action move-column-to-workspace "$n" >/dev/null
+    fi
+    attempt=0
+    while (( attempt < 4 )); do
+      left_ws="$(ws_of larp-tl)"; right_ws="$(ws_of larp-tr)"
+      [[ -n "$left_ws" && "$left_ws" == "$right_ws" ]] && break
+      [[ -n "$left_ws" ]] || break
+      idx="$(idx_of "$left_ws")"
+      [[ "$idx" =~ ^[0-9]+$ ]] || break
+      niri msg action focus-window --id "$tr" >/dev/null
+      niri msg action move-column-to-workspace "$idx" >/dev/null
+      sleep 0.5
+      attempt=$((attempt + 1))
+    done
+    # Land on the wall, focus top-left.
+    wall_ws="$(ws_of larp-tl)"; wall_idx="$(idx_of "$wall_ws")"
+    [[ "$wall_idx" =~ ^[0-9]+$ ]] && niri msg action focus-workspace "$wall_idx" >/dev/null
+    niri msg action focus-window --id "$tl" >/dev/null
     ;;
   *)
     echo "usage: larp [open|kill]" >&2

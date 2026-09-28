@@ -10,8 +10,8 @@ cursor-style = bar
 cursor-style-blink = true
 
 # Window
-window-padding-x = 8
-window-padding-y = 8
+window-padding-x = 12
+window-padding-y = 12
 window-decoration = false
 background-opacity = {{GHOSTTY_OPACITY}}
 background-blur-radius = 20

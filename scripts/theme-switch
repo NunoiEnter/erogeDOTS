@@ -8,7 +8,7 @@ THEMES_DIR="$DOTFILES/themes"
 TEMPLATES_DIR="$THEMES_DIR/templates"
 STATE_DIR="$CONFIG_HOME/theme"
 STATE_FILE="$STATE_DIR/active"
-APPS=(niri quickshell fetch fuzzel swaync ghostty alacritty kitty cava cmatrix)
+APPS=(niri quickshell fetch fuzzel swaync ghostty alacritty kitty cava cmatrix bottom)
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 info() { printf "${CYAN}→${NC} %s\n" "$*"; }

@@ -180,6 +180,13 @@ in
 
   programs.home-manager.enable = true;
 
+  # bottom binary via home-manager; bottom.toml itself is rendered by
+  # theme-switch (themes/templates/bottom) so theme changes apply without
+  # rebuilds — same pattern as ghostty/cava/fetch. Settings left empty
+  # on purpose: a non-empty settings set would fight theme-switch over
+  # ~/.config/bottom/bottom.toml.
+  programs.bottom.enable = true;
+
   # Browser preferences are declarative; install.sh no longer copies user.js.
   programs.firefox = {
     enable = true;
