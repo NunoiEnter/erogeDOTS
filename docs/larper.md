@@ -2,6 +2,16 @@
 
 Look like a hacker. Feel like a hacker. Be a cat chasing a mouse.
 
+## Larp Wall
+
+```bash
+larp        # 2x2 wall: TL areofyl fetch, TR tty-clock, BL cmatrix, BR cava
+larp kill   # close all four
+```
+
+Or `Mod+G`. Quadrant geometry assumes 1920x1080 (rules in
+`themes/templates/niri/config.kdl`).
+
 ## Audio Visualizer
 
 | Command | What | Usage |

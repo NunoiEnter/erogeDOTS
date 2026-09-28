@@ -4,11 +4,8 @@
 
 set -euo pipefail
 
-DOTFILES="$HOME/erogeDOTS"
-THEMES_DIR="$DOTFILES/themes"
-STATE_DIR="$HOME/.config/theme"
-STATE_FILE="$STATE_DIR/active"
-TEMPLATES_DIR="$THEMES_DIR/templates"
+# shellcheck disable=SC1091
+source "$(dirname "$(readlink -f "$0")")/lib/common.sh"
 
 # Colors
 RED='\033[0;31m'
@@ -41,7 +38,7 @@ usage() {
     echo "Available themes:"
     for theme_dir in "$THEMES_DIR"/*/; do
         theme_name=$(basename "$theme_dir")
-        [[ "$theme_name" == "templates" ]] && continue
+        should_skip "$theme_name" && continue
         echo -e "  ${CYAN}$theme_name${NC}"
     done
 }
@@ -51,7 +48,7 @@ list_themes() {
     echo ""
     for theme_dir in "$THEMES_DIR"/*/; do
         theme_name=$(basename "$theme_dir")
-        [[ "$theme_name" == "templates" ]] && continue
+        should_skip "$theme_name" && continue
 
         if [[ -f "$STATE_FILE" ]] && [[ "$(cat "$STATE_FILE")" == "$theme_name" ]]; then
             echo -e "  ${GREEN}● $theme_name${NC} ${DIM}(active)${NC}"
@@ -109,6 +106,16 @@ parse_theme() {
         var_name=$(echo "$key" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
         COLORS[$var_name]="$value"
     done < "$conf_file"
+
+    # Fallback: old waybar_* names feed bar_* for one release.
+    for pair in BORDER:WAYBAR_BORDER WORKSPACE_ACTIVE:WAYBAR_WORKSPACE_ACTIVE \
+        WORKSPACE_DEFAULT:WAYBAR_WORKSPACE_DEFAULT CLOCK_ICON:WAYBAR_CLOCK_ICON; do
+        new="BAR_${pair%%:*}"
+        old="${pair##*:}"
+        if [[ -z "${COLORS[$new]:-}" && -n "${COLORS[$old]:-}" ]]; then
+            COLORS[$new]="${COLORS[$old]}"
+        fi
+    done
 }
 
 # ── Theme Validation ───────────────────────────────────────────────
@@ -130,6 +137,13 @@ validate_theme() {
         warn "Missing keys: ${missing[*]}"
         return 1
     fi
+
+    # Optional but expected — warn only, fall back at apply time.
+    for key in BAR_BORDER CAVA_COLORS CMATRIX_COLOR GHOSTTY_OPACITY; do
+        if [[ -z "${COLORS[$key]:-}" ]]; then
+            warn "Optional $key missing, using fallback"
+        fi
+    done
     return 0
 }
 
@@ -142,7 +156,8 @@ apply_template() {
     cp "$template" "$output"
 
     for key in "${!COLORS[@]}"; do
-        sed -i "s|{{${key}}}|${COLORS[$key]}|g" "$output"
+        esc=$(sed_escape "${COLORS[$key]}")
+        sed -i "s|{{${key}}}|${esc}|g" "$output"
     done
 }
 
@@ -156,8 +171,7 @@ generate_configs() {
     parse_theme "$theme_name"
     validate_theme "$theme_name" || true
 
-    local apps=("niri" "waybar" "catnap" "fuzzel" "swaync" "ghostty" "alacritty" "foot" "kitty" "cava" "cmatrix")
-    for app in "${apps[@]}"; do
+    for app in "${APPS[@]}"; do
         if [[ -d "$TEMPLATES_DIR/$app" ]]; then
             mkdir -p "$cache_dir/$app"
             for tpl in "$TEMPLATES_DIR/$app"/*; do
@@ -186,11 +200,8 @@ apply_theme() {
     local theme_name="$1"
     local cache_dir="$STATE_DIR/cache/$theme_name"
 
-    local apps=("niri" "waybar" "catnap" "fuzzel" "swaync" "ghostty" "alacritty" "foot" "kitty" "cava" "cmatrix")
-
-    for app in "${apps[@]}"; do
+    for app in "${APPS[@]}"; do
         local target="$HOME/.config/$app"
-        local source_dir="$DOTFILES/config/$app"
         local theme_dir="$cache_dir/$app"
 
         mkdir -p "$target"
@@ -201,11 +212,6 @@ apply_theme() {
             real_target="$(readlink -f "$target")"
         fi
 
-        # Copy base configs if target empty
-        if [[ -d "$source_dir" ]] && [[ -z "$(ls -A "$real_target" 2>/dev/null)" ]]; then
-            cp -r "$source_dir"/* "$real_target"/ 2>/dev/null || true
-        fi
-
         # Overwrite with theme-specific configs
         if [[ -d "$theme_dir" ]]; then
             cp -r "$theme_dir"/* "$real_target"/ 2>/dev/null || true
@@ -213,6 +219,8 @@ apply_theme() {
     done
 
     step "Configs applied: $theme_name"
+    # One-release cleanup: catnap replaced by fetch (see docs/RETIRED.md).
+    rm -rf "$HOME/.config/catnap" "$HOME/.cache/catnap_output" 2>/dev/null || true
     sync
 }
 
@@ -241,19 +249,12 @@ restart_apps() {
     local theme_name="$1"
     header "Restarting apps"
 
-    # Kill waybar
-    if pgrep -f "waybar" > /dev/null 2>&1; then
-        pkill -f "waybar" 2>/dev/null || true
-        sleep 0.3
-        step "Waybar stopped"
-    fi
-
     # Set wallpaper
     apply_wallpaper "$theme_name"
 
     # Reload niri
     if pgrep -x "niri" > /dev/null 2>&1; then
-        niri msg action reload-config 2>/dev/null || true
+        niri msg action load-config-file 2>/dev/null || true
         step "Niri reloaded"
     fi
 
@@ -275,18 +276,25 @@ restart_apps() {
         step "Foot reloaded (reopen terminals for new colors)"
     fi
 
-    # Restart waybar
-    waybar >/dev/null 2>&1 &
-    disown
-    step "Waybar started"
-
     # Reload swaync
     if pgrep -x "swaync" > /dev/null 2>&1; then
         swaync-client --reload-config 2>/dev/null || true
         step "Swaync reloaded"
     fi
 
-    step "catnap: next launch uses new theme"
+    # Restart quickshell widget (picks up new themed shell.qml)
+    if pgrep -f "\.config/quickshell/shell\.qml" > /dev/null 2>&1; then
+        pkill -f "\.config/quickshell/shell\.qml" 2>/dev/null || true
+        sleep 0.3
+        step "Quickshell stopped"
+    fi
+    if command -v quickshell &>/dev/null && [[ -f "$HOME/.config/quickshell/shell.qml" ]]; then
+        nohup quickshell -n -p "$HOME/.config/quickshell/shell.qml" >/dev/null 2>&1 </dev/null &
+        disown
+        step "Quickshell started"
+    fi
+
+    step "fetch: reads ~/.config/fetch/config on each run, nothing to restart"
 }
 
 # ── Preview ────────────────────────────────────────────────────────
@@ -310,7 +318,7 @@ preview_theme() {
     echo -e "  Foreground:  ${COLORS[FG]}"
     echo ""
     echo -e "  Niri focus:  ${COLORS[NIRI_FOCUS_ACTIVE]}"
-    echo -e "  Waybar bg:   ${COLORS[WAYBAR_BG_GRADIENT]}"
+    echo -e "  Bar border:  ${COLORS[BAR_BORDER]:-${COLORS[WAYBAR_BORDER]:-?}}"
 }
 
 # ── Interactive Picker ─────────────────────────────────────────────
@@ -387,7 +395,7 @@ picker() {
     for theme_dir in "$THEMES_DIR"/*/; do
         local name
         name=$(basename "$theme_dir")
-        [[ "$name" == "templates" ]] && continue
+        should_skip "$name" && continue
         themes+=("$name")
     done
 

@@ -1,61 +1,25 @@
 { pkgs }:
 
 let
-  rustToolchain = pkgs.rust-bin.stable.latest.default.override {
-    extensions = [
-      "rust-src"
-      "rust-analyzer"
-      "clippy"
-      "rustfmt"
-    ];
-  };
+  rust = import ./rust.nix { inherit pkgs; };
+  python = import ./python.nix { inherit pkgs; };
+  go = import ./go.nix { inherit pkgs; };
+  common = import ./common.nix { inherit pkgs; };
 in
 pkgs.mkShell {
-  nativeBuildInputs = [
-    # Rust
-    rustToolchain
-    pkgs.cargo-edit
-    pkgs.cargo-watch
-    pkgs.cargo-audit
-    pkgs.cargo-deny
+  nativeBuildInputs =
+    rust.nativeBuildInputs
+    ++ python.nativeBuildInputs
+    ++ go.nativeBuildInputs
+    ++ common.nativeBuildInputs
+    ++ (with pkgs; [
+      nil
+      nixfmt
+      govulncheck
+      air
+    ]);
 
-    # Python
-    pkgs.python3
-    pkgs.python3Packages.ruff
-    pkgs.pyright
-    pkgs.uv
-    pkgs.python3Packages.black
-    pkgs.python3Packages.mypy
-
-    # Go
-    pkgs.go
-    pkgs.gopls
-    pkgs.gofumpt
-    pkgs.golangci-lint
-    pkgs.govulncheck
-    pkgs.air
-
-    # Nix
-    pkgs.nil
-    pkgs.nixfmt
-
-    # Common
-    pkgs.git
-    pkgs.lazygit
-    pkgs.ripgrep
-    pkgs.fd
-    pkgs.jq
-    pkgs.yq-go
-    pkgs.prettier
-    pkgs.shfmt
-    pkgs.shellcheck
-    pkgs.htop
-    pkgs.curl
-    pkgs.wget
-    pkgs.tree
-  ];
-
-  RUST_SRC_PATH = "${rustToolchain}/lib/rustlib/src/rust/library";
+  RUST_SRC_PATH = rust.RUST_SRC_PATH;
   GOPATH = "$HOME/go";
   GOBIN = "$HOME/go/bin";
 

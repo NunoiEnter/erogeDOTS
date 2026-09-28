@@ -42,9 +42,7 @@ pkgs.mkShell {
     tree-sitter
     ripgrep
     fd
-    jq
   ];
-
   shellHook = ''
     echo "🧪 Tester Shell loaded"
     echo "   pytest | playwright | k6 | httpie | vegeta"

@@ -50,9 +50,9 @@ layout {
 spawn-at-startup "fcitx5" "-d"
 spawn-at-startup "awww-daemon"
 spawn-sh-at-startup "awww img {{WALLPAPER}} --transition-type fade"
-spawn-at-startup "waybar"
 spawn-at-startup "swaync"
 spawn-at-startup "playerctld" "daemon"
+spawn-sh-at-startup "quickshell -n -p ~/.config/quickshell/shell.qml"
 spawn-sh-at-startup "wl-paste --type text --watch cliphist store"
 spawn-sh-at-startup "wl-paste --type image --watch cliphist store"
 spawn-sh-at-startup "wl-paste --primary --type text --watch cliphist store"
@@ -64,6 +64,16 @@ hotkey-overlay {
 screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
 
 animations { }
+
+debug {
+    keep-laptop-panel-on-when-lid-is-closed
+}
+
+switch-events {
+    lid-open {
+        spawn "bash" "-c" "niri msg output eDP-1 on; niri msg action power-on-monitors";
+    }
+}
 
 window-rule {
     draw-border-with-background false
@@ -101,18 +111,66 @@ window-rule {
     clip-to-geometry true
 }
 
+// Larp wall — `larp` opens 2x2 quadrants (TL fetch, TR clock, BL matrix, BR cava).
+// Geometry assumes 1920x1080; bar occupies ~top 48px.
+window-rule {
+    match app-id=r#"^com\.mitchellh\.ghostty$"# title="^larp-tl$"
+    open-floating true
+    open-focused false
+    default-floating-position x=12 y=48 relative-to="top-left"
+    default-column-width { fixed 936; }
+    default-window-height { fixed 494; }
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+
+window-rule {
+    match app-id=r#"^com\.mitchellh\.ghostty$"# title="^larp-tr$"
+    open-floating true
+    open-focused false
+    default-floating-position x=12 y=48 relative-to="top-right"
+    default-column-width { fixed 936; }
+    default-window-height { fixed 494; }
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+
+window-rule {
+    match app-id=r#"^com\.mitchellh\.ghostty$"# title="^larp-bl$"
+    open-floating true
+    open-focused false
+    default-floating-position x=12 y=12 relative-to="bottom-left"
+    default-column-width { fixed 936; }
+    default-window-height { fixed 494; }
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+
+window-rule {
+    match app-id=r#"^com\.mitchellh\.ghostty$"# title="^larp-br$"
+    open-floating true
+    open-focused false
+    default-floating-position x=12 y=12 relative-to="bottom-right"
+    default-column-width { fixed 936; }
+    default-window-height { fixed 494; }
+    geometry-corner-radius 12
+    clip-to-geometry true
+}
+
 binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
     Mod+Return hotkey-overlay-title="Open a Terminal" { spawn "ghostty"; }
     Mod+Shift+Return hotkey-overlay-title="Mini Terminal" { spawn "sh" "-c" "ghostty --title=mini -e sh -c 'export MINI=1; catnap -c $HOME/.config/catnap/config-mini.cat; exec zsh'"; }
     Mod+grave hotkey-overlay-title="Dropdown Terminal" { spawn-sh "dropterm"; }
+    Mod+G hotkey-overlay-title="Larp Wall" { spawn-sh "larp"; }
+    Mod+S hotkey-overlay-title="Quick Settings" { spawn-sh "quickshell ipc -n call quick-settings toggle"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
     Mod+Ctrl+V hotkey-overlay-title="Clipboard History" { spawn-sh "cliphist-pick"; }
     Mod+Shift+W hotkey-overlay-title="Session Menu: wlogout" { spawn "wlogout"; }
     Mod+Ctrl+W hotkey-overlay-title="Toggle Night Light: wlsunset" { spawn-sh "pkill wlsunset || { wlsunset -l 13.736717 -L 100.523186 & }"; }
     Super+Alt+L allow-when-locked=true hotkey-overlay-title="Lock the Screen: qylock" { spawn "qylock-lock"; }
     Mod+Shift+Space hotkey-overlay-title="Cycle Input Method" {
-        spawn-sh "~/.config/waybar/scripts/fcitx5-cycle.sh";
+        spawn-sh "$HOME/erogeDOTS/scripts/fcitx5-cycle.sh";
     }
     Super+Alt+S allow-when-locked=true hotkey-overlay-title=null { spawn-sh "pkill orca || exec orca"; }
 

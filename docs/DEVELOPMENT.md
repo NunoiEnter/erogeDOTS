@@ -204,7 +204,7 @@ sudo tcpdump -i eth0 -w capture.pcap
 
 ## direnv Integration (Recommended)
 
-Auto-load shells per-project. Add to `home/modules/terminal.nix`:
+Auto-load shells per-project. Add to `home/modules/shell.nix`:
 
 ```nix
 programs.direnv = {
@@ -241,29 +241,36 @@ erogeDOTS/
 │   ├── rust.nix           # Rust dev
 │   ├── python.nix         # Python dev
 │   ├── go.nix             # Go dev
-│   ├── full.nix           # All combined
+│   ├── full.nix           # Composes rust+python+go+common (no copy-paste)
 │   ├── tester.nix         # QA / Testing
 │   ├── docker.nix         # Container tools
-│   └── security.nix       # Cyber security
+│   ├── security.nix       # Cyber security
+│   ├── webapp.nix         # Web workflow
+│   └── pg-computer.nix    # pg-computer runtime
 ├── themes/
+│   ├── SCHEMA.md          # Key contract (required vs optional vs static)
 │   ├── templates/         # Config templates with {{VARIABLES}}
 │   │   ├── niri/config.kdl
-│   │   ├── waybar/{config.jsonc,style.css}
+│   │   ├── quickshell/shell.qml
 │   │   ├── catnap/config.cat
-│   │   └── fuzzel/config.ini
+│   │   ├── fetch/config
+│   │   └── fuzzel/fuzzel.ini
 │   ├── harumi/            # Pink/cute theme (default)
 │   ├── nanami/            # Dark purple/elegant
 │   ├── natsume/           # Warm pastel/calm
-│   └── nene/              # Lavender/dreamy
+│   ├── nene/              # Lavender/dreamy
+│   ├── sana/              # Red Mashiro-iro
+│   └── incomplete/        # meguru, tsumuki parked (no wallpaper yet)
 ├── scripts/
-│   └── theme-switch       # Theme switcher command
+│   ├── theme-switch       # Theme switcher command
+│   └── lib/common.sh      # APPS list + DOTFILES autodetect (edit here, not in theme-switch)
 └── docs/
     └── DEVELOPMENT.md     # This file
 ```
 
 ## Theme Switcher
 
-Instant desktop theme changer. Switches niri, waybar, fuzzel, catnap colors without rebuild.
+Instant desktop theme changer. Switches niri, quickshell, fuzzel, catnap, fetch colors without rebuild.
 
 ### Quick Start
 
@@ -293,7 +300,7 @@ tspreview                # theme-switch preview
 3. `theme-switch` generates configs by substituting variables
 4. Generated configs cached in `~/.config/theme/cache/<name>/`
 5. Generated configs copied from cache to `~/.config/<app>/` (regular files, not symlinks)
-6. Affected apps restart (waybar) or reload (niri)
+6. Affected apps restart (Quickshell) or reload (niri)
 
 ### Creating a New Theme
 
@@ -316,31 +323,24 @@ bg_surface = "#surface"
 fg = "#foreground"
 fg_dim = "#dimmed"
 
-# Waybar
-waybar_bg_gradient = "linear-gradient(135deg, #color1 0%, #color2 100%)"
-waybar_border = "#border_color"
-waybar_shadow = "rgba(r, g, b, 0.25)"
-waybar_text = "#text_color"
-waybar_active_bg = "linear-gradient(135deg, #color1, #color2)"
+# Bar
+bar_border = "#border_color"
+bar_workspace_active = "◆"
+bar_workspace_default = "◇"
+bar_clock_icon = "🌸"
 
 # Niri
 niri_focus_active = "#focus_color"
 niri_focus_inactive = "#inactive_color"
 niri_shadow = "#shadow_color"
 
-# Fastfetch
-ff_color = "magenta"
-
-# Nvim
-nvim_colorscheme = "your-colorscheme"
+# Terminal opacity
+ghostty_opacity = "0.8"
 
 # Wallpaper
-wallpaper = "~/Pictures/wallpapers/your-wallpaper.jpg"
+wallpaper = "~/erogeDOTS/wallpapers/your-wallpaper.jpg"
 
-# Icons
-waybar_workspace_active = "◆"
-waybar_workspace_default = "◇"
-waybar_clock_icon = "🌸"
+# Cava + cmatrix + fetch + catnap + character (see themes/SCHEMA.md)
 ```
 
 3. Switch to it:
@@ -355,15 +355,20 @@ All `{{VARIABLES}}` in templates are replaced with values from `theme.conf`:
 
 | Variable | Used In | Description |
 |----------|---------|-------------|
-| `{{PRIMARY}}` | waybar | Primary accent color |
-| `{{PRIMARY_LIGHT}}` | waybar | Lighter accent |
-| `{{PRIMARY_DARK}}` | waybar | Darker accent |
-| `{{BG}}` | waybar, fuzzel | Background color |
-| `{{FG}}` | waybar, fuzzel | Foreground color |
+| `{{PRIMARY}}` | quickshell, terminals | Primary accent color |
+| `{{PRIMARY_LIGHT}}` | quickshell, terminals | Lighter accent |
+| `{{PRIMARY_DARK}}` | cava | Darker accent |
+| `{{BG}}` | quickshell, fuzzel, terminals | Background color |
+| `{{FG}}` | quickshell, fuzzel, terminals | Foreground color |
 | `{{NIRI_FOCUS_ACTIVE}}` | niri | Active window focus ring |
 | `{{NIRI_FOCUS_INACTIVE}}` | niri | Inactive window focus ring |
-| `{{WAYBAR_BG_GRADIENT}}` | waybar | Background gradient |
+| `{{BAR_BORDER}}` | quickshell | Bar border |
 | `{{WALLPAPER}}` | niri | Wallpaper path |
+| `{{GHOSTTY_OPACITY}}` | ghostty/kitty/alacritty/foot | Terminal opacity |
+| `{{CHAR_NAME}}` | quickshell | Character name |
+
+Full contract: `themes/SCHEMA.md`. Static templates (`swaync/config.json`,
+`cmatrix/config`) copy as-is.
 
 ### Available Themes
 
@@ -373,6 +378,9 @@ All `{{VARIABLES}}` in templates are replaced with values from `theme.conf`:
 | **nanami** | Dark purple/elegant | `#bd93f9` |
 | **natsume** | Warm pastel/calm | `#cba6f7` |
 | **nene** | Lavender/dreamy | `#b4a7d6` |
+| **sana** | Red Mashiro-iro | `#e05050` |
+
+Parked in `themes/incomplete/` until wallpapers land: `meguru`, `tsumuki`.
 
 ## Adding a New Shell
 

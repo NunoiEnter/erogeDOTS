@@ -1,5 +1,4 @@
 docs/SESSION-SUMMARY.md
-scripts/bench
 result
 result-*
 .direnv/
@@ -8,7 +7,6 @@ target/
 __pycache__/
 
 # secrets - never commit real VPN creds
-config/openvpn/*.ovpn
 *.ovpn
 *.key
 *.pem

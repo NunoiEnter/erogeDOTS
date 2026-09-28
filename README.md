@@ -18,8 +18,8 @@ My NixOS dotfiles with a visual-novel look (waifu themes), one theme-switcher th
 re-colors everything, and a lightweight desktop stack on **niri**.
 
 Why "lightweight"? I tried Noctalia (a whole desktop shell). It looked amazing but
-ate resources. So I dropped it and rebuilt the same look with small tools: waybar,
-swaync, fuzzel — way lighter, still pretty.
+ate resources. So I dropped it and rebuilt the same look with small tools: quickshell,
+swaync, fuzzel — way lighter, still pretty, now in Senren Banka visual-novel style.
 
 ## 🧠 How it works
 
@@ -60,42 +60,50 @@ erogeDOTS/
 ├── install.sh                 # fresh-machine installer
 ├── agent.md                   # agent identity + full repo reference
 ├── hosts/NixChan/             # machine-specific system config
-│   ├── configuration.nix      # system services, desktops, fonts, Nix settings
-│   └── hardware-configuration.nix # MY hardware only, not portable
+│   ├── configuration.nix      # thin router, imports only
+│   ├── hardware-configuration.nix # MY hardware only, not portable
+│   └── modules/               # boot/network/desktop/audio/power/fonts/i18n/gaming/bluetooth/remote/nix-settings/users
 ├── home/
-│   ├── moni.nix               # user entry: imports, nvim symlink, theme restore hook
+│   ├── moni.nix               # user entry: 9 imports, nvim symlink, theme restore hook
 │   └── modules/
-│       ├── terminal.nix       # terminal tools, MPD, zsh, aliases
-│       └── desktop.nix        # desktop apps, mimeapps, launchers
-├── modules/nixos/
-│   └── i18n.nix               # fcitx5 EN/JP/TH input, env vars, CJK fonts
+│       ├── shell.nix          # terminals, zsh, core aliases
+│       ├── dev.nix            # dev tools + AI CLIs
+│       ├── fun.nix            # terminal toys + aliases
+│       ├── desktop.nix        # session tools (bar, launcher, screenshots)
+│       ├── apps.nix           # browsers, files, media, editors
+│       ├── gaming.nix         # wine/steam/heroic
+│       ├── media.nix          # MPD + rmpc
+│       ├── mime.nix           # mimeapps, launchers, kdeglobals
+│       └── discord-opencode.nix # Oko-chan bridge service
 ├── themes/                    # theme definitions + templates
-│   ├── sana/ harumi/ nanami/ natsume/ nene/ meguru/ tsumuki/
-│   └── templates/             # 11 apps with {{color}} placeholders
-│       ├── niri/ waybar/ swaync/ fuzzel/
+│   ├── sana/ harumi/ nanami/ natsume/ nene/  # 5 live themes
+│   ├── incomplete/            # meguru/ tsumuki/ parked (no wallpaper yet)
+│   ├── SCHEMA.md              # theme key contract
+│   └── templates/             # 11 apps with {{placeholders}}
+│   ├── niri/ quickshell/ swaync/ fuzzel/
 │       ├── ghostty/ alacritty/ foot/ kitty/
-│       └── catnap/ cava/ cmatrix/
+│       └── catnap/ fetch/ cava/ cmatrix/
 ├── scripts/
 │   ├── theme-switch           # parses theme.conf -> generates -> applies -> restarts
+│   ├── lib/common.sh          # DOTFILES autodetect + APPS list + safe sed
 │   ├── tspick                 # wrapper: theme-switch picker
 │   ├── cliphist-pick          # image-aware clipboard picker
 │   ├── dropterm               # quake dropdown terminal (Mod+grave)
-│   ├── music-pill-rs/           # Rust layer-shell media pill (no Python/GTK)
-│   ├── vnload / vnsave        # Heroic/Wine save snapshot sync helpers
-│   └── bench                  # illustrative build-speed comparison output
+│   ├── fcitx5-cycle.sh        # EN/JP/TH input cycle
+│   ├── ram                    # RAM breakdown + safe diet
+│   ├── unzzz / zzz            # stay-awake inhibit + hibernate
+│   └── mk-boot-partition      # LIVE-USB ONLY XBOOTLDR helper
 ├── picker-rs/                 # Rust TUI theme picker (src/main.rs)
 ├── pkgs/
-│   ├── catnap/                # prebuilt catnap binary package
-│   └── chatgpt/               # official ChatGPT RPM as FHSEnv
+│   ├── catnap/               # prebuilt catnap binary (default shell fetch)
+│   ├── chatgpt/               # official ChatGPT RPM as FHSEnv
+│   └── discord-opencode/      # Oko-chan Discord bridge (areofyl fetch comes from nixpkgs)
 ├── config/                    # static configs
 │   ├── nvim/                  # LazyVim config, symlinked by Home-Manager
-│   ├── firefox/user.js        # fonts + GPU perf, applied after first launch
-│   ├── waybar/scripts/        # waybar helper scripts
-│   ├── openvpn/               # VPN profiles
-│   └── ytfzf/                 # ytfzf config (currently dead upstream)
-├── shells/                    # nix develop environments
-├── wallpapers/                # theme wallpapers (5 present, see themes table)
-├── docs/                      # notes: DEVELOPMENT, INSTALL, larper, vpn
+│   └── firefox/user.js        # fonts + GPU perf, applied after first launch
+├── shells/                    # nix develop environments (default/full composes rust+python+go+common)
+├── wallpapers/                # 5 live wallpapers (see themes table)
+├── docs/                      # DEVELOPMENT, INSTALL, RETIRED, larper, vpn
 └── README.md                  # this file
 ```
 
@@ -103,14 +111,14 @@ erogeDOTS/
 
 | Path | What it does |
 |---|---|
-| `flake.nix` | Declares `nixosConfigurations.NixChan`, 9 devShells, and `catnap`/`chatgpt` packages. Uses `rust-overlay` for dev shells. |
-| `install.sh` | Clone -> `nixos-rebuild switch` -> `cargo build --release` picker-rs -> copy to `~/.local/bin/theme-picker` -> symlink `tspick`/`cliphist-pick` -> apply Firefox `user.js`. Uses fzf fallback when cargo is absent. |
-| `hosts/NixChan/configuration.nix` | systemd-boot limit 2, NetworkManager + openvpn, Tailscale + SSH 22, xrdp XFCE session, PipeWire, Bluetooth, SDDM Wayland, niri + XFCE + GNOME, patched qylock shim, Kanit/Noto/JetBrainsMono fonts, flakes, allowUnfree. |
-| `home/moni.nix` | Imports terminal + desktop modules, symlinks `config/nvim`, restores theme on activation. |
-| `home/modules/terminal.nix` | User MPD on PipeWire, 4 terminals, zsh aliases (`ts`, `yt`, `cmx`, `cave`, `pkmn`, etc.), catnap on shell open, dev CLIs, screenshot/clipboard/session utilities. |
-| `home/modules/desktop.nix` | Daily apps, ChatGPT package, Firefox defaults, dual-location mimeapps, figma handler, Claude webapp, Dolphin dark theme, nvim-terminal entry. |
-| `modules/nixos/i18n.nix` | fcitx5 + mozc with `keyboard-us`/`mozc`/`keyboard-th` cycle and required env vars. |
-| `themes/<name>/theme.conf` | Colors, gradients, focus rings, terminal colors, nvim scheme, cava/cmatrix/catnap values, wallpaper path, character metadata. |
+| `flake.nix` | Declares `nixosConfigurations.NixChan`, 10 devShells, and `catnap`/`chatgpt`/`discord-opencode-bot` packages. Uses `rust-overlay` for dev shells. |
+| `install.sh` | Clone -> `nixos-rebuild switch` -> `cargo build --release` picker-rs -> copy to `~/.local/bin/theme-picker` -> symlink `tspick`/`cliphist-pick` -> link skill -> apply Firefox `user.js`. Uses fzf fallback when cargo is absent. |
+| `hosts/NixChan/configuration.nix` | Thin router. GRUB, NetworkManager + openvpn, Tailscale + SSH 22, xrdp off, PipeWire, Bluetooth off, SDDM Wayland, niri + XFCE + GNOME, patched qylock shim, single-source fonts, flakes, allowUnfree, GC 30d. |
+| `home/moni.nix` | Imports 9 home modules, symlinks `config/nvim`, restores theme on activation. |
+| `home/modules/shell.nix` | 4 terminals, zsh + core aliases, catnap on shell open (areofyl fetch rides along for `larp`). |
+| `home/modules/desktop.nix` | Session tools: Quickshell Senren Banka shell, fuzzel, awww, swaync, screenshots, clipboard, wlogout/wlsunset/swaylock. |
+| `home/modules/apps.nix` | Daily apps, ChatGPT package, Firefox default. `gaming.nix` holds wine/steam/heroic. `mime.nix` holds dual-location mimeapps, figma handler, Claude webapp, Dolphin dark theme, nvim-terminal entry. |
+| `themes/<name>/theme.conf` | Colors, bar border + icons, focus rings, terminal opacity, cava/cmatrix/fetch/catnap values, wallpaper path, character metadata. Schema: `themes/SCHEMA.md`. |
 | `themes/templates/<app>/` | Source templates with `{{PLACEHOLDERS}}` for all 11 themed apps. |
 | `scripts/theme-switch` | Full switcher: `list`, `current`, `preview`, `picker`, and direct `<theme>` apply with wallpaper + app reload. |
 | `picker-rs/src/main.rs` | Ratatui picker with wallpaper image preview; Enter calls `theme-switch`. |
@@ -126,7 +134,8 @@ erogeDOTS/
 | Piece | What it does for me |
 |---|---|
 | **niri** | my tiling compositor — scrollable columns, tabbed, overview |
-| **waybar** | Noctalia-style bar — full width, capsule widgets, launcher/notif/clipboard/session |
+| **quickshell bar** | Senren Banka kamidana strip — torii launcher, hanko workspace seals, focused title left; VN clock + ❀ media center; ema status + settings right |
+| **quickshell popover** | dialogue-box quick-settings — Wi-Fi, Bluetooth, volume, brightness, media, battery, quick actions (`Mod+S` or bar status click) |
 | **swaync** | my notifications |
 | **fuzzel** | launcher + dmenu |
 | **wlogout** | session menu (power off, reboot, logout) |
@@ -134,13 +143,14 @@ erogeDOTS/
 | **wlsunset** | night light, manual toggle (`Mod+Ctrl+W`) |
 | **cliphist** | clipboard history (`Mod+Ctrl+V`) |
 | **grim + slurp + swappy** | screenshots + region annotate (`Print` family) |
-| **music-pill** | Rust layer-shell pill with album art, LRCLIB synced lyrics, click controls, auto-hides when stopped |
 | **awww** | wallpaper daemon with fade transitions |
+
+Eww/waybar gone. Quickshell owns bar + media + popover.
 
 ### Theming
 
-- **theme-switch** — one command, re-colors 11 apps: niri, waybar, swaync, fuzzel,
-  ghostty, alacritty, foot, kitty, catnap, cava, cmatrix
+- **theme-switch** — one command, re-colors 12 apps: niri,
+  quickshell, swaync, fuzzel, ghostty, alacritty, foot, kitty, catnap, fetch, cava, cmatrix
 - **picker-rs** — Rust picker with live wallpaper previews; fzf fallback included
 - **Cache** — generated configs live in `~/.config/theme/cache/<name>/`; active theme
   in `~/.config/theme/active`; shell env in `~/.config/theme/env`
@@ -152,22 +162,24 @@ erogeDOTS/
 | `nanami` | Nanami | dark purple | yes |
 | `natsume` | Natsume | warm pastel | yes |
 | `nene` | Nene | lavender | yes |
-| `meguru` | Inaba Meguru / Sanoba Witch | `#f09a4c` orange | missing |
-| `tsumuki` | Shiiba Tsumugi / Sanoba Witch | `#e6c055` gold | missing |
+
+Parked in `themes/incomplete/` until wallpapers land: `meguru` (`#f09a4c` orange),
+`tsumuki` (`#e6c055` gold). Schema: `themes/SCHEMA.md`.
 
 ### Terminal and editor
 
 - ghostty (default), kitty, alacritty, foot — all themed
 - zsh with completion, autosuggestions, syntax highlighting, theme env sourcing
 - catnap fetch on shell open with cache + `clear` redraw; `mini` alias for small view
+- areofyl fetch (spinning logo) for the `larp` wall (`Mod+G`)
 - nvim (LazyVim), vscodium, zed-editor
 - yazi, fzf, ripgrep, fd, btop/htop, fun fetch toys (`pkmn`, `cmx`, `cave`, etc.)
 
 ### Apps, gaming, media
 
 - Firefox default + librewolf + chrome, vesktop/discord, obs-studio
-- dolphin/ark, qimgv, vlc/mpv/yt-dlp/ytfzf, qbittorrent
-- wine, steam, steam-run, heroic + `vnload`/`vnsave` save snapshots
+- dolphin/ark, qimgv, vlc/mpv/yt-dlp, qbittorrent
+- wine, steam (system `programs.steam` + user packages), steam-run, heroic
 - MPD user service + rmpc + playerctl, foliate, figma-linux
 
 ### AI tools
@@ -199,11 +211,12 @@ Full details: `docs/DEVELOPMENT.md`.
 |---|---|
 | `theme-switch <theme>\|list\|current\|preview\|picker` | Generate + apply theme, restart affected apps |
 | `tspick` | Shortcut to the interactive picker |
-| `dropterm` | Toggle quake terminal under waybar |
+| `dropterm` | Toggle quake terminal under bar |
 | `cliphist-pick` | Clipboard history with correct image/text paste |
-| `music-pill` (`~/.local/bin`, built from `music-pill-rs/`) | Square media card: hidden tab top-right, hover or `Mod+Shift+M` opens art/title/lyrics/progress/controls |
-| `vnload [game]` / `vnsave [game]` | Restore/snapshot Heroic save folders |
-| `bench` | Illustrative rebuild-speed comparison |
+| `ram show\|diet\|watch` | RAM breakdown + safe diet |
+| `larp [open\|kill]` | 2x2 hacker wall: fetch + tty-clock + cmatrix + cava |
+| `unzzz start\|stop` / `zzz` | Stay awake with lid closed / hibernate |
+| `mk-boot-partition --i-know` | LIVE-USB ONLY XBOOTLDR helper |
 
 ### Keybinds I actually use
 
@@ -211,8 +224,10 @@ Full details: `docs/DEVELOPMENT.md`.
 |---|---|
 | `Mod+Return` | terminal (ghostty) |
 | `Mod+Shift+Return` | mini terminal |
-| `Mod+grave` | dropdown terminal (quake-style under waybar) |
+| `Mod+grave` | dropdown terminal (quake-style under bar) |
+| `Mod+G` | larp wall (2x2: fetch, clock, matrix, cava) |
 | `Mod+D` | app launcher (fuzzel) |
+| `Mod+S` | quick settings popover (quickshell) |
 | `Mod+Ctrl+V` | clipboard history |
 | `Mod+Shift+W` | session menu (wlogout) |
 | `Mod+Ctrl+W` | night light toggle |
@@ -240,7 +255,7 @@ The **install.sh script does the compiling** — you don't touch cargo yourself:
 
 1. `git clone` the repo → `~/erogeDOTS`
 2. `sudo nixos-rebuild switch` — installs EVERYTHING including `cargo` (it's in
-   my `home/modules/terminal.nix` packages). This order matters: cargo must exist
+   my `home/modules/dev.nix` packages). This order matters: cargo must exist
    *before* the build step.
 3. `cd picker-rs && cargo build --release` — compiles the Rust picker from source
    (`picker-rs/src/main.rs`)
@@ -272,25 +287,22 @@ sudo nixos-rebuild switch --flake .#NixChan
 ### Theme/config tweaks (no rebuild needed)
 
 ```bash
-theme-switch sana          # or: harumi nanami natsume nene meguru tsumuki
-niri msg action load-config-file
-pkill waybar; waybar &
+theme-switch sana          # or: harumi nanami natsume nene
+# regenerates Quickshell, reloads niri, restarts Quickshell
 ```
 
-Edit colors in `themes/<name>/theme.conf`; edit layout/behavior in
-`themes/templates/<app>/`; add an app by creating
-`themes/templates/<new-app>/` and adding its name to the `apps` arrays in
-`scripts/theme-switch`.
+Edit colors in `themes/<name>/theme.conf` (schema: `themes/SCHEMA.md`); edit
+layout/behavior in `themes/templates/<app>/`; add an app by creating
+`themes/templates/<new-app>/` and adding its name to `APPS` in
+`scripts/lib/common.sh`.
 
 ## ⚠️ Read this before you copy me
 
 - Hostname is **`NixChan`** — hardware-configuration is for MY hardware only.
 - My aliases, my colors, my keybinds. Yours will (and should) differ.
 - `allowUnfree` overlap deliberately left alone.
-- `meguru` and `tsumuki` theme.conf files exist but their wallpapers are not in
-  `wallpapers/` yet.
-- `docs/INSTALL.md` still mentions old `battery-alert` and `pkgs/theme-picker`
-  paths; the current picker is `picker-rs` built once by `install.sh`.
+- `meguru` and `tsumuki` are parked in `themes/incomplete/` until their wallpapers land.
+- Removed things + how to restore: `docs/RETIRED.md`.
 - **Still building.** Expect churn.
 
 ## 📚 My notes

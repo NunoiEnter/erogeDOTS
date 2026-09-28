@@ -2,7 +2,7 @@
 
 pkgs.mkShell {
   name = "webapp";
-  packages = with pkgs; [
+  nativeBuildInputs = with pkgs; [
     bun
     gh
     nodejs

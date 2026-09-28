@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dropterm — quake-style dropdown terminal, toggles from top-center (under waybar)
+# dropterm — quake-style dropdown terminal, toggles from top-center (under bar)
 # Show: moves to active workspace + focuses. Hide: parks on workspace 5.
 set -euo pipefail
 

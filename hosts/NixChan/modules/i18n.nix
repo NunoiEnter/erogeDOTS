@@ -1,8 +1,10 @@
-# modules/nixos/i18n.nix
-# Import from hosts/NixChan/configuration.nix:
-#   imports = [ ../../modules/nixos/i18n.nix ];
+# hosts/NixChan/modules/i18n.nix
+# Input method + locale + timezone. Edit the group list here, never in GUI.
 { pkgs, ... }:
 {
+  time.timeZone = "Asia/Bangkok";
+  i18n.defaultLocale = "en_US.UTF-8";
+
   i18n.inputMethod = {
     enable = true;
     type = "fcitx5";
@@ -56,13 +58,4 @@
     XMODIFIERS = "@im=fcitx";
     SDL_IM_MODULE = "fcitx";
   };
-
-  # Noto CJK covers Japanese glyphs. Thai fonts (Noto Sans Thai /
-  # Sarabun / IBM Plex Sans Thai) — grab whichever you already used
-  # for your lab sheets; google-fonts includes all three.
-  fonts.packages = with pkgs; [
-    noto-fonts-cjk-sans
-    noto-fonts-color-emoji
-    google-fonts
-  ];
 }

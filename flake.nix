@@ -24,11 +24,11 @@
     };
     catnap = pkgs.callPackage ./pkgs/catnap/default.nix {};
     chatgpt = pkgs.callPackage ./pkgs/chatgpt/default.nix {};
+    discord-opencode-bot = pkgs.callPackage ./pkgs/discord-opencode {};
   in
   {
     packages.${system} = {
-      inherit catnap chatgpt;
-      default = catnap;
+      inherit catnap chatgpt discord-opencode-bot;
     };
 
     nixosConfigurations = {
@@ -43,7 +43,7 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit catnap; };
+            home-manager.extraSpecialArgs = { inherit catnap chatgpt discord-opencode-bot; };
             home-manager.users.moni = import ./home/moni.nix;
           }
         ];

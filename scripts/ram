@@ -1,0 +1,175 @@
+#!/usr/bin/env bash
+# ram — show where RAM goes on NixChan + safe diet to reclaim it.
+# Usage:
+#   ram show [--short]   breakdown: free, PSS top, category totals, opencode DB
+#   ram diet [--full]    kill safe leftovers; --full also stops discord bridge + codex daemons
+#   ram watch            refresh compact view every 2s
+# Diet only touches user-owned processes, never sudo, never deletes data.
+set -euo pipefail
+
+SHORT=0
+FULL=0
+CMD="${1:-show}"
+for a in "$@"; do
+    case "$a" in
+        --short) SHORT=1 ;;
+        --full) FULL=1 ;;
+    esac
+done
+
+pss_table() {
+    # Prints: PSS_MB PID ARGS sorted desc. Root-owned procs read as 0.
+    python3 -c "
+import re, subprocess
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE, SIG_DFL)
+def pss(pid):
+    try:
+        s = 0
+        with open(f'/proc/{pid}/smaps') as f:
+            for line in f:
+                if line.startswith('Pss:'):
+                    s += int(line.split()[1])
+        return s
+    except OSError:
+        return 0
+procs = subprocess.check_output(['ps', '-eo', 'pid,args']).decode().splitlines()[1:]
+rows = []
+for line in procs:
+    m = re.match(r'\s*(\d+)\s+(.*)', line)
+    if m:
+        rows.append((pss(m.group(1)), m.group(1), m.group(2)[:110]))
+try:
+    for p, pid, args in sorted(rows, reverse=True):
+        print(f'{p / 1024:6.0f} {pid:>7} {args}')
+except BrokenPipeError:
+    pass
+"
+}
+
+cat_totals() {
+    # Category totals in MB from PSS scan.
+    python3 -c "
+import re, subprocess
+def pss(pid):
+    try:
+        s = 0
+        with open(f'/proc/{pid}/smaps') as f:
+            for line in f:
+                if line.startswith('Pss:'):
+                    s += int(line.split()[1])
+        return s
+    except OSError:
+        return 0
+cats = {'opencode': 0, 'browser': 0, 'codex': 0, 'desktop': 0, 'bg': 0, 'other': 0}
+pats = {
+    'opencode': re.compile(r'opencode|npm.*mcp|node.*\.bin/mcp|pg_computer', re.I),
+    'browser': re.compile(r'firefox|librewolf|chrome|Isolated|Web Content|Socket Process|RDD Process|Utility Process|Privileged Cont|Extensions', re.I),
+    'codex': re.compile(r'codex', re.I),
+    'desktop': re.compile(r'niri|quickshell|Xwayland|swaync|awww|mpd|fcitx5|mako|ghostty|foot|kitty|alacritty|fuzzel|discordo', re.I),
+    'bg': re.compile(r'blueman|nm-applet|tailscaled|polkit|xdg-desktop-portal|pipewire|wireplumber|upower|discord-opencode|gvfs|at-spi|gnome-keyring|playerctl|cliphist|wl-paste', re.I),
+}
+for line in subprocess.check_output(['ps', '-eo', 'pid,args']).decode().splitlines()[1:]:
+    m = re.match(r'\s*(\d+)\s+(.*)', line)
+    if not m:
+        continue
+    p, args = pss(m.group(1)), m.group(2)
+    hit = False
+    for name, pat in pats.items():
+        if pat.search(args):
+            cats[name] += p
+            hit = True
+            break
+    if not hit:
+        cats['other'] += p
+for k, v in cats.items():
+    print(f'{k:9s} {v / 1024:5.0f} MB')
+"
+}
+
+opencode_db() {
+    local db="$HOME/.local/share/opencode/opencode-stable.db"
+    [[ -f "$db" ]] || { echo "opencode DB: none"; return 0; }
+    du -h "$db" | awk '{ print "opencode DB: " $1 " " $2 }'
+    python3 -c "
+import sqlite3, os
+db = os.path.expanduser('~/.local/share/opencode/opencode-stable.db')
+try:
+    con = sqlite3.connect(f'file:{db}?mode=ro', uri=True)
+    s = con.execute('SELECT COUNT(*) FROM session').fetchone()[0]
+    m = con.execute('SELECT COUNT(*) FROM message').fetchone()[0]
+    p = con.execute('SELECT COUNT(*) FROM part').fetchone()[0]
+    print(f'sessions: {s}  messages: {m}  parts: {p}')
+except Exception as e:
+    print(f'DB query skipped: {e}')
+"
+}
+
+cmd_show() {
+    echo "== free =="
+    free -h
+    echo
+    echo "== top PSS (MB PID CMD) =="
+    if [[ "$SHORT" == 1 ]]; then
+        pss_table | head -n 12
+    else
+        pss_table | head -n 20
+    fi
+    echo
+    echo "== categories (PSS, root procs read 0, add ~150MB) =="
+    cat_totals
+    echo
+    echo "== hogs =="
+    opencode_db
+    if systemctl --user is-active --quiet discord-opencode-bot 2>/dev/null; then
+        systemctl --user show discord-opencode-bot -p MemoryCurrent 2>/dev/null \
+            | awk -F= '{ printf "discord bridge cgroup: %.0f MB\n", $2 / 1024 / 1024 }'
+    else
+        echo "discord bridge: stopped"
+    fi
+    echo
+    echo "== diet hints =="
+    echo "firefox tabs dominate idle. close tabs / about:memory minimize."
+    echo "opencode TUI ~700MB + MCP children ~200MB. disable idle MCP in opencode.jsonc."
+    echo "prune: opencode session list, opencode session delete <id>, opencode db \"VACUUM;\""
+    echo "run: ram diet [--full]"
+}
+
+cmd_diet() {
+    local before after
+    before=$(free -m | awk '/^Mem:/ { print $3 }')
+    # MCP / pg-computer children whose opencode parent is gone.
+    while read -r pid ppid args; do
+        if ! kill -0 "$ppid" 2>/dev/null; then
+            kill "$pid" 2>/dev/null && echo "killed orphan $pid ($args)" || true
+        fi
+    done < <(pgrep -a -f "pg_computer.server|node.*/\.bin/mcp|npm exec @magicuidesign" | awk '{ print $1 }' \
+        | while read -r pid; do
+            ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+            echo "$pid $ppid orphan-mcp"
+        done)
+    if [[ "$FULL" == 1 ]]; then
+        systemctl --user stop discord-opencode-bot 2>/dev/null \
+            && echo "stopped discord-opencode-bot (incl opencode serve)" || true
+        pkill -f "codex app-server" 2>/dev/null \
+            && echo "killed codex daemons" || echo "codex: none running"
+    else
+        echo "tip: ram diet --full also stops discord bridge + codex (~500MB)"
+    fi
+    sleep 1
+    after=$(free -m | awk '/^Mem:/ { print $3 }')
+    echo "Mem used: ${before}M -> ${after}M (shared/cache shift, check ram show)"
+}
+
+case "$CMD" in
+    show) cmd_show ;;
+    diet) cmd_diet ;;
+    watch)
+        while true; do
+            clear
+            SHORT=1 cmd_show
+            sleep 2
+        done
+        ;;
+    *) echo "usage: ram [show [--short]|diet [--full]|watch]" >&2; exit 1 ;;
+esac

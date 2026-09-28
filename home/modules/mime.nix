@@ -1,0 +1,98 @@
+# home/modules/mime.nix
+# Default apps + launchers + Dolphin dark theme.
+{ pkgs, ... }:
+let
+  nvim-desktop = pkgs.writeTextFile {
+    name = "nvim-terminal.desktop";
+    destination = "/share/applications/nvim-terminal.desktop";
+    text = ''
+      [Desktop Entry]
+      Name=Neovim (Terminal)
+      Exec=${pkgs.ghostty}/bin/ghostty -e ${pkgs.neovim}/bin/nvim %F
+      Type=Application
+      Terminal=false
+      MimeType=text/plain;text/x-python;text/x-csrc;text/x-chdr;text/x-java;text/html;text/css;text/javascript;text/x-shellscript;application/json;application/xml;application/x-nix;
+      Categories=TextEditor;Utility;
+      Icon=utilities-terminal
+    '';
+  };
+
+  mimeapps = ''
+    [Default Applications]
+    x-scheme-handler/http=firefox.desktop
+    x-scheme-handler/https=firefox.desktop
+    x-scheme-handler/about=firefox.desktop
+    text/html=firefox.desktop
+    application/xhtml+xml=firefox.desktop
+    text/plain=nvim-terminal.desktop
+    text/x-python=nvim-terminal.desktop
+    text/css=nvim-terminal.desktop
+    text/javascript=nvim-terminal.desktop
+    text/x-shellscript=nvim-terminal.desktop
+    application/json=nvim-terminal.desktop
+    application/xml=nvim-terminal.desktop
+    application/x-nix=nvim-terminal.desktop
+    image/png=qimgv.desktop
+    image/jpeg=qimgv.desktop
+    image/gif=qimgv.desktop
+    image/webp=qimgv.desktop
+    image/svg+xml=qimgv.desktop
+    image/bmp=qimgv.desktop
+    image/tiff=qimgv.desktop
+    video/mp4=vlc.desktop
+    video/x-matroska=vlc.desktop
+    video/webm=vlc.desktop
+    video/x-msvideo=vlc.desktop
+    video/quicktime=vlc.desktop
+    audio/mpeg=vlc.desktop
+    audio/ogg=vlc.desktop
+    audio/flac=vlc.desktop
+    audio/x-wav=vlc.desktop
+    audio/aac=vlc.desktop
+    audio/mp4=vlc.desktop
+    x-scheme-handler/figma=figma-linux.desktop
+    x-scheme-handler/figmadesktop=figma-linux.desktop
+  '';
+in
+{
+  home.packages = [ nvim-desktop ];
+
+  # Write mimeapps.list to BOTH locations KDE checks.
+  # force: local file replaced HM symlink during figma fix.
+  xdg.configFile."mimeapps.list" = {
+    text = mimeapps;
+    force = true;
+  };
+  xdg.dataFile."applications/mimeapps.list".text = mimeapps;
+
+  xdg.dataFile."applications/figma-linux.desktop".text = ''
+    [Desktop Entry]
+    Comment=Unofficial Figma desktop application for Linux
+    Exec=figma-linux %U
+    Icon=figma-linux
+    Name=Figma Linux
+    Terminal=false
+    Type=Application
+    Version=1.5
+    MimeType=x-scheme-handler/figma;x-scheme-handler/figmadesktop;
+  '';
+
+  # Claude has no native Linux app in nixpkgs.
+  xdg.dataFile."applications/claude-webapp.desktop".text = ''
+    [Desktop Entry]
+    Comment=Claude by Anthropic (web app)
+    Exec=firefox --new-window https://claude.ai %U
+    Icon=claude
+    Name=Claude
+    Terminal=false
+    Type=Application
+    Version=1.5
+    Categories=Network;Chat;
+  '';
+
+  xdg.configFile."kdeglobals".text = ''
+    [General]
+    ColorScheme=BreezeDark
+    Theme=Breeze Dark
+  '';
+}

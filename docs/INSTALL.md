@@ -39,7 +39,8 @@ theme-switch list         # or list themes
 theme-switch nanami       # switch directly
 ```
 
-Themes: `harumi` (pink), `nanami` (purple), `natsume` (warm), `nene` (lavender)
+Themes: `harumi` (pink), `nanami` (purple), `natsume` (warm), `nene` (lavender),
+`sana` (red). `meguru`/`tsumuki` parked in `themes/incomplete/` (no wallpaper yet).
 
 ### Flatpak Apps
 
@@ -72,7 +73,7 @@ SDDM loads. Session dropdown (top-left) for XFCE/GNOME. Niri is default.
 │   → symlinks to nix store                       │
 ├─────────────────────────────────────────────────┤
 │ Theme-switch (scripts/theme-switch)             │
-│   niri, waybar, ghostty, fuzzel, swaync, catnap │
+│   niri, quickshell, ghostty, fuzzel, swaync, catnap, fetch │
 │   → generated from templates, copied to ~/.config│
 └─────────────────────────────────────────────────┘
 ```
@@ -85,11 +86,12 @@ SDDM loads. Session dropdown (top-left) for XFCE/GNOME. Niri is default.
 | `~/.config/mimeapps.list` | Symlink → nix store | Static MIME associations |
 | `~/.config/kdeglobals` | Symlink → nix store | KDE dark theme |
 | `~/.config/niri/` | Regular files | Generated per-theme |
-| `~/.config/waybar/` | Regular files | Generated per-theme |
+| `~/.config/quickshell/` | Regular files | Generated per-theme |
 | `~/.config/ghostty/` | Regular files | Generated per-theme |
 | `~/.config/fuzzel/` | Regular files | Generated per-theme |
 | `~/.config/swaync/` | Regular files | Generated per-theme |
 | `~/.config/catnap/` | Regular files | Generated per-theme |
+| `~/.config/fetch/` | Regular files | Generated per-theme |
 
 ### Theme System Flow
 
@@ -111,7 +113,7 @@ cp -r → ~/.config/<app>/         ← live configs (regular files, not symlinks
 
 1. Create template: `themes/templates/myapp/config`
 2. Add `{{VARIABLES}}` from `theme.conf`
-3. Add app name to `apps` array in `scripts/theme-switch` (lines 159, 180)
+3. Add app name to `apps` array in `scripts/theme-switch` (both arrays)
 4. Run `theme-switch <current-theme>` to regenerate
 
 ### Editing Niri Config
@@ -136,49 +138,62 @@ theme-switch nanami
 
 ```
 erogeDOTS/
-├── flake.nix                    # Flake: nixpkgs, home-manager, qylock
+├── flake.nix                    # Flake: nixpkgs, home-manager, qylock, rust-overlay
 ├── flake.lock                   # Locked inputs
 ├── install.sh                   # One-command installer
 ├── hosts/NixChan/
-│   ├── configuration.nix        # NixOS system config
-│   └── hardware-configuration.nix
+│   ├── configuration.nix        # Thin router, imports modules/
+│   ├── hardware-configuration.nix
+│   └── modules/                 # boot/network/desktop/audio/power/fonts/i18n/gaming/bluetooth/remote/nix-settings/users
 ├── home/
-│   ├── moni.nix                 # Home-manager user config
+│   ├── moni.nix                 # 9 home modules, nvim symlink, theme restore hook
 │   └── modules/
-│       ├── terminal.nix         # Packages, zsh, aliases
-│       └── desktop.nix          # Packages, mimeapps, kdeglobals
+│       ├── shell.nix            # Terminals, zsh, core aliases
+│       ├── dev.nix              # Dev tools + AI CLIs
+│       ├── fun.nix              # Terminal toys
+│       ├── desktop.nix          # Session tools
+│       ├── apps.nix             # Daily apps
+│       ├── gaming.nix           # wine/steam/heroic
+│       ├── media.nix            # MPD + rmpc
+│       ├── mime.nix             # Mimeapps + launchers
+│       └── discord-opencode.nix # Bridge service
 ├── themes/
+│   ├── SCHEMA.md                # Key contract
 │   ├── templates/               # Config templates with {{VARIABLES}}
 │   │   ├── niri/config.kdl
-│   │   ├── waybar/{config.jsonc,style.css}
+│   │   ├── quickshell/shell.qml
 │   │   ├── ghostty/config
-│   │   ├── fuzzel/config.ini
+│   │   ├── fuzzel/fuzzel.ini
 │   │   ├── swaync/{config.json,style.css}
 │   │   ├── alacritty/alacritty.toml
 │   │   ├── foot/foot.ini
-│   │   └── kitty/kitty.conf
-│   ├── nanami/theme.conf        # Theme color definitions
-│   ├── harumi/theme.conf
-│   ├── natsume/theme.conf
-│   └── nene/theme.conf
+│   │   ├── kitty/kitty.conf
+│   │   ├── catnap/
+│   │   ├── fetch/config
+│   │   ├── cava/config
+│   │   └── cmatrix/config
+│   ├── sana/harumi/nanami/natsume/nene/  # 5 live themes
+│   └── incomplete/              # meguru, tsumuki (no wallpaper yet)
 ├── scripts/
 │   ├── theme-switch             # Theme switcher (bash)
-│   └── battery-alert            # Battery monitor
+│   ├── lib/common.sh            # APPS list + autodetect (edit here)
+│   ├── tspick/dropterm/cliphist-pick/fcitx5-cycle.sh
+│   ├── ram/unzzz/zzz
+│   └── mk-boot-partition        # LIVE-USB ONLY
 ├── pkgs/
-│   ├── theme-picker/default.nix # Rust TUI picker (Nix derivation)
-│   └── catnap/default.nix       # Catnap fetchurl (prebuilt binary)
+│   ├── catnap/default.nix       # Catnap fetchurl (prebuilt binary, default shell fetch)
+│   ├── chatgpt/                 # Official RPM as FHSEnv
+│   └── discord-opencode/        # Rust bridge (areofyl fetch comes from nixpkgs)
 ├── picker-rs/                   # Rust picker source
-├── shells/                      # Dev shells (rust, python, go, etc.)
+├── shells/                      # Dev shells (rust, python, go, common, full, tester, docker, security, webapp, pg-computer)
 ├── config/
 │   ├── nvim/                    # Base nvim config (symlinked by home-manager)
-│   ├── waybar/scripts/          # Waybar helper scripts
-│   ├── fuzzel/                  # Base fuzzel config
-│   └── ytfzf/                   # ytfzf config (dead — Invidious API blocked)
-├── wallpapers/                  # Theme wallpapers
-├── modules/nixos/               # NixOS modules (i18n)
+│   └── firefox/user.js          # Fonts + GPU perf
+├── wallpapers/                  # 5 live wallpapers
 └── docs/
     ├── INSTALL.md               # This file
-    └── DEVELOPMENT.md           # Dev shells & theme creation
+    ├── DEVELOPMENT.md           # Dev shells & theme creation
+    └── RETIRED.md               # Removed things + restore
 ```
 
 ## Troubleshooting
@@ -215,7 +230,7 @@ KDE ignores `xdg.mimeApps` wildcards (`image/*`). Must use explicit MIME types a
 - `~/.config/mimeapps.list`
 - `~/.local/share/applications/mimeapps.list`
 
-Home-manager handles this via `xdg.configFile` and `xdg.dataFile` in `desktop.nix`.
+Home-manager handles this via `xdg.configFile` and `xdg.dataFile` in `home/modules/mime.nix`.
 
 ### xwayland not working
 

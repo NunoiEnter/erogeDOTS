@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# larp — 2x2 hacker wall (see docs/larper.md).
+# TL areofyl fetch, TR tty-clock in theme color, BL cmatrix, BR cava.
+# Usage: larp | larp kill
+set -euo pipefail
+
+case "${1:-open}" in
+  kill)
+    pkill -f 'ghostty --title=larp-' 2>/dev/null || true
+    ;;
+  open)
+    run() { # title, command...
+      local title="$1"
+      shift
+      # shellcheck disable=SC2086
+      ghostty --title="$title" -e bash -c 'source "$HOME/.config/theme/env" 2>/dev/null; '"$*"' ; exec zsh' &
+      disown
+    }
+    run larp-tl 'while true; do fetch --infinite; sleep 0.3; done'
+    run larp-tr 'tty-clock -C ${CMATRIX_COLOR:-cyan} -s -g'
+    run larp-bl 'cmatrix -C ${CMATRIX_COLOR:-cyan}'
+    run larp-br 'cava -p ~/.config/cava/config'
+    ;;
+  *)
+    echo "usage: larp [open|kill]" >&2
+    exit 2
+    ;;
+esac

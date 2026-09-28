@@ -65,8 +65,8 @@ else
     exit 1
 fi
 
-# 3.9. (retired) Music widget experiments (Python pill, Rust pill, eww card)
-# were removed; media controls live in waybar's mpris module for now.
+# 3.9. Quickshell Senren Banka bar + popover started by niri template.
+# No separate media widget build required.
 cd "$TARGET"
 
 # 4. Apply Firefox user.js (fonts + GPU perf)
@@ -80,5 +80,7 @@ fi
 
 echo ""
 echo "=== Setup complete ==="
-echo "Run: theme-switch   (or: theme-switch <name>)"
-echo "Themes: sana (Sana Inui), harumi, nanami, natsume, nene"
+echo "Run: sudo nixos-rebuild switch --flake .#NixChan"
+echo "Then: theme-switch harumi  (or sana nanami natsume nene)"
+echo "Picker: theme-switch picker (tspick)"
+echo "Incomplete themes (no wallpaper yet): themes/incomplete/"

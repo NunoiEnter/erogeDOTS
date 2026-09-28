@@ -5,11 +5,18 @@
   home.homeDirectory = "/home/moni";
 
   imports = [
-    ./modules/terminal.nix
+    ./modules/shell.nix
+    ./modules/dev.nix
+    ./modules/fun.nix
     ./modules/desktop.nix
+    ./modules/apps.nix
+    ./modules/gaming.nix
+    ./modules/media.nix
+    ./modules/mime.nix
+    ./modules/discord-opencode.nix
   ];
 
-  # Symlinks — niri, waybar, catnap, fuzzel managed by theme-switch
+  # Symlinks — niri, quickshell, fuzzel managed by theme-switch
   home.file = {
     ".config/nvim".source = ../config/nvim;
   };

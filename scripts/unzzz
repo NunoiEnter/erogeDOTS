@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# unzzz: stay awake with lid closed. Blocks logind lid-switch until stopped.
+set -euo pipefail
+
+case "${1:-start}" in
+    stop)
+        systemctl --user stop unzzz.service
+        ;;
+    start)
+        systemctl --user stop unzzz.service 2>/dev/null || true
+        systemctl --user reset-failed unzzz.service 2>/dev/null || true
+        systemd-run --user --unit=unzzz --collect \
+            --description="Stay awake with lid closed" \
+            /run/current-system/sw/bin/systemd-inhibit \
+            --what=handle-lid-switch --mode=block \
+            --who=unzzz --why="stay awake, lid closed" \
+            /run/current-system/sw/bin/sleep infinity
+        ;;
+    *)
+        printf '%s\n' 'Usage: unzzz [start|stop]' >&2
+        exit 2
+        ;;
+esac
+
