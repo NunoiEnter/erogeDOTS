@@ -235,5 +235,15 @@ in
   boot.initrd.verbose = false;
   boot.kernelParams = [ "quiet" "rd.udev.log_level=3" "rd.systemd.show_status=auto" ];
 
+  # Distro branding (NixOwOS-style): shown in /etc/os-release, hostnamectl, fastfetch OS line.
+  # ID_LIKE=nixos keeps scripts that check for NixOS working.
+  system.nixos = {
+    distroId = "nixowos";
+    distroName = "NixOwOS";
+    vendorId = "nixowos";
+    vendorName = "NixOwOS";
+    extraOSReleaseArgs.ID_LIKE = "nixos";
+  };
+
   system.stateVersion = "26.05";
 }

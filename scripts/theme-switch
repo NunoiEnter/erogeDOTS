@@ -148,6 +148,7 @@ apply_theme() {
     render_configs "$name"
     install_configs "$name"
     write_state "$name"
+    rm -f "${XDG_CACHE_HOME:-$HOME/.cache}"/fastfetch-*.out 2>/dev/null || true
     [[ "${EROGEDOTS_NO_RESTART:-0}" == 1 ]] || reload_desktop
     printf "${GREEN}✓${NC} theme: %s\n" "$name"
     info "terminal colors update in newly opened terminals"

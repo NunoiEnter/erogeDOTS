@@ -53,6 +53,86 @@ let
     x-scheme-handler/figma=figma-linux.desktop
     x-scheme-handler/figmadesktop=figma-linux.desktop
   '';
+
+  ffDisplay = {
+    separator = ": ";
+    color = {
+      keys = "magenta";
+      title = "cyan";
+    };
+  };
+
+  ffModules = [
+    "title"
+    "separator"
+    "os"
+    {
+      type = "host";
+      key = "󰌢 Device";
+      format = "{family}";
+    }
+    {
+      type = "kernel";
+      format = "{release}";
+    }
+    "uptime"
+    {
+      type = "packages";
+      combined = true;
+    }
+    "shell"
+    {
+      type = "wm";
+      key = "WM";
+    }
+    "terminal"
+    {
+      type = "cpu";
+      format = "{name}";
+    }
+    {
+      type = "memory";
+      format = "{used} / {total} ({percentage})";
+    }
+    {
+      type = "disk";
+      folders = [ "/" ];
+      key = "Disk";
+      format = "{size-used} / {size-total} ({size-percentage})";
+    }
+    {
+      type = "battery";
+      key = "Battery";
+      format = "{capacity} [{status}]";
+    }
+    "break"
+    {
+      type = "colors";
+      symbol = "circle";
+    }
+  ];
+
+  # Compact info set: fits 61 cols, 9 rows. Full set used with big logo only.
+  ffMiniModules = [
+    "title"
+    "separator"
+    "os"
+    {
+      type = "kernel";
+      format = "{release}";
+    }
+    "uptime"
+    "shell"
+    {
+      type = "memory";
+      format = "{used} / {total} ({percentage})";
+    }
+    "break"
+    {
+      type = "colors";
+      symbol = "circle";
+    }
+  ];
 in
 {
   home = {
@@ -124,9 +204,11 @@ in
 
   programs.zsh = {
     enable = true;
-    enableCompletion = true;
-    autosuggestion.enable = true;
-    syntaxHighlighting.enable = true;
+    # HM compinit deferred below (paints fetch inside niri animation); keep fpath setup only.
+    enableCompletion = false;
+    # Deferred below with compinit (paint first); keep HM fpath only.
+    autosuggestion.enable = false;
+    syntaxHighlighting.enable = false;
     shellAliases = {
       ts = "theme-switch";
       tslist = "theme-switch list";
@@ -160,7 +242,65 @@ in
       setopt PROMPT_SUBST
       PROMPT='%F{magenta}%m%f %F{white}%~%%f '
       [[ -f "$HOME/.config/theme/env" ]] && source "$HOME/.config/theme/env"
-      [[ "''${EROGEDOTS_NO_FASTFETCH:-0}" == 1 ]] || fastfetch
+      # Deferred shell init: runs on first prompt (after fetch paints),
+      # so window animation + fetch appear together. Split hooks: slow compinit
+      # can never cancel the fast plugins, even with Ctrl-C.
+      autoload -Uz add-zsh-hook compinit
+      _eroge_plugins() {
+        add-zsh-hook -d precmd _eroge_plugins
+        ZSH_AUTOSUGGEST_STRATEGY=(history)
+        source ${pkgs.zsh-autosuggestions}/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+        ZSH_HIGHLIGHT_HIGHLIGHTERS=(main)
+        source ${pkgs.zsh-syntax-highlighting}/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+      }
+      _eroge_compinit() {
+        add-zsh-hook -d precmd _eroge_compinit
+        local dump="''${ZSH_COMPDUMP:-$HOME/.zcompdump}"
+        # Dump older than current system = stale store paths -> full rebuild once.
+        if [[ ! -s "$dump" ]] || { [[ -e /run/current-system ]] && [[ "$dump" -ot /run/current-system ]]; }; then
+          compinit -d "$dump" 2>/dev/null || true
+        else
+          compinit -C -d "$dump" 2>/dev/null || compinit -d "$dump"
+        fi
+      }
+      add-zsh-hook precmd _eroge_plugins
+      add-zsh-hook precmd _eroge_compinit
+      # Instant theme-matched fetch: cat cache now (~5ms), refresh in background.
+      # Cache keyed by theme primary so theme switches never show stale colors.
+      _eroge_fetch() {
+        local cfg="$1" tag tkey cache tmp k tg l1 l2 l3
+        local -a flags
+        tkey="''${THEME_PRIMARY:-#ff8fb1}"; tkey="''${tkey//[#]/}"
+        tag="$2-$tkey"
+        cache="$HOME/.cache/fastfetch-$tag.out"
+        _FF_LAST="$cache"
+        k="''${THEME_PRIMARY:-#ff8fb1}"; tg="''${THEME_FG:-#c0caf5}"
+        l1="''${THEME_PRIMARY_DARK:-#5277c3}"; l2="''${THEME_PRIMARY:-#7ebae4}"; l3="''${THEME_PRIMARY_LIGHT:-#df90af}"
+        flags=(--pipe false --color-keys "$k" --color-title "$tg" --logo-color-1 "$l1" --logo-color-2 "$l2" --logo-color-3 "$l3")
+        if [[ -n "$cfg" ]]; then flags+=(-c "$cfg"); fi
+        if [[ -s "$cache" ]]; then
+          cat "$cache"
+          tmp="$cache.$$"
+          (fastfetch "''${flags[@]}" > "$tmp" 2>/dev/null && mv -f "$tmp" "$cache") &!
+        else
+          fastfetch "''${flags[@]}" | tee "$cache"
+        fi
+      }
+      clear() {
+        command clear "$@"
+        [[ -n "''${_FF_LAST:-}" && -f "$_FF_LAST" ]] && cat "$_FF_LAST"
+      }
+      # Responsive: full NixOwOS logo on 81x41 or bigger,
+      # else compact mini logo (fits 61 cols, 10 rows), skip when tiny.
+      if [[ "''${EROGEDOTS_NO_FASTFETCH:-0}" != 1 ]]; then
+        _ff_c="''${COLUMNS:-80}" _ff_l="''${LINES:-24}"
+        if (( _ff_c >= 81 )) && (( _ff_l >= 41 )) && [[ -z "''${MINI:-}" ]]; then
+          _eroge_fetch "" full
+        elif (( _ff_l >= 10 )); then
+          _eroge_fetch "$HOME/.config/fastfetch/compact.jsonc" compact
+        fi
+        unset _ff_c _ff_l
+      fi
     '';
   };
 
@@ -168,18 +308,47 @@ in
     text = mimeapps;
     force = true;
   };
+  # NixOwOS branding: full uwu logo for big windows, mini uwu logo + trimmed info otherwise
+  # (ascii by u/ant-arctica via yunfachi/NixOwOS, CC-BY-4.0; mini variant own code).
+  # File logos, no fastfetch overlay rebuild. Drops noisy Unknown modules
+  # (de/wmtheme/theme/icons/font/terminalfont/swap/localip/poweradapter), compact display + circle colors.
+  xdg.configFile."fastfetch/nixowos.txt".source = ../config/fastfetch/nixowos.txt;
+  xdg.configFile."fastfetch/nixowos-mini.txt".source = ../config/fastfetch/nixowos-mini.txt;
+  xdg.configFile."fastfetch/config.jsonc".text = builtins.toJSON {
+    "$schema" = "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json";
+    logo = {
+      type = "file";
+      source = "${config.home.homeDirectory}/.config/fastfetch/nixowos.txt";
+      padding = {
+        left = 1;
+        right = 1;
+        top = 0;
+      };
+    };
+    display = ffDisplay;
+    modules = ffModules;
+  };
+  # Compact: mini uwu logo + trimmed info, 9 rows, fits 61 cols / short windows.
+  xdg.configFile."fastfetch/compact.jsonc".text = builtins.toJSON {
+    "$schema" = "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json";
+    logo = {
+      type = "file";
+      source = "${config.home.homeDirectory}/.config/fastfetch/nixowos-mini.txt";
+      color = {
+        "1" = "38;2;82;119;195";
+        "2" = "38;2;126;186;228";
+        "3" = "38;2;223;144;175";
+      };
+      padding = {
+        left = 1;
+        right = 2;
+        top = 0;
+      };
+    };
+    display = ffDisplay;
+    modules = ffMiniModules;
+  };
   xdg.dataFile."applications/mimeapps.list".text = mimeapps;
-  xdg.dataFile."applications/figma-linux.desktop".text = ''
-    [Desktop Entry]
-    Name=Figma Linux
-    Comment=Unofficial Figma desktop application for Linux
-    Exec=figma-linux %U
-    Icon=figma-linux
-    Terminal=false
-    Type=Application
-    Version=1.5
-    MimeType=x-scheme-handler/figma;x-scheme-handler/figmadesktop;
-  '';
   xdg.dataFile."applications/claude-webapp.desktop".text = ''
     [Desktop Entry]
     Name=Claude
