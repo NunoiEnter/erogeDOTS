@@ -24,22 +24,34 @@
       config.allowUnfree = true;
     };
     chatgpt = pkgs.callPackage ./pkgs/chatgpt/default.nix {};
-    discord-opencode-bot = pkgs.callPackage ./pkgs/discord-opencode {};
-    theme-picker = pkgs.callPackage ./picker-rs {};
+    theme-picker = pkgs.rustPlatform.buildRustPackage {
+      pname = "theme-picker";
+      version = "0.2.0";
+      src = lib.cleanSourceWith {
+        src = ./picker-rs;
+        filter = path: type: type != "directory" || builtins.baseNameOf path != "target";
+      };
+      cargoLock.lockFile = ./picker-rs/Cargo.lock;
+      meta = {
+        description = "Theme and development-shell TUI for erogeDOTS";
+        mainProgram = "theme-picker";
+      };
+    };
 
     hostEntries = builtins.readDir ./hosts;
     hostNames = builtins.filter
       (name:
         hostEntries.${name} == "directory"
         && !(lib.hasPrefix "_" name)
-        && builtins.pathExists (./hosts + "/${name}/configuration.nix"))
+        && builtins.pathExists (./hosts + "/${name}/hardware-configuration.nix"))
       (builtins.attrNames hostEntries);
 
     mkHost = hostName: lib.nixosSystem {
       inherit system;
-      specialArgs = { inherit inputs; };
+      specialArgs = { inherit inputs hostName; };
       modules = [
-        (./hosts + "/${hostName}/configuration.nix")
+        ./configuration.nix
+        (./hosts + "/${hostName}/hardware-configuration.nix")
         inputs.qylock.nixosModules.default
 
         home-manager.nixosModules.home-manager
@@ -47,7 +59,7 @@
           home-manager.useGlobalPkgs = true;
           home-manager.useUserPackages = true;
           home-manager.extraSpecialArgs = {
-            inherit chatgpt discord-opencode-bot theme-picker;
+            inherit chatgpt theme-picker;
           };
           home-manager.users.moni = import ./home/moni.nix;
         }
@@ -56,7 +68,7 @@
   in
   {
     packages.${system} = {
-      inherit chatgpt discord-opencode-bot theme-picker;
+      inherit chatgpt theme-picker;
     };
 
     nixosConfigurations = lib.genAttrs hostNames mkHost;

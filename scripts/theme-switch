@@ -1,516 +1,172 @@
 #!/usr/bin/env bash
-# theme-switch: instant desktop theme changer for erogeDOTS
-# Usage: theme-switch <theme-name> | list | current | picker
-
+# Render and apply erogeDOTS themes. Interactive screens live in theme-picker.
 set -euo pipefail
 
-# The variable also makes isolated tests possible; installed config uses ~/erogeDOTS.
 DOTFILES="${EROGEDOTS_ROOT:-$HOME/erogeDOTS}"
+CONFIG_HOME="${EROGEDOTS_CONFIG_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}}"
 THEMES_DIR="$DOTFILES/themes"
-STATE_DIR="$HOME/.config/theme"
-STATE_FILE="$STATE_DIR/active"
 TEMPLATES_DIR="$THEMES_DIR/templates"
-APPS=(niri quickshell fetch fuzzel swaync ghostty alacritty foot kitty cava cmatrix)
-SKIP_DIRS=(templates incomplete)
+STATE_DIR="$CONFIG_HOME/theme"
+STATE_FILE="$STATE_DIR/active"
+APPS=(niri quickshell fetch fuzzel swaync ghostty alacritty kitty cava cmatrix)
 
-should_skip() {
-    local name="$1" skip
-    for skip in "${SKIP_DIRS[@]}"; do
-        [[ "$name" == "$skip" ]] && return 0
+RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; CYAN='\033[0;36m'; NC='\033[0m'
+info() { printf "${CYAN}→${NC} %s\n" "$*"; }
+warn() { printf "${YELLOW}warning:${NC} %s\n" "$*" >&2; }
+die() { printf "${RED}error:${NC} %s\n" "$*" >&2; exit 1; }
+
+usage() {
+    cat <<'EOF'
+theme-switch <theme>       render and apply a theme
+theme-switch picker        open the theme TUI
+theme-switch add           create a theme in the guided TUI
+theme-switch list          list themes
+theme-switch current       print active theme
+theme-switch preview [id]  print key colors
+EOF
+}
+
+available_themes() {
+    local dir
+    for dir in "$THEMES_DIR"/*/; do
+        [[ -f "$dir/theme.conf" ]] && basename "$dir"
+    done | sort
+}
+
+list_themes() {
+    local active theme marker
+    active="$(cat "$STATE_FILE" 2>/dev/null || true)"
+    while IFS= read -r theme; do
+        marker='○'; [[ "$theme" == "$active" ]] && marker='●'
+        printf '%s %s\n' "$marker" "$theme"
+    done < <(available_themes)
+}
+
+declare -A THEME
+parse_theme() {
+    local conf="$1" line key value
+    THEME=()
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        [[ "$line" =~ ^[[:space:]]*(#|\[|$) || "$line" != *'='* ]] && continue
+        key="${line%%=*}"; value="${line#*=}"
+        key="$(printf '%s' "$key" | xargs | tr '[:lower:]-' '[:upper:]_')"
+        value="$(printf '%s' "$value" | xargs)"
+        value="${value#\"}"; value="${value%\"}"
+        THEME["$key"]="$value"
+    done < "$conf"
+}
+
+require_theme() {
+    local name="$1" key
+    [[ "$name" =~ ^[a-z0-9][a-z0-9-]*$ ]] || die "invalid theme id: $name"
+    local conf="$THEMES_DIR/$name/theme.conf"
+    [[ -f "$conf" ]] || die "theme not found: $name"
+    parse_theme "$conf"
+    for key in PRIMARY PRIMARY_LIGHT PRIMARY_DARK BG BG_LIGHT BG_SURFACE FG FG_DIM WALLPAPER; do
+        [[ -n "${THEME[$key]:-}" ]] || die "$name misses required key: ${key,,}"
     done
-    return 1
 }
 
-sed_escape() {
-    printf '%s' "$1" | sed -e 's/[&|\\]/\\&/g'
-}
-
-resolve_wallpaper() {
-    local path="$1"
+wallpaper_path() {
+    local path="${THEME[WALLPAPER]}"
     path="${path/#\~/$HOME}"
     [[ "$path" == /* ]] || path="$DOTFILES/$path"
     printf '%s\n' "$path"
 }
 
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-BLUE='\033[0;34m'
-MAGENTA='\033[0;35m'
-CYAN='\033[0;36m'
-DIM='\033[2m'
-BOLD='\033[1m'
-NC='\033[0m'
+sed_escape() { printf '%s' "$1" | sed 's/[&|\\]/\\&/g'; }
 
-# ── Helpers ────────────────────────────────────────────────────────
-
-step()  { echo -e "${CYAN}  → $1${NC}"; }
-warn()  { echo -e "${YELLOW}  ⚠ $1${NC}"; }
-header(){ echo -e "\n${MAGENTA}✿ $1${NC}"; }
-done_msg() { echo -e "\n${GREEN}✓ $1${NC}"; }
-
-usage() {
-    echo -e "${MAGENTA}erogeDOTS Theme Switcher${NC}"
-    echo ""
-    echo "Usage:"
-    echo "  theme-switch <theme>      Switch to theme"
-    echo "  theme-switch list          List available themes"
-    echo "  theme-switch current       Show current theme"
-    echo "  theme-switch preview       Preview theme colors"
-    echo "  theme-switch picker        Interactive theme picker"
-    echo ""
-    echo "Available themes:"
-    for theme_dir in "$THEMES_DIR"/*/; do
-        theme_name=$(basename "$theme_dir")
-        should_skip "$theme_name" && continue
-        echo -e "  ${CYAN}$theme_name${NC}"
+render_template() {
+    local source="$1" target="$2" key escaped
+    cp "$source" "$target"
+    for key in "${!THEME[@]}"; do
+        escaped="$(sed_escape "${THEME[$key]}")"
+        sed -i "s|{{$key}}|$escaped|g" "$target"
     done
-}
-
-list_themes() {
-    header "Available themes"
-    echo ""
-    for theme_dir in "$THEMES_DIR"/*/; do
-        theme_name=$(basename "$theme_dir")
-        should_skip "$theme_name" && continue
-
-        if [[ -f "$STATE_FILE" ]] && [[ "$(cat "$STATE_FILE")" == "$theme_name" ]]; then
-            echo -e "  ${GREEN}● $theme_name${NC} ${DIM}(active)${NC}"
-        else
-            echo -e "  ${CYAN}○ $theme_name${NC}"
-        fi
-
-        if [[ -f "$theme_dir/theme.conf" ]]; then
-            primary=$(grep "^primary" "$theme_dir/theme.conf" | head -1 | cut -d'=' -f2 | xargs | tr -d '"')
-            echo -e "    primary: ${primary}"
-        fi
-    done
-}
-
-current_theme() {
-    if [[ -f "$STATE_FILE" ]]; then
-        echo -e "${GREEN}Current theme:${NC} $(cat "$STATE_FILE")"
-    else
-        echo -e "${YELLOW}No theme set${NC}"
+    if grep -Eq '\{\{[A-Z0-9_]+\}\}' "$target"; then
+        die "unresolved value in template: ${source#"$DOTFILES/"}"
     fi
 }
 
-# ── Theme Parsing ──────────────────────────────────────────────────
-
-parse_theme() {
-    local theme_name="$1"
-    local conf_file="$THEMES_DIR/$theme_name/theme.conf"
-
-    if [[ ! -f "$conf_file" ]]; then
-        echo -e "${RED}Theme not found: $theme_name${NC}"
-        exit 1
-    fi
-
-    declare -gA COLORS
-    while IFS= read -r line || [[ -n "$line" ]]; do
-        # Skip comments, empty lines, section headers
-        [[ "$line" =~ ^[[:space:]]*# ]] && continue
-        [[ "$line" =~ ^[[:space:]]*\[ ]] && continue
-        [[ -z "${line// /}" ]] && continue
-
-        key="${line%%=*}"
-        value="${line#*=}"
-
-        # Skip if no = sign
-        [[ "$key" == "$line" ]] && continue
-
-        key=$(echo "$key" | xargs)
-        value=$(echo "$value" | xargs)
-
-        # Strip surrounding quotes from value
-        value="${value#\"}"
-        value="${value%\"}"
-
-        # Convert key to template variable name
-        var_name=$(echo "$key" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
-        COLORS[$var_name]="$value"
-    done < "$conf_file"
-
-    # Fallback: old waybar_* names feed bar_* for one release.
-    for pair in BORDER:WAYBAR_BORDER WORKSPACE_ACTIVE:WAYBAR_WORKSPACE_ACTIVE \
-        WORKSPACE_DEFAULT:WAYBAR_WORKSPACE_DEFAULT CLOCK_ICON:WAYBAR_CLOCK_ICON; do
-        new="BAR_${pair%%:*}"
-        old="${pair##*:}"
-        if [[ -z "${COLORS[$new]:-}" && -n "${COLORS[$old]:-}" ]]; then
-            COLORS[$new]="${COLORS[$old]}"
-        fi
-    done
-}
-
-# ── Theme Validation ───────────────────────────────────────────────
-
-validate_theme() {
-    local theme_name="$1"
-    local conf_file="$THEMES_DIR/$theme_name/theme.conf"
-
-    local required=("PRIMARY" "PRIMARY_LIGHT" "PRIMARY_DARK" "BG" "FG" "WALLPAPER")
-    local missing=()
-
-    for key in "${required[@]}"; do
-        if [[ -z "${COLORS[$key]:-}" ]]; then
-            missing+=("$key")
-        fi
-    done
-
-    if [[ ${#missing[@]} -gt 0 ]]; then
-        warn "Missing keys: ${missing[*]}"
-        return 1
-    fi
-
-    # Optional but expected — warn only, fall back at apply time.
-    for key in BAR_BORDER CAVA_COLORS CMATRIX_COLOR GHOSTTY_OPACITY; do
-        if [[ -z "${COLORS[$key]:-}" ]]; then
-            warn "Optional $key missing, using fallback"
-        fi
-    done
-    return 0
-}
-
-# ── Template Processing ────────────────────────────────────────────
-
-apply_template() {
-    local template="$1"
-    local output="$2"
-
-    cp "$template" "$output"
-
-    for key in "${!COLORS[@]}"; do
-        esc=$(sed_escape "${COLORS[$key]}")
-        sed -i "s|{{${key}}}|${esc}|g" "$output"
-    done
-}
-
-# ── Config Generation ──────────────────────────────────────────────
-
-generate_configs() {
-    local theme_name="$1"
-    local cache_dir="$STATE_DIR/cache/$theme_name"
-    mkdir -p "$cache_dir"
-
-    parse_theme "$theme_name"
-    validate_theme "$theme_name" || return 1
-
+render_configs() {
+    local name="$1" cache="$STATE_DIR/cache/$name" app template
+    mkdir -p "$cache"
     for app in "${APPS[@]}"; do
-        if [[ -d "$TEMPLATES_DIR/$app" ]]; then
-            mkdir -p "$cache_dir/$app"
-            for tpl in "$TEMPLATES_DIR/$app"/*; do
-                [[ -f "$tpl" ]] || continue
-                local fname=$(basename "$tpl")
-                apply_template "$tpl" "$cache_dir/$app/$fname"
-            done
-        fi
+        [[ -d "$TEMPLATES_DIR/$app" ]] || continue
+        mkdir -p "$cache/$app"
+        for template in "$TEMPLATES_DIR/$app"/*; do
+            [[ -f "$template" ]] || continue
+            render_template "$template" "$cache/$app/$(basename "$template")"
+        done
     done
-
-    step "Configs generated for $theme_name"
-
-    # Cache wallpaper thumbnail for fast picker preview
-    local wallpaper="${COLORS[WALLPAPER]:-}"
-    if [[ -n "$wallpaper" ]]; then
-        wallpaper="$(resolve_wallpaper "$wallpaper")"
-        if [[ -f "$wallpaper" ]] && command -v convert &>/dev/null; then
-            convert "$wallpaper" -resize 320x200 "$cache_dir/thumb.png" 2>/dev/null || true
-        fi
-    fi
 }
 
-# ── Apply Theme ────────────────────────────────────────────────────
+install_configs() {
+    local name="$1" cache="$STATE_DIR/cache/$name" app target
+    for app in "${APPS[@]}"; do
+        [[ -d "$cache/$app" ]] || continue
+        target="$CONFIG_HOME/$app"
+        [[ ! -L "$target" ]] || die "refusing to overwrite symlink: $target"
+        mkdir -p "$target"
+        cp -f "$cache/$app"/* "$target/"
+    done
+}
+
+write_state() {
+    local name="$1"
+    mkdir -p "$STATE_DIR"
+    cat > "$STATE_DIR/env" <<EOF
+export THEME_PRIMARY="${THEME[PRIMARY]}"
+export THEME_PRIMARY_LIGHT="${THEME[PRIMARY_LIGHT]}"
+export THEME_PRIMARY_DARK="${THEME[PRIMARY_DARK]}"
+export THEME_BG="${THEME[BG]}"
+export THEME_FG="${THEME[FG]}"
+export CAVA_COLOR="${THEME[CAVA_COLORS]:-${THEME[PRIMARY]}}"
+export CMATRIX_COLOR="${THEME[CMATRIX_COLOR]:-cyan}"
+EOF
+    printf '%s\n' "$name" > "$STATE_FILE"
+}
+
+reload_desktop() {
+    local wallpaper
+    wallpaper="$(wallpaper_path)"
+    [[ -f "$wallpaper" ]] && awww img "$wallpaper" --transition-type fade 2>/dev/null || warn "wallpaper not found: $wallpaper"
+    pgrep -x niri >/dev/null && niri msg action load-config-file >/dev/null 2>&1 || true
+    pgrep -x swaync >/dev/null && swaync-client --reload-config >/dev/null 2>&1 || true
+    if pgrep -f '[q]uickshell.*shell.qml' >/dev/null; then
+        pkill -f '[q]uickshell.*shell.qml' || true
+    fi
+    if command -v quickshell >/dev/null && [[ -f "$CONFIG_HOME/quickshell/shell.qml" ]]; then
+        nohup quickshell -n -p "$CONFIG_HOME/quickshell/shell.qml" >/dev/null 2>&1 </dev/null &
+    fi
+}
 
 apply_theme() {
-    local theme_name="$1"
-    local cache_dir="$STATE_DIR/cache/$theme_name"
-
-    for app in "${APPS[@]}"; do
-        local target="$HOME/.config/$app"
-        local theme_dir="$cache_dir/$app"
-
-        mkdir -p "$target"
-
-        # Generated configs must be regular writable files, never Nix-store links.
-        if [[ -L "$target" ]]; then
-            warn "Refusing to overwrite symlink: $target"
-            return 1
-        fi
-
-        # Overwrite with theme-specific configs
-        if [[ -d "$theme_dir" ]]; then
-            cp -r "$theme_dir"/* "$target"/
-        fi
-    done
-
-    step "Configs applied: $theme_name"
-    sync
-}
-
-# ── Wallpaper ──────────────────────────────────────────────────────
-
-apply_wallpaper() {
-    local theme_name="$1"
-    local conf_file="$THEMES_DIR/$theme_name/theme.conf"
-    local wallpaper
-    wallpaper=$(grep "^wallpaper" "$conf_file" | head -1 | cut -d'=' -f2 | xargs | tr -d '"')
-
-    if [[ -n "$wallpaper" ]]; then
-        wallpaper="$(resolve_wallpaper "$wallpaper")"
-        if [[ -f "$wallpaper" ]]; then
-            awww img "$wallpaper" --transition-type fade 2>/dev/null || true
-            step "Wallpaper set"
-        else
-            warn "Wallpaper not found: $wallpaper"
-        fi
-    fi
-}
-
-# ── Restart Apps ───────────────────────────────────────────────────
-
-restart_apps() {
-    local theme_name="$1"
-    header "Restarting apps"
-
-    # Set wallpaper
-    apply_wallpaper "$theme_name"
-
-    # Reload niri
-    if pgrep -x "niri" > /dev/null 2>&1; then
-        niri msg action load-config-file 2>/dev/null || true
-        step "Niri reloaded"
-    fi
-
-    # Reload terminals (kill — they re-read config on next launch)
-    if pgrep -x "ghostty" > /dev/null 2>&1; then
-        pkill -x "ghostty" 2>/dev/null || true
-        step "Ghostty reloaded (reopen terminals for new colors)"
-    fi
-    if pgrep -x "kitty" > /dev/null 2>&1; then
-        pkill -x "kitty" 2>/dev/null || true
-        step "Kitty reloaded (reopen terminals for new colors)"
-    fi
-    if pgrep -x "alacritty" > /dev/null 2>&1; then
-        pkill -x "alacritty" 2>/dev/null || true
-        step "Alacritty reloaded (reopen terminals for new colors)"
-    fi
-    if pgrep -x "foot" > /dev/null 2>&1; then
-        pkill -x "foot" 2>/dev/null || true
-        step "Foot reloaded (reopen terminals for new colors)"
-    fi
-
-    # Reload swaync
-    if pgrep -x "swaync" > /dev/null 2>&1; then
-        swaync-client --reload-config 2>/dev/null || true
-        step "Swaync reloaded"
-    fi
-
-    # Restart quickshell widget (picks up new themed shell.qml)
-    if pgrep -f "\.config/quickshell/shell\.qml" > /dev/null 2>&1; then
-        pkill -f "\.config/quickshell/shell\.qml" 2>/dev/null || true
-        sleep 0.3
-        step "Quickshell stopped"
-    fi
-    if command -v quickshell &>/dev/null && [[ -f "$HOME/.config/quickshell/shell.qml" ]]; then
-        nohup quickshell -n -p "$HOME/.config/quickshell/shell.qml" >/dev/null 2>&1 </dev/null &
-        disown
-        step "Quickshell started"
-    fi
-
-    step "fetch: reads ~/.config/fetch/config on each run, nothing to restart"
-}
-
-# ── Preview ────────────────────────────────────────────────────────
-
-preview_theme() {
-    local theme_name="${1:-$(cat "$STATE_FILE" 2>/dev/null || echo "")}"
-
-    if [[ -z "$theme_name" ]]; then
-        echo -e "${RED}No theme specified${NC}"
-        return 1
-    fi
-
-    parse_theme "$theme_name"
-
-    header "Theme: $theme_name"
-    echo ""
-    echo -e "  Primary:     ${COLORS[PRIMARY]}"
-    echo -e "  Primary Lt:  ${COLORS[PRIMARY_LIGHT]}"
-    echo -e "  Primary Dk:  ${COLORS[PRIMARY_DARK]}"
-    echo -e "  Background:  ${COLORS[BG]}"
-    echo -e "  Foreground:  ${COLORS[FG]}"
-    echo ""
-    echo -e "  Niri focus:  ${COLORS[NIRI_FOCUS_ACTIVE]}"
-    echo -e "  Bar border:  ${COLORS[BAR_BORDER]:-${COLORS[WAYBAR_BORDER]:-?}}"
-}
-
-# ── Interactive Picker ─────────────────────────────────────────────
-
-picker_preview() {
-    local theme_name="$1"
-    local cache_dir="$STATE_DIR/cache/$theme_name"
-    parse_theme "$theme_name" 2>/dev/null || return
-
-    local char_name="${COLORS[CHAR_NAME]:-}"
-    local char_game="${COLORS[CHAR_GAME]:-}"
-    local char_quote="${COLORS[CHAR_QUOTE]:-}"
-
-    echo -e "${MAGENTA}  ╭─ ${BOLD}${theme_name}${NC}"
-    echo -e "${MAGENTA}  ├─ ${DIM}Primary${NC}   ${COLORS[PRIMARY]:-?}"
-    echo -e "${MAGENTA}  ├─ ${DIM}BG${NC}        ${COLORS[BG]:-?}"
-    echo -e "${MAGENTA}  ├─ ${DIM}FG${NC}        ${COLORS[FG]:-?}"
-    if [[ -n "$char_name" ]]; then
-        echo -e "${MAGENTA}  ├─ ${DIM}Character${NC} ${char_name}"
-    fi
-    if [[ -n "$char_game" ]]; then
-        echo -e "${MAGENTA}  ├─ ${DIM}Game${NC}      ${char_game}"
-    fi
-    if [[ -n "$char_quote" ]]; then
-        echo -e "${MAGENTA}  ╰─ ${DIM}\"${char_quote}\"${NC}"
-    fi
-
-    # Cached thumbnail (instant) or fallback to raw wallpaper
-    local thumb="$cache_dir/thumb.png"
-    if [[ -f "$thumb" ]] && command -v chafa &>/dev/null; then
-        echo ""
-        chafa --clear --size=25x8 "$thumb"
-    else
-        local wallpaper="${COLORS[WALLPAPER]:-}"
-        if [[ -n "$wallpaper" ]]; then
-            wallpaper="$(resolve_wallpaper "$wallpaper")"
-            if [[ -f "$wallpaper" ]] && command -v chafa &>/dev/null; then
-                echo ""
-                echo -e "${DIM}Loading preview...${NC}" >&2
-                chafa --clear --size=25x8 "$wallpaper"
-            fi
-        fi
-    fi
-}
-
-picker() {
-    # Nix installs the Rust picker; fzf remains the fallback.
-    if command -v theme-picker &>/dev/null; then
-        theme-picker
-        return
-    fi
-
-    # Fallback to fzf
-    if ! command -v fzf &>/dev/null; then
-        echo -e "${RED}fzf not installed${NC}"
-        exit 1
-    fi
-
-    local current
-    current=$(cat "$STATE_FILE" 2>/dev/null || echo "")
-
-    local themes=()
-    for theme_dir in "$THEMES_DIR"/*/; do
-        local name
-        name=$(basename "$theme_dir")
-        should_skip "$name" && continue
-        themes+=("$name")
-    done
-
-    if [[ ${#themes[@]} -eq 0 ]]; then
-        echo -e "${RED}No themes found${NC}"
-        exit 1
-    fi
-
-    local selected
-    selected=$(printf '%s\n' "${themes[@]}" | \
-        fzf --prompt="Theme > " \
-            --sync \
-            --preview="$0 picker-preview {}" \
-            --preview-window=right:40%:wrap \
-            --height=40% \
-            --border=rounded)
-
-    if [[ -n "$selected" ]]; then
-        printf "\033[2J\033[H"  # clear terminal to remove chafa artifacts
-        "$0" "$selected"
-    fi
-}
-
-# ── Main ───────────────────────────────────────────────────────────
-
-main() {
+    local name="$1"
+    require_theme "$name"
     mkdir -p "$STATE_DIR"
-
-    case "${1:-}" in
-        list)
-            list_themes
-            ;;
-        current)
-            current_theme
-            ;;
-        preview)
-            preview_theme "${2:-}"
-            ;;
-        picker)
-            picker
-            ;;
-        picker-preview)
-            picker_preview "${2:-}"
-            ;;
-        help|-h|--help)
-            usage
-            ;;
-        "")
-            usage
-            exit 1
-            ;;
-        *)
-            local theme_name="$1"
-
-            if [[ ! -d "$THEMES_DIR/$theme_name" ]]; then
-                echo -e "${RED}Theme not found: $theme_name${NC}"
-                echo "Run 'theme-switch list' to see available themes"
-                exit 1
-            fi
-
-            header "Switching to $theme_name"
-
-            generate_configs "$theme_name"
-            apply_theme "$theme_name"
-
-            # Write theme env for CLI tools (cava, cmatrix, etc.)
-            mkdir -p "$STATE_DIR"
-            cat > "$STATE_DIR/env" <<EOF
-export THEME_PRIMARY="${COLORS[PRIMARY]:-}"
-export THEME_PRIMARY_LIGHT="${COLORS[PRIMARY_LIGHT]:-}"
-export THEME_PRIMARY_DARK="${COLORS[PRIMARY_DARK]:-}"
-export THEME_BG="${COLORS[BG]:-}"
-export THEME_FG="${COLORS[FG]:-}"
-export CAVA_COLOR="${COLORS[CAVA_COLORS]:-${COLORS[PRIMARY]:-}}"
-export CMATRIX_COLOR="${COLORS[CMATRIX_COLOR]:-cyan}"
-EOF
-
-            echo "$theme_name" > "$STATE_FILE"
-
-            if [[ "${EROGEDOTS_NO_RESTART:-0}" == "1" ]]; then
-                step "Skip app restarts (installer mode)"
-            else
-                restart_apps "$theme_name"
-            fi
-
-            done_msg "Theme switched to: $theme_name"
-
-            # Show erogeDOTS banner with theme name
-            echo ""
-            echo -e "${MAGENTA}>>=======================================================<<${NC}"
-            echo -e "${MAGENTA}||   _____                      ____   ___ _____ ____    ${CYAN}||${NC}"
-            echo -e "${MAGENTA}||  | ____|_ __ ___   __ _  ___|  _ \\ / _ \\_   _/ ___|   ${CYAN}||${NC}"
-            echo -e "${MAGENTA}||  |  _| | '__/ _ \\ / _\` |/ _ \\ | | | | | || | \\___ \\   ${CYAN}||${NC}"
-            echo -e "${MAGENTA}||  | |___| | | (_) | (_| |  __/ |_| | |_| || |  ___) |  ${CYAN}||${NC}"
-            echo -e "${MAGENTA}||  |_____|_|  \\___/ \\__, |\\___|____/ \\___/ |_| |____/   ${CYAN}||${NC}"
-            echo -e "${MAGENTA}||                   |___/                               ${CYAN}||${NC}"
-            echo -e "${MAGENTA}>>=======================================================<<${NC}"
-            echo ""
-            echo -e "  ${MAGENTA}${BOLD}THEME${NC} ${CYAN}${BOLD}:${NC} ${BOLD}${COLORS[CHAR_FULL]:-$theme_name}${NC} ${CYAN}${BOLD}|${NC} ${YELLOW}${BOLD}${COLORS[CHAR_GAME]:-unknown}${NC}"
-            echo -e "  ${BOLD}${MAGENTA}${COLORS[CHAR_NAME]:-}${NC}  ${DIM}${COLORS[CHAR_QUOTE]:-}${NC}"
-            echo ""
-            ;;
-    esac
+    render_configs "$name"
+    install_configs "$name"
+    write_state "$name"
+    [[ "${EROGEDOTS_NO_RESTART:-0}" == 1 ]] || reload_desktop
+    printf "${GREEN}✓${NC} theme: %s\n" "$name"
+    info "terminal colors update in newly opened terminals"
 }
 
-main "$@"
+preview() {
+    local name="${1:-$(cat "$STATE_FILE" 2>/dev/null || true)}"
+    [[ -n "$name" ]] || die "no active theme"
+    require_theme "$name"
+    printf 'theme       %s\nprimary     %s\nbackground  %s\nforeground  %s\nwallpaper   %s\n' \
+        "$name" "${THEME[PRIMARY]}" "${THEME[BG]}" "${THEME[FG]}" "$(wallpaper_path)"
+}
+
+case "${1:-help}" in
+    picker) exec theme-picker themes ;;
+    add) exec theme-picker add ;;
+    list) list_themes ;;
+    current) cat "$STATE_FILE" 2>/dev/null || printf 'none\n' ;;
+    preview) preview "${2:-}" ;;
+    help|-h|--help) usage ;;
+    *) apply_theme "$1" ;;
+esac

@@ -1,4 +1,4 @@
-{ inputs, lib, pkgs, ... }:
+{ hostName, inputs, lib, pkgs, ... }:
 
 let
   qylockQs = (inputs.qylock.legacyPackages.${pkgs.stdenv.hostPlatform.system}.mkQuickshell {
@@ -18,6 +18,8 @@ let
   });
 in
 {
+  networking.hostName = hostName;
+
   # Nix and packages
   nixpkgs.config.allowUnfree = true;
   nix.settings = {
@@ -207,7 +209,28 @@ in
     remotePlay.openFirewall = true;
   };
 
-  # Quiet boot defaults; each host owns its bootloader and filesystems.
+  # NixChan has a tiny ESP mounted at /efi. Other hosts use normal UEFI defaults.
+  boot.loader = if hostName == "NixChan" then {
+    systemd-boot.enable = lib.mkForce false;
+    grub = {
+      enable = true;
+      efiSupport = true;
+      device = "nodev";
+      useOSProber = true;
+      configurationLimit = 10;
+    };
+    efi = {
+      canTouchEfiVariables = true;
+      efiSysMountPoint = "/efi";
+    };
+    timeout = 0;
+  } else {
+    systemd-boot.enable = true;
+    efi.canTouchEfiVariables = true;
+    configurationLimit = 10;
+  };
+
+  # Quiet boot defaults; filesystems remain hardware-specific.
   boot.consoleLogLevel = 3;
   boot.initrd.verbose = false;
   boot.kernelParams = [ "quiet" "rd.udev.log_level=3" "rd.systemd.show_status=auto" ];

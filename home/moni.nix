@@ -1,9 +1,7 @@
-{ config, lib, pkgs, chatgpt, discord-opencode-bot, theme-picker, ... }:
+{ config, lib, pkgs, chatgpt, theme-picker, ... }:
 
 let
   repo = "${config.home.homeDirectory}/erogeDOTS";
-  discordEnv = "${config.home.homeDirectory}/.config/opencode/discord-bot.env";
-
   nvimDesktop = pkgs.writeTextFile {
     name = "nvim-terminal.desktop";
     destination = "/share/applications/nvim-terminal.desktop";
@@ -69,7 +67,7 @@ in
 
     packages = with pkgs; [
       # Terminals and shell tools
-      ghostty kitty alacritty foot vim git wget curl gnutar yazi fzf fetch
+      ghostty kitty alacritty vim git wget curl gnutar yazi fzf fetch
 
       # Desktop
       quickshell fuzzel awww swaynotificationcenter libnotify
@@ -97,11 +95,7 @@ in
       theme-picker
     ];
 
-    file = {
-      ".config/nvim".source = ../config/nvim;
-      ".config/opencode/discord-bot.env.example".source =
-        ../pkgs/discord-opencode/discord-bot.env.example;
-    };
+    file.".config/nvim".source = ../config/nvim;
   };
 
   programs.home-manager.enable = true;
@@ -139,6 +133,11 @@ in
       tscurrent = "theme-switch current";
       tspreview = "theme-switch preview";
       tspick = "theme-switch picker";
+      tsadd = "theme-switch add";
+      dev = "theme-picker dev";
+      clip = "cliphist-pick";
+      drop = "dropterm";
+      ime = "fcitx5-cycle.sh";
       yt = "mpv --ytdl-format=bestvideo[height<=1080]+bestaudio/best";
       ytmp3 = "yt-dlp -x --audio-format mp3";
       ytsearch = "yt-dlp \"ytsearch10:\"";
@@ -211,34 +210,6 @@ in
         name "PipeWire Output"
       }
     '';
-  };
-
-  # Credentials live in this mode-0600 file, never Nix or Git.
-  home.activation.createDiscordOpencodeBotEnv = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-    if [[ ! -e "${discordEnv}" ]]; then
-      install -Dm600 \
-        "$HOME/.config/opencode/discord-bot.env.example" \
-        "${discordEnv}"
-    fi
-  '';
-  systemd.user.services.discord-opencode-bot = {
-    Unit = {
-      Description = "Oko-chan Discord bridge for OpenCode";
-      After = [ "network-online.target" ];
-      Wants = [ "network-online.target" ];
-      ConditionPathExists = discordEnv;
-    };
-    Service = {
-      ExecStart = "${discord-opencode-bot}/bin/discord-opencode-bot";
-      Environment = [ "PATH=${lib.makeBinPath [ pkgs.opencode ]}" ];
-      EnvironmentFile = discordEnv;
-      Restart = "on-failure";
-      RestartSec = 5;
-      NoNewPrivileges = true;
-      PrivateTmp = true;
-      UMask = "0077";
-    };
-    Install.WantedBy = lib.mkForce [];
   };
 
   home.activation.restoreTheme = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

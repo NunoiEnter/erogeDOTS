@@ -6,7 +6,6 @@ REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 EXPECTED_ROOT="$HOME/erogeDOTS"
 HOST_NAME="$(hostnamectl --static 2>/dev/null || hostname)"
 HOST_DIR="$REPO_ROOT/hosts/$HOST_NAME"
-TEMPLATE_DIR="$REPO_ROOT/hosts/_template"
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/erogedots"
 LOG_FILE="$STATE_DIR/install.log"
 NEW_HOST=false
@@ -43,7 +42,7 @@ for command_name in git nix sudo hostnamectl nixos-rebuild nixos-generate-config
 done
 
 [[ -f "$REPO_ROOT/flake.nix" ]] || die "flake.nix not found"
-[[ -f "$TEMPLATE_DIR/configuration.nix" ]] || die "host template missing"
+[[ -f "$REPO_ROOT/configuration.nix" ]] || die "configuration.nix not found"
 
 step "Authenticate sudo once"
 sudo -v
@@ -54,7 +53,6 @@ if [[ ! -d "$HOST_DIR" ]]; then
 
     step "Create host $HOST_NAME"
     mkdir -p "$HOST_DIR"
-    cp "$TEMPLATE_DIR/configuration.nix" "$HOST_DIR/configuration.nix"
     NEW_HOST=true
 fi
 
@@ -89,6 +87,6 @@ echo
 echo "ALPHA 1.4 installed successfully on $HOST_NAME"
 echo "Log: $LOG_FILE"
 if [[ "$NEW_HOST" == true ]]; then
-    echo "New host files created under: $HOST_DIR"
-    echo "Review and commit them when ready."
+    echo "New hardware file created: $HOST_DIR/hardware-configuration.nix"
+    echo "Review and commit it when ready."
 fi

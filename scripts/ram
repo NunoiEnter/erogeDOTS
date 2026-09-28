@@ -2,7 +2,7 @@
 # ram — show where RAM goes on NixChan + safe diet to reclaim it.
 # Usage:
 #   ram show [--short]   breakdown: free, PSS top, category totals, opencode DB
-#   ram diet [--full]    kill safe leftovers; --full also stops discord bridge + codex daemons
+#   ram diet [--full]    kill safe leftovers; --full also stops codex daemons
 #   ram watch            refresh compact view every 2s
 # Diet only touches user-owned processes, never sudo, never deletes data.
 set -euo pipefail
@@ -66,8 +66,8 @@ pats = {
     'opencode': re.compile(r'opencode|npm.*mcp|node.*\.bin/mcp|pg_computer', re.I),
     'browser': re.compile(r'firefox|librewolf|chrome|Isolated|Web Content|Socket Process|RDD Process|Utility Process|Privileged Cont|Extensions', re.I),
     'codex': re.compile(r'codex', re.I),
-    'desktop': re.compile(r'niri|quickshell|Xwayland|swaync|awww|mpd|fcitx5|mako|ghostty|foot|kitty|alacritty|fuzzel|discordo', re.I),
-    'bg': re.compile(r'blueman|nm-applet|tailscaled|polkit|xdg-desktop-portal|pipewire|wireplumber|upower|discord-opencode|gvfs|at-spi|gnome-keyring|playerctl|cliphist|wl-paste', re.I),
+    'desktop': re.compile(r'niri|quickshell|Xwayland|swaync|awww|mpd|fcitx5|mako|ghostty|kitty|alacritty|fuzzel|discordo', re.I),
+    'bg': re.compile(r'blueman|nm-applet|tailscaled|polkit|xdg-desktop-portal|pipewire|wireplumber|upower|gvfs|at-spi|gnome-keyring|playerctl|cliphist|wl-paste', re.I),
 }
 for line in subprocess.check_output(['ps', '-eo', 'pid,args']).decode().splitlines()[1:]:
     m = re.match(r'\s*(\d+)\s+(.*)', line)
@@ -121,13 +121,6 @@ cmd_show() {
     echo
     echo "== hogs =="
     opencode_db
-    if systemctl --user is-active --quiet discord-opencode-bot 2>/dev/null; then
-        systemctl --user show discord-opencode-bot -p MemoryCurrent 2>/dev/null \
-            | awk -F= '{ printf "discord bridge cgroup: %.0f MB\n", $2 / 1024 / 1024 }'
-    else
-        echo "discord bridge: stopped"
-    fi
-    echo
     echo "== diet hints =="
     echo "firefox tabs dominate idle. close tabs / about:memory minimize."
     echo "opencode TUI ~700MB + MCP children ~200MB. disable idle MCP in opencode.jsonc."
@@ -149,12 +142,10 @@ cmd_diet() {
             echo "$pid $ppid orphan-mcp"
         done)
     if [[ "$FULL" == 1 ]]; then
-        systemctl --user stop discord-opencode-bot 2>/dev/null \
-            && echo "stopped discord-opencode-bot (incl opencode serve)" || true
         pkill -f "codex app-server" 2>/dev/null \
             && echo "killed codex daemons" || echo "codex: none running"
     else
-        echo "tip: ram diet --full also stops discord bridge + codex (~500MB)"
+        echo "tip: ram diet --full also stops codex daemons"
     fi
     sleep 1
     after=$(free -m | awk '/^Mem:/ { print $3 }')
