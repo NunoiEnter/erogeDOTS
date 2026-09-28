@@ -67,7 +67,7 @@ in
 
     packages = with pkgs; [
       # Terminals and shell tools
-      ghostty kitty alacritty vim git wget curl gnutar yazi fzf fetch
+      ghostty kitty alacritty vim git wget curl gnutar yazi fzf fetch fastfetch
 
       # Desktop
       quickshell fuzzel awww swaynotificationcenter libnotify
@@ -160,6 +160,7 @@ in
       setopt PROMPT_SUBST
       PROMPT='%F{magenta}%m%f %F{white}%~%%f '
       [[ -f "$HOME/.config/theme/env" ]] && source "$HOME/.config/theme/env"
+      [[ "''${EROGEDOTS_NO_FASTFETCH:-0}" == 1 ]] || fastfetch
     '';
   };
 

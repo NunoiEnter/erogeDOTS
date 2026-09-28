@@ -41,7 +41,7 @@ Never commit tokens, VPN keys, SSH private keys, Wi-Fi passwords, cookies, or `.
 
 `configuration.nix` is the one shared system configuration. The old `nixos.nix` and per-host wrapper files were unnecessary, so they were merged. One small per-machine file still has to exist: `hosts/<hostname>/hardware-configuration.nix`. Disk UUIDs, filesystems, and device drivers are hardware facts and should not be mixed into the portable configuration.
 
-Home Manager owns user applications, aliases, MIME defaults, and desktop files. Theme sources live under `themes/`; `theme-switch` renders them into `~/.config`. Neovim now uses one bootstrap file and otherwise follows normal LazyVim defaults.
+Home Manager owns user applications, aliases, MIME defaults, and desktop files. A normal interactive Zsh terminal prints Fastfetch on startup; the animated mini terminal skips the duplicate Fastfetch screen. Theme sources live under `themes/`; `theme-switch` renders them into `~/.config`. Neovim now uses one bootstrap file and otherwise follows normal LazyVim defaults.
 
 ### Important Niri keys
 

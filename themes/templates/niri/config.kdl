@@ -170,7 +170,7 @@ window-rule {
 binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
     Mod+Return hotkey-overlay-title="Open a Terminal" { spawn "ghostty"; }
-    Mod+Shift+Return hotkey-overlay-title="Mini Terminal" { spawn "sh" "-c" "ghostty --title=mini -e sh -c 'fetch --frames 60; exec zsh'"; }
+    Mod+Shift+Return hotkey-overlay-title="Mini Terminal" { spawn "sh" "-c" "ghostty --title=mini -e sh -c 'fetch --frames 60; EROGEDOTS_NO_FASTFETCH=1 exec zsh'"; }
     Mod+grave hotkey-overlay-title="Dropdown Terminal" { spawn-sh "dropterm"; }
     Mod+G hotkey-overlay-title="Larp Wall" { spawn-sh "larp"; }
     Mod+T hotkey-overlay-title="Theme Picker" { spawn "ghostty" "--title=theme-tools" "-e" "theme-switch" "picker"; }

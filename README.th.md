@@ -41,7 +41,7 @@ cd /home/moni/erogeDOTS
 
 `configuration.nix` คือ config ระบบร่วมเพียงไฟล์เดียว ไฟล์ `nixos.nix` และ wrapper ของแต่ละเครื่องเดิมไม่จำเป็นจึงถูกรวมแล้ว แต่ยังต้องมีไฟล์เล็กของแต่ละเครื่องคือ `hosts/<hostname>/hardware-configuration.nix` เพราะ UUID ของดิสก์ filesystem และ driver เป็นข้อเท็จจริงของ hardware ไม่ควรปนกับ config ที่ย้ายข้ามเครื่อง
 
-Home Manager ดูแลโปรแกรมของผู้ใช้ alias ค่า MIME และ desktop file ต้นฉบับ theme อยู่ใน `themes/` แล้ว `theme-switch` จะสร้าง config จริงลง `~/.config` ส่วน Neovim เหลือ bootstrap ไฟล์เดียวและใช้ค่าเริ่มต้นปกติของ LazyVim
+Home Manager ดูแลโปรแกรมของผู้ใช้ alias ค่า MIME และ desktop file เมื่อเปิด Zsh terminal ปกติจะแสดง Fastfetch อัตโนมัติ ส่วน mini terminal แบบ animation จะข้าม Fastfetch ที่ซ้ำกัน ต้นฉบับ theme อยู่ใน `themes/` แล้ว `theme-switch` จะสร้าง config จริงลง `~/.config` ส่วน Neovim เหลือ bootstrap ไฟล์เดียวและใช้ค่าเริ่มต้นปกติของ LazyVim
 
 ### ปุ่มสำคัญของ Niri
 
