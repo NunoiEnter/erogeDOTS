@@ -7,6 +7,8 @@ edition = "2021"
 ratatui = { version = "0.30", default-features = false, features = ["crossterm"] }
 crossterm = "0.29"
 dirs = "6"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png", "webp"] }
+ratatui-image = { version = "11", default-features = false, features = ["crossterm"] }
 
 [profile.release]
 opt-level = 3

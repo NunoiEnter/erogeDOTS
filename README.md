@@ -92,7 +92,7 @@ Every script has a keyboard route. Long names also get a short shell alias; alre
 
 ### Themes
 
-Use `Mod+T` or `ts` to choose an existing theme. Use `Mod+Shift+T` or `tsadd` to create one. The Rust TUI asks for the theme ID, character details, a wallpaper selected from `wallpapers/`, `~/Pictures`, or `~/Downloads`, and one of six color presets. It copies the image and writes a complete `theme.conf`; no color codes or image paths need to be typed.
+Use `Mod+T` or `ts` to choose an existing theme. The picker shows each theme's wallpaper beside the list, using the terminal's image protocol when available and a colored half-block preview as fallback. Use `Mod+Shift+T` or `tsadd` to create one. The Rust TUI asks for the theme ID, character details, a wallpaper selected from `wallpapers/`, `~/Pictures`, or `~/Downloads`, and one of six color presets. It copies the image and writes a complete `theme.conf`; no color codes or image paths need to be typed.
 
 Manual commands remain available:
 
@@ -130,7 +130,7 @@ The list is intentionally explicit. If a file is not here, it should not be part
 ### Editor and local packages
 
 - `config/nvim/init.lua` — minimal Lazy.nvim bootstrap that loads stock LazyVim.
-- `picker-rs/Cargo.toml` — Rust TUI package metadata and its three direct libraries.
+- `picker-rs/Cargo.toml` — Rust TUI package metadata and direct dependencies.
 - `picker-rs/Cargo.lock` — exact Rust dependency versions.
 - `picker-rs/src/main.rs` — theme picker, guided theme creator, dev-shell picker, and unit tests.
 - `pkgs/chatgpt/default.nix` — wraps the upstream ChatGPT desktop AppImage as a Nix package.

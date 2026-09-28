@@ -92,7 +92,7 @@ Home Manager ดูแลโปรแกรมของผู้ใช้ alias 
 
 ### Theme
 
-กด `Mod+T` หรือใช้ `ts` เพื่อเลือก theme ที่มีอยู่ กด `Mod+Shift+T` หรือใช้ `tsadd` เพื่อสร้างใหม่ Rust TUI จะถาม ID ของ theme, ข้อมูลตัวละคร, ให้เลือกรูปจาก `wallpapers/`, `~/Pictures` หรือ `~/Downloads` แล้วให้เลือกหนึ่งในหกชุดสี จากนั้นจะคัดลอกรูปและเขียน `theme.conf` ที่ครบให้เอง ไม่ต้องพิมพ์ path รูปหรือรหัสสี
+กด `Mod+T` หรือใช้ `ts` เพื่อเลือก theme ที่มีอยู่ ตัว picker จะแสดง wallpaper ของ theme ที่เลือกไว้ข้างรายการ โดยใช้ระบบแสดงภาพของ terminal ถ้ารองรับ และใช้ภาพสีแบบครึ่งบล็อกเป็นตัวสำรอง กด `Mod+Shift+T` หรือใช้ `tsadd` เพื่อสร้างใหม่ Rust TUI จะถาม ID ของ theme, ข้อมูลตัวละคร, ให้เลือกรูปจาก `wallpapers/`, `~/Pictures` หรือ `~/Downloads` แล้วให้เลือกหนึ่งในหกชุดสี จากนั้นจะคัดลอกรูปและเขียน `theme.conf` ที่ครบให้เอง ไม่ต้องพิมพ์ path รูปหรือรหัสสี
 
 ยังใช้คำสั่งตรงได้:
 
@@ -130,7 +130,7 @@ theme-switch harumi
 ### Editor และ package ใน repo
 
 - `config/nvim/init.lua` — bootstrap ขนาดเล็กของ Lazy.nvim ที่โหลด LazyVim แบบมาตรฐาน
-- `picker-rs/Cargo.toml` — ข้อมูล package ของ Rust TUI และ library ตรงสามตัว
+- `picker-rs/Cargo.toml` — ข้อมูล package ของ Rust TUI และ dependency ที่ใช้โดยตรง
 - `picker-rs/Cargo.lock` — เวอร์ชัน dependency Rust ที่แน่นอน
 - `picker-rs/src/main.rs` — ตัวเลือก theme, ตัวสร้าง theme, ตัวเลือก dev shell และ unit test
 - `pkgs/chatgpt/default.nix` — ห่อ ChatGPT desktop AppImage จากต้นทางให้เป็น Nix package

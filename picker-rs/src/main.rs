@@ -14,6 +14,9 @@ use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph};
 use ratatui::Terminal;
+use ratatui_image::picker::Picker;
+use ratatui_image::protocol::Protocol;
+use ratatui_image::Image;
 
 type Term = Terminal<CrosstermBackend<io::Stdout>>;
 
@@ -144,6 +147,32 @@ fn repo_root() -> PathBuf {
         .map(PathBuf::from)
         .or_else(|| dirs::home_dir().map(|p| p.join("erogeDOTS")))
         .unwrap_or_default()
+}
+
+fn wallpaper_path(value: &str) -> PathBuf {
+    if let Some(relative) = value.strip_prefix("~/") {
+        return dirs::home_dir().unwrap_or_default().join(relative);
+    }
+    let path = PathBuf::from(value);
+    if path.is_absolute() {
+        path
+    } else {
+        repo_root().join(path)
+    }
+}
+
+fn hex_color(value: &str) -> Color {
+    let hex = value.trim_start_matches('#');
+    if hex.len() == 6 {
+        if let (Ok(red), Ok(green), Ok(blue)) = (
+            u8::from_str_radix(&hex[0..2], 16),
+            u8::from_str_radix(&hex[2..4], 16),
+            u8::from_str_radix(&hex[4..6], 16),
+        ) {
+            return Color::Rgb(red, green, blue);
+        }
+    }
+    Color::Reset
 }
 
 fn parse_theme(path: &Path) -> Theme {
@@ -564,26 +593,156 @@ fn create_theme(new: &NewTheme) -> io::Result<()> {
     Ok(())
 }
 
-fn choose_theme(term: &mut Term) -> io::Result<Option<String>> {
-    let values = themes();
-    let current = current_theme();
-    let rows: Vec<String> = values
-        .iter()
-        .map(|t| {
-            let mark = if t.name == current { "●" } else { "○" };
-            format!(
-                "{mark} {:12}  {}  {}  {}",
-                t.name, t.primary, t.character, t.game
+struct ThemeChooser {
+    values: Vec<Theme>,
+    current: String,
+    cursor: usize,
+    image: Option<Protocol>,
+}
+
+impl ThemeChooser {
+    fn new() -> Self {
+        Self {
+            values: themes(),
+            current: current_theme(),
+            cursor: 0,
+            image: None,
+        }
+    }
+
+    fn load_image(&mut self, picker: &mut Picker) {
+        let Some(theme) = self.values.get(self.cursor) else {
+            self.image = None;
+            return;
+        };
+        let path = wallpaper_path(&theme.wallpaper);
+        let Ok(reader) = image::ImageReader::open(path) else {
+            self.image = None;
+            return;
+        };
+        let Ok(image) = reader.decode() else {
+            self.image = None;
+            return;
+        };
+        self.image = picker
+            .new_protocol(
+                image,
+                ratatui::layout::Size::new(48, 16),
+                ratatui_image::Resize::Fit(None),
             )
+            .ok();
+    }
+}
+
+fn render_theme_chooser(frame: &mut ratatui::Frame, app: &ThemeChooser) {
+    let page = Layout::vertical([
+        Constraint::Length(2),
+        Constraint::Min(12),
+        Constraint::Length(2),
+    ])
+    .split(frame.area());
+    frame.render_widget(
+        Paragraph::new("erogeDOTS · Theme").style(
+            Style::default()
+                .fg(Color::Magenta)
+                .add_modifier(Modifier::BOLD),
+        ),
+        page[0],
+    );
+
+    let body =
+        Layout::horizontal([Constraint::Percentage(32), Constraint::Percentage(68)]).split(page[1]);
+    let rows: Vec<ListItem> = app
+        .values
+        .iter()
+        .map(|theme| {
+            let mark = if theme.name == app.current {
+                "●"
+            } else {
+                "○"
+            };
+            ListItem::new(format!("{mark} {}", theme.name))
         })
         .collect();
-    select(
-        term,
-        "erogeDOTS · Theme",
-        "[↑↓/jk] move  [Enter] apply  [q/Esc] cancel",
-        &rows,
-    )
-    .map(|picked| picked.map(|i| values[i].name.clone()))
+    let mut state = ListState::default().with_selected(Some(app.cursor));
+    frame.render_stateful_widget(
+        List::new(rows)
+            .block(Block::default().title("Themes").borders(Borders::ALL))
+            .highlight_symbol("› ")
+            .highlight_style(
+                Style::default()
+                    .fg(Color::Black)
+                    .bg(Color::LightMagenta)
+                    .add_modifier(Modifier::BOLD),
+            ),
+        body[0],
+        &mut state,
+    );
+
+    let preview = Block::default()
+        .title("Wallpaper preview")
+        .borders(Borders::ALL);
+    let inner = preview.inner(body[1]);
+    frame.render_widget(preview, body[1]);
+    if let Some(theme) = app.values.get(app.cursor) {
+        let swatch = "      ";
+        let details = vec![
+            ratatui::text::Line::from(vec![
+                ratatui::text::Span::styled(
+                    swatch,
+                    Style::default()
+                        .fg(hex_color(&theme.primary))
+                        .bg(hex_color(&theme.primary)),
+                ),
+                ratatui::text::Span::raw(format!("  {}", theme.name)),
+            ]),
+            ratatui::text::Line::from(format!("{} · {}", theme.character, theme.game)),
+            ratatui::text::Line::from(theme.wallpaper.as_str()),
+        ];
+        let parts = Layout::vertical([Constraint::Length(4), Constraint::Min(1)]).split(inner);
+        frame.render_widget(Paragraph::new(details), parts[0]);
+        if let Some(protocol) = &app.image {
+            frame.render_widget(Image::new(protocol), parts[1]);
+        } else {
+            frame.render_widget(
+                Paragraph::new("Wallpaper could not be loaded")
+                    .style(Style::default().fg(Color::DarkGray)),
+                parts[1],
+            );
+        }
+    }
+
+    frame.render_widget(
+        Paragraph::new("[↑↓/jk] move  [Enter] apply  [q/Esc] cancel")
+            .style(Style::default().fg(Color::DarkGray)),
+        page[2],
+    );
+}
+
+fn choose_theme(term: &mut Term) -> io::Result<Option<String>> {
+    let mut app = ThemeChooser::new();
+    if app.values.is_empty() {
+        return Ok(None);
+    }
+    let mut picker = Picker::from_query_stdio().unwrap_or_else(|_| Picker::halfblocks());
+    app.load_image(&mut picker);
+
+    loop {
+        term.draw(|frame| render_theme_chooser(frame, &app))?;
+        match key()? {
+            KeyCode::Up | KeyCode::Char('k') => {
+                app.cursor = app.cursor.saturating_sub(1);
+                app.load_image(&mut picker);
+            }
+            KeyCode::Down | KeyCode::Char('j') => {
+                app.cursor = (app.cursor + 1).min(app.values.len() - 1);
+                app.load_image(&mut picker);
+            }
+            KeyCode::Enter => return Ok(Some(app.values[app.cursor].name.clone())),
+            KeyCode::Esc | KeyCode::Char('q') => return Ok(None),
+            _ => {}
+        }
+    }
 }
 
 fn choose_dev(term: &mut Term) -> io::Result<Option<String>> {
