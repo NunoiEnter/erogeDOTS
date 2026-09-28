@@ -1,86 +1,94 @@
 #!/usr/bin/env bash
-# erogeDOTS installer — fresh NixOS device
+# erogeDOTS ALPHA 1.4 — unattended installer after git clone
 set -euo pipefail
 
-REPO="https://github.com/NunoiEnter/erogeDOTS.git"
-TARGET="$HOME/erogeDOTS"
+REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+EXPECTED_ROOT="$HOME/erogeDOTS"
+HOST_NAME="$(hostnamectl --static 2>/dev/null || hostname)"
+HOST_DIR="$REPO_ROOT/hosts/$HOST_NAME"
+TEMPLATE_DIR="$REPO_ROOT/hosts/_template"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/erogedots"
+LOG_FILE="$STATE_DIR/install.log"
+NEW_HOST=false
+TEMP_HARDWARE=""
 
-echo "=== erogeDOTS installer ==="
+mkdir -p "$STATE_DIR"
+exec > >(tee -a "$LOG_FILE") 2>&1
 
-# 1. Clone repo
-if [[ ! -d "$TARGET" ]]; then
-    git clone "$REPO" "$TARGET"
-else
-    echo "Repo exists at $TARGET, skipping clone"
-fi
+cleanup() {
+    [[ -z "$TEMP_HARDWARE" ]] || rm -f -- "$TEMP_HARDWARE"
+}
+trap cleanup EXIT
 
-cd "$TARGET"
-
-# 2. Apply NixOS config (everything managed by Nix)
-sudo nixos-rebuild switch --flake .#NixChan
-
-# 3. Build Rust theme-picker (compiled once at install, not on every rebuild)
-echo ""
-echo "=== Building theme-picker ==="
-# nixos-rebuild put cargo in the user profile — make sure it's on PATH even
-# if the current shell was started before this install
-export PATH="/etc/profiles/per-user/$USER/bin:$PATH"
-if command -v cargo &>/dev/null; then
-    cd "$TARGET/picker-rs"
-    cargo build --release
-    mkdir -p "$HOME/.local/bin"
-    cp target/release/theme-picker "$HOME/.local/bin/"
-    echo "theme-picker built: $HOME/.local/bin/theme-picker"
-else
-    echo "cargo not found — theme-picker will use fzf fallback"
-fi
-
-# 3.5. Symlink tspick → theme-switch picker
-ln -sf "$TARGET/scripts/tspick" "$HOME/.local/bin/tspick"
-echo "tspick symlinked to ~/.local/bin/tspick"
-
-# 3.6. Symlink cliphist-pick (image-aware clipboard picker)
-ln -sf "$TARGET/scripts/cliphist-pick" "$HOME/.local/bin/cliphist-pick"
-echo "cliphist-pick symlinked to ~/.local/bin/cliphist-pick"
-
-# 3.7. Link eroricer skill + /erodots command into opencode config
-# The repo copies under .opencode/ are the source of truth (they travel with
-# git). These symlinks make the skill and command available in every session,
-# from any directory — including fresh devices where ~/.config is empty.
-mkdir -p "$HOME/.config/opencode/skills" "$HOME/.config/opencode/commands"
-ln -sfn "$TARGET/.opencode/skills/eroricer" "$HOME/.config/opencode/skills/eroricer"
-ln -sfn "$TARGET/.opencode/commands/erodots.md" "$HOME/.config/opencode/commands/erodots.md"
-echo "eroricer skill + /erodots linked into ~/.config/opencode"
-
-# 3.8. Verify eroricer is loadable (fail loudly, install is the only chance)
-SKILL_FILE="$TARGET/.opencode/skills/eroricer/SKILL.md"
-if [[ -f "$SKILL_FILE" ]] \
-    && grep -q "^name: eroricer$" "$SKILL_FILE" \
-    && grep -q "^description: " "$SKILL_FILE" \
-    && [[ -f "$HOME/.config/opencode/commands/erodots.md" ]] \
-    && [[ "$(readlink -f "$HOME/.config/opencode/skills/eroricer")" == "$TARGET/.opencode/skills/eroricer" ]]; then
-    echo "eroricer verified — type /erodots in any opencode session"
-else
-    echo "ERROR: eroricer skill verification failed (see step 3.7)" >&2
+die() {
+    echo "error: $*" >&2
     exit 1
+}
+
+step() {
+    echo
+    echo "==> $*"
+}
+
+[[ "${EUID}" -ne 0 ]] || die "run as your normal user, not root"
+[[ "$(id -un)" == "moni" ]] || die "this personal config requires user: moni"
+[[ "$REPO_ROOT" == "$EXPECTED_ROOT" ]] ||
+    die "clone this repository at: $EXPECTED_ROOT"
+[[ -f /etc/NIXOS ]] || die "this installer requires NixOS"
+[[ "$HOST_NAME" =~ ^[A-Za-z0-9][A-Za-z0-9-]{0,62}$ ]] ||
+    die "invalid hostname: $HOST_NAME"
+
+for command_name in git nix sudo hostnamectl nixos-rebuild nixos-generate-config; do
+    command -v "$command_name" >/dev/null || die "missing command: $command_name"
+done
+
+[[ -f "$REPO_ROOT/flake.nix" ]] || die "flake.nix not found"
+[[ -f "$TEMPLATE_DIR/configuration.nix" ]] || die "host template missing"
+
+step "Authenticate sudo once"
+sudo -v
+
+if [[ ! -d "$HOST_DIR" ]]; then
+    [[ -d /sys/firmware/efi ]] ||
+        die "automatic new-host setup currently requires UEFI"
+
+    step "Create host $HOST_NAME"
+    mkdir -p "$HOST_DIR"
+    cp "$TEMPLATE_DIR/configuration.nix" "$HOST_DIR/configuration.nix"
+    NEW_HOST=true
 fi
 
-# 3.9. Quickshell Senren Banka bar + popover started by niri template.
-# No separate media widget build required.
-cd "$TARGET"
-
-# 4. Apply Firefox user.js (fonts + GPU perf)
-FIREFOX_PROFILE=$(find "$HOME/.config/mozilla/firefox" -maxdepth 2 -name "prefs.js" -type f 2>/dev/null | head -1 | xargs dirname 2>/dev/null)
-if [[ -n "$FIREFOX_PROFILE" ]] && [[ -f "$TARGET/config/firefox/user.js" ]]; then
-    cp "$TARGET/config/firefox/user.js" "$FIREFOX_PROFILE/user.js"
-    echo "Firefox user.js applied (fonts + GPU acceleration)"
-else
-    echo "Launch Firefox once, then re-run: cp ~/erogeDOTS/config/firefox/user.js ~/.config/mozilla/firefox/*/user.js"
+if [[ ! -f "$HOST_DIR/hardware-configuration.nix" ]]; then
+    step "Generate hardware configuration"
+    TEMP_HARDWARE="$(mktemp)"
+    sudo nixos-generate-config --show-hardware-config > "$TEMP_HARDWARE"
+    install -m 0644 "$TEMP_HARDWARE" "$HOST_DIR/hardware-configuration.nix"
 fi
 
-echo ""
-echo "=== Setup complete ==="
-echo "Run: sudo nixos-rebuild switch --flake .#NixChan"
-echo "Then: theme-switch harumi  (or sana nanami natsume nene)"
-echo "Picker: theme-switch picker (tspick)"
-echo "Incomplete themes (no wallpaper yet): themes/incomplete/"
+step "Check flake"
+nix flake check "path:$REPO_ROOT" --no-build --no-write-lock-file
+
+step "Build $HOST_NAME"
+sudo nixos-rebuild build --flake "path:$REPO_ROOT#$HOST_NAME"
+
+step "Activate $HOST_NAME"
+sudo nixos-rebuild switch --flake "path:$REPO_ROOT#$HOST_NAME"
+
+step "Generate active theme"
+active_theme="$(cat "$HOME/.config/theme/active" 2>/dev/null || printf harumi)"
+EROGEDOTS_ROOT="$REPO_ROOT" EROGEDOTS_NO_RESTART=1 \
+    "$REPO_ROOT/scripts/theme-switch" "$active_theme"
+
+step "Verify"
+[[ "$(hostnamectl --static)" == "$HOST_NAME" ]] ||
+    die "hostname verification failed"
+[[ -e /run/current-system ]] || die "current system generation missing"
+command -v theme-picker >/dev/null || die "theme-picker missing after activation"
+
+echo
+echo "ALPHA 1.4 installed successfully on $HOST_NAME"
+echo "Log: $LOG_FILE"
+if [[ "$NEW_HOST" == true ]]; then
+    echo "New host files created under: $HOST_DIR"
+    echo "Review and commit them when ready."
+fi

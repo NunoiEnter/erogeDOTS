@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# larp — 2x2 hacker wall (see docs/larper.md).
+# larp — 2x2 terminal wall.
 # TL areofyl fetch, TR tty-clock in theme color, BL cmatrix, BR cava.
 # Usage: larp | larp kill
 set -euo pipefail

@@ -14,7 +14,6 @@ keys (`primary` -> `{{PRIMARY}}`) and substitutes into `themes/templates/<app>/`
 `niri_focus_active`, `niri_focus_inactive`, `niri_shadow`,
 `bar_border`, `bar_workspace_active`, `bar_workspace_default`, `bar_clock_icon`,
 `fetch_label`, `fetch_logo_outer`, `fetch_logo_inner`,
-`catnap_primary`, `catnap_accent`,
 `cava_colors`, `cmatrix_color`, `ghostty_opacity`
 
 Old `waybar_*` names still work as fallback for one release

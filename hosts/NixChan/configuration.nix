@@ -1,18 +1,26 @@
-# hosts/NixChan/configuration.nix
-# Thin router. Every domain lives in modules/. Pick a file, not a line number.
+# NixChan-only hardware and boot choices. Shared system config lives in ../../nixos.nix.
+{ lib, ... }:
+
 {
   imports = [
-    ./modules/boot.nix
-    ./modules/network.nix
-    ./modules/desktop.nix
-    ./modules/audio.nix
-    ./modules/power.nix
-    ./modules/fonts.nix
-    ./modules/i18n.nix
-    ./modules/gaming.nix
-    ./modules/bluetooth.nix
-    ./modules/remote.nix
-    ./modules/nix-settings.nix
-    ./modules/users.nix
+    ../../nixos.nix
+    ./hardware-configuration.nix
   ];
+
+  networking.hostName = "NixChan";
+
+  # The 96 MiB ESP is mounted at /efi; GRUB reads /boot from the root filesystem.
+  boot.loader.systemd-boot.enable = lib.mkForce false;
+  boot.loader.grub = {
+    enable = true;
+    efiSupport = true;
+    device = "nodev";
+    useOSProber = true;
+    configurationLimit = 10;
+  };
+  boot.loader.efi = {
+    canTouchEfiVariables = true;
+    efiSysMountPoint = "/efi";
+  };
+  boot.loader.timeout = 0;
 }

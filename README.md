@@ -1,518 +1,131 @@
-# ⚠️ erogeDOTS — VER ALPHA 1.3
+# erogeDOTS — ALPHA 1.4
 
-> **⚠️ WARNING: MY PERSONAL DOTFILES — NOT FOR YOU ⚠️**
->
-> This is **my** personal NixOS setup. Runs on **my** machine (`NixChan`), uses **my**
-> themes, **my** keybinds, **my** little quirks. This isn't a template or a distro —
-> it's just my home.
->
-> **STATUS: STILL BUILDING.** I break things, fix them, and move on. Don't expect
-> stability. Don't expect support. If you copy this and something explodes —
-> that's on you, not me. ⚠️
+Personal NixOS fleet for `moni`. Niri is the main desktop; GNOME and XFCE stay
+available. Kitty, Alacritty, Ghostty, and Foot are all kept.
 
----
+This repository is public. It contains configuration and wallpapers, never live
+credentials.
 
-## 🎮 What even is this
+## Install
 
-My NixOS dotfiles with a visual-novel look (waifu themes), one theme-switcher that
-re-colors everything, and a lightweight desktop stack on **niri**.
-
-Why "lightweight"? I tried Noctalia (a whole desktop shell). It looked amazing but
-ate resources. So I dropped it and rebuilt the same look with small tools: quickshell,
-swaync, fuzzel — way lighter, still pretty, now in Senren Banka visual-novel style.
-
-## 🧠 How it works
-
-Three layers, in order:
-
-1. **NixOS system** (`hosts/NixChan/configuration.nix` + `hosts/NixChan/modules/`):
-   bootloader, networking, sound, Bluetooth, display manager, desktops, fonts,
-   Nix settings, users. Thin router — every domain lives in its own module file.
-2. **Home-Manager user** (`home/moni.nix`, `home/modules/`): user packages, zsh,
-   MIME apps, symlinks. Static configs such as nvim come from the Nix store.
-3. **Theme runtime** (`scripts/theme-switch`, `themes/`): parses
-   `themes/<name>/theme.conf`, substitutes `{{VARIABLES}}` into
-   `themes/templates/<app>/*`, caches the result in
-   `~/.config/theme/cache/<name>/`, then copies live files into `~/.config/<app>/`
-   and records `~/.config/theme/{active,env}`. Wallpaper goes through `awww`.
-   No rebuild is needed to change colors.
-
-Flow:
-
-```text
-flake.nix
-  -> sudo nixos-rebuild switch --flake .#NixChan
-    -> system + Home-Manager symlinks
-      -> home.activation.restoreTheme runs theme-switch <active> if cache missing
-        -> ~/.config/<app>/ + wallpaper
-```
-
-Config rule: symlinks for static content, regular generated files for anything
-theme-switch owns. Do not edit `~/.config/niri/config.kdl` directly; edit
-`themes/templates/niri/config.kdl` and re-run
-`theme-switch $(cat ~/.config/theme/active)`.
-
-## 📖 How NixOS actually works (beginner guide)
-
-New to NixOS? Read this once and the rest of this repo makes sense.
-
-### The big idea: declarative + immutable
-
-Normal Linux: you `apt install` things, edit files in `/etc`, and the system
-slowly drifts. You can never exactly reproduce it.
-
-NixOS: you **describe** the whole system in text files. Nix **builds** that
-description into immutable outputs under `/nix/store/` (paths like
-`/nix/store/abc123-firefox-...`). Old outputs are never overwritten — a rebuild
-just creates new ones and flips a pointer. That pointer flip is a **generation**,
-and you can boot back into any old generation from GRUB. That is why NixOS feels
-"unbreakable": a bad config is one reboot away from undone.
-
-```text
-your .nix files  ->  nix build  ->  /nix/store/<hash>-<name>  ->  activated as generation N
-                                          (read-only, never edited in place)
-```
-
-### The Nix language (30-second version)
-
-`.nix` files are written in the Nix expression language: lots of `{ }`,
-`[ ]`, `let ... in`, `with`. Two patterns cover 90% of this repo:
-
-```nix
-# 1. Attribute set = the config object. Keys map to values/modules.
-{ config, pkgs, ... }:
-{
-  programs.firefox.enable = true;
-  home.packages = [ pkgs.ripgrep pkgs.fzf ];
-}
-
-# 2. Lists + imports = composing modules together.
-{
-  imports = [
-    ./modules/boot.nix
-    ./modules/network.nix
-  ];
-}
-```
-
-`pkgs` = the package set from nixpkgs (tens of thousands of packages).
-`{ config, pkgs, ... }:` at the top = "this module receives these arguments".
-
-### configuration.nix vs flake.nix vs flake.lock
-
-Three files, three jobs. Beginners mix these up, so:
-
-| File | Job | Analogy |
-|---|---|---|
-| `configuration.nix` | **WHAT** your system is: bootloader, users, desktop, services, fonts | The recipe |
-| `flake.nix` | **WHERE** dependencies come from + **WHICH** machines exist: declares `inputs` (nixpkgs revision, home-manager, qylock, rust-overlay) and `outputs` (`nixosConfigurations.NixChan`, dev shells, local packages) | The cookbook index + pinned suppliers |
-| `flake.lock` | **EXACTLY WHICH** version of every input: commit hash + content hash for reproducible builds | The receipt with barcodes |
-
-Before flakes (the old way), you had a channel (`nixos-unstable` on your machine,
-constantly moving) and a single `/etc/nixos/configuration.nix`. Two machines
-rebuilt a week apart got different software. Flakes fix that:
-
-```nix
-# flake.nix (simplified) — this repo
-{
-  inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager.url = "github:nix-community/home-manager";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs"; # one nixpkgs for all
-    qylock.url = "github:Darkkal44/qylock";
-    rust-overlay.url = "github:oxalica/rust-overlay";
-  };
-  outputs = { nixpkgs, home-manager, ... }: {
-    nixosConfigurations.NixChan = nixpkgs.lib.nixosSystem {
-      modules = [
-        ./hosts/NixChan/configuration.nix
-        home-manager.nixosModules.home-manager
-      ];
-    };
-  };
-}
-```
-
-- `inputs` = dependencies, as URLs.
-- `inputs.nixpkgs.follows = "nixpkgs"` = "don't fetch a second copy, reuse mine".
-- `outputs` = a function producing your machines, shells, and packages.
-- `nixosConfigurations.NixChan` = "the machine named NixChan, built from these modules".
-- Rebuild with `sudo nixos-rebuild switch --flake .#NixChan` = build that output, activate it.
-
-`flake.lock` records the exact commit (`rev`) and hash (`narHash`) of each input
-at the time you last updated. **Commit it.** Without it, clones resolve floating
-branches and diverge. Update it deliberately:
+On an already installed NixOS machine using the `moni` account:
 
 ```bash
-nix flake update            # bump everything (review the diff after)
-nix flake update nixpkgs     # bump one input only
-nix flake metadata           # show what is currently pinned
-```
-
-### System vs Home-Manager vs dev shells
-
-NixOS config splits by scope. This repo maps 1:1 onto it:
-
-- **System** (`hosts/NixChan/modules/*.nix`, 12 files): things needing root —
-  bootloader, kernel, networking, display manager, system-wide services
-  (`programs.steam`, PipeWire, TLP, SDDM). Applied with `nixos-rebuild switch`.
-- **Home-Manager** (`home/moni.nix` + `home/modules/*.nix`, 9 files): things
-  owned by user `moni` — shells, user packages, dotfiles, MIME handlers,
-  user services. Runs as part of the same rebuild (via the home-manager NixOS
-  module), no separate command needed here because `useGlobalPkgs` +
-  `useUserPackages` are on.
-- **Dev shells** (`shells/*.nix`, 10 shells): throwaway environments per task —
-  `nix develop .#rust`, `.#python`, `.#go`, `.#tester`, `.#docker`,
-  `.#security`, `.#webapp`, `.#common`, `.#pg-computer`, plus default/full.
-  They never touch your system; they just put tools on `PATH` while you are
-  inside the shell.
-
-```bash
-nix develop            # full shell (default)
-nix develop .#rust     # Rust toolchain only
-exit                   # leave, system unchanged
-```
-
-### Symlinks: how dotfiles actually land in ~/.config
-
-Everything in `/nix/store` is read-only, so NixOS does not "copy configs into
-place" — it **symlinks** them. Home-Manager's `home.file` declares the link:
-
-```nix
-# static file: source lives in the repo, linked read-only into home
-home.file = {
-  ".config/nvim".source = ../config/nvim;
-};
-# after rebuild: ~/.config/nvim -> /nix/store/<hash>-nvim/
-```
-
-Result: edit `config/nvim/` in the repo, rebuild, the symlink target updates.
-You never edit `~/.config/nvim` directly (it points at a read-only store path).
-
-Two flavors worth knowing:
-
-```nix
-{
-  # 1. Store symlink (default, read-only target — use for static configs)
-  ".config/nvim".source = ../config/nvim;
-
-  # 2. Out-of-store symlink (writable target — use when an app must write
-  #    to its own config, or you want live edits without rebuilds)
-  # ".config/some-app".source =
-  #   config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/erogeDOTS/config/some-app";
-}
-```
-
-**This repo's rule:** store symlinks for static content (nvim, mimeapps,
-kdeglobals); plain generated **files** (not symlinks) for anything `theme-switch`
-owns (niri, quickshell, swaync, fuzzel, ghostty, alacritty, foot, kitty, catnap,
-fetch, cava, cmatrix). Reason: the theme script must overwrite those files on
-every switch without a rebuild — a store symlink would be read-only and fight it.
-
-### How a rebuild flows (end to end)
-
-```text
-1. You edit a .nix file (or theme.conf for colors-only changes)
-2. nixos-rebuild evaluates flake.nix + lockfile -> builds new store paths
-3. New generation created (/nix/var/nix/profiles/system-*-link)
-4. Activation: services restarted, /etc + /run updated, home symlinks relinked
-5. home.activation.restoreTheme: if theme cache missing, re-run theme-switch
-6. Bad generation? Reboot, pick older entry in GRUB, or:
-   sudo nixos-rebuild switch --rollback
-```
-
-Colors-only change? Skip all of that — just `theme-switch <name>`. No sudo,
-no generation, instant.
-
-### Glossary for this repo
-
-- **nixpkgs**: the giant package collection (this repo tracks `nixos-unstable`).
-- **overlay** (`rust-overlay`): a layer adding/overriding packages (here: fresh
-  Rust toolchains for dev shells).
-- **module**: a `.nix` file exporting config; composed via `imports`.
-- **`specialArgs` / `extraSpecialArgs`**: extra arguments passed into modules
-  (this repo passes flake `inputs` to the system, and `catnap`/`chatgpt`/
-  `discord-opencode-bot` into home-manager so modules use them without
-  re-`callPackage`-ing).
-- **generation**: one activated system build; listed with
-  `sudo nix-env --list-generations --profile /nix/var/nix/profiles/system`.
-- **GC**: `nix.gc` (30 days here) deletes store paths older than X; run
-  `sudo nix-collect-garbage --delete-older-than 30d` to free space.
-
-## 🧱 Where stuff lives
-
-```text
-erogeDOTS/
-├── flake.nix                  # inputs: nixpkgs, home-manager, qylock, rust-overlay
-├── flake.lock                 # locked inputs (commit this, update deliberately)
-├── install.sh                 # fresh-machine installer
-├── agent.md                   # agent identity + full repo reference
-├── hosts/NixChan/             # machine-specific system config
-│   ├── configuration.nix      # thin router, imports only
-│   ├── hardware-configuration.nix # MY hardware only, not portable
-│   └── modules/               # 12 files: boot/network/desktop/audio/power/fonts/i18n/gaming/bluetooth/remote/nix-settings/users
-├── home/
-│   ├── moni.nix               # user entry: 9 imports, nvim symlink, theme restore hook
-│   └── modules/
-│       ├── shell.nix          # terminals, zsh, core aliases
-│       ├── dev.nix            # dev tools + AI CLIs
-│       ├── fun.nix            # terminal toys + aliases
-│       ├── desktop.nix        # session tools (bar, launcher, screenshots)
-│       ├── apps.nix           # browsers, files, media, editors
-│       ├── gaming.nix         # wine/steam/heroic
-│       ├── media.nix          # MPD + rmpc
-│       ├── mime.nix           # mimeapps, launchers, kdeglobals
-│       └── discord-opencode.nix # Oko-chan bridge service
-├── themes/                    # theme definitions + templates
-│   ├── sana/ harumi/ nanami/ natsume/ nene/  # 5 live themes
-│   ├── incomplete/            # meguru/ tsumuki/ parked (no wallpaper yet)
-│   ├── SCHEMA.md              # theme key contract
-│   └── templates/             # 12 apps with {{placeholders}}
-│   ├── niri/ quickshell/ swaync/ fuzzel/
-│       ├── ghostty/ alacritty/ foot/ kitty/
-│       └── catnap/ fetch/ cava/ cmatrix/
-├── scripts/
-│   ├── theme-switch           # parses theme.conf -> generates -> applies -> restarts
-│   ├── lib/common.sh          # DOTFILES autodetect + APPS list + safe sed
-│   ├── tspick                 # wrapper: theme-switch picker
-│   ├── larp                   # 2x2 hacker wall (fetch + clock + cmatrix + cava)
-│   ├── cliphist-pick          # image-aware clipboard picker
-│   ├── dropterm               # quake dropdown terminal (Mod+grave)
-│   ├── fcitx5-cycle.sh        # EN/JP/TH input cycle
-│   ├── ram                    # RAM breakdown + safe diet
-│   ├── unzzz / zzz            # stay-awake inhibit + hibernate
-│   └── mk-boot-partition      # LIVE-USB ONLY XBOOTLDR helper
-├── picker-rs/                 # Rust TUI theme picker (src/main.rs)
-├── pkgs/
-│   ├── catnap/                # prebuilt catnap binary (default shell fetch)
-│   ├── chatgpt/               # official ChatGPT RPM as FHSEnv
-│   └── discord-opencode/      # Oko-chan Discord bridge (Rust, flake-passed to home-manager)
-├── config/                    # static configs
-│   ├── nvim/                  # LazyVim config, symlinked by Home-Manager
-│   └── firefox/user.js        # fonts + GPU perf, applied after first launch
-├── shells/                    # 10 nix develop environments (default/full composes rust+python+go+common)
-├── wallpapers/                # 5 live wallpapers (see themes table)
-├── docs/                      # DEVELOPMENT, INSTALL, RETIRED, larper, vpn
-└── README.md                  # this file
-```
-
-### File roles in detail
-
-| Path | What it does |
-|---|---|
-| `flake.nix` | Declares `nixosConfigurations.NixChan`, 10 devShells, and `catnap`/`chatgpt`/`discord-opencode-bot` packages. Uses `rust-overlay` for dev shells. |
-| `flake.lock` | Exact pinned revisions of all 4 inputs. Commit it; bump with `nix flake update`. |
-| `install.sh` | Clone -> `nixos-rebuild switch` -> `cargo build --release` picker-rs -> copy to `~/.local/bin/theme-picker` -> symlink `tspick`/`cliphist-pick` -> link skill -> apply Firefox `user.js`. Uses fzf fallback when cargo is absent. |
-| `hosts/NixChan/configuration.nix` | Thin router. Imports the 12 files in `modules/` only. |
-| `hosts/NixChan/modules/` | `boot` (GRUB, ESP at /efi), `network` (NM + VPN + Tailscale + SSH 22), `desktop` (niri + XFCE + GNOME, SDDM Wayland, flatpak, patched qylock shim), `audio` (PipeWire 44.1/48k), `power` (TLP), `fonts` (single source), `i18n` (fcitx5 EN/JP/TH), `gaming` (`programs.steam`), `bluetooth` (off for RAM), `remote` (xrdp off, uinput/udev), `nix-settings` (flakes, caches, GC 30d), `users` (moni groups + scoped NOPASSWD). |
-| `home/moni.nix` | Imports 9 home modules, symlinks `config/nvim`, restores theme on activation. |
-| `home/modules/shell.nix` | 4 terminals, zsh + core aliases, catnap on shell open (areofyl fetch rides along for `larp`). |
-| `home/modules/desktop.nix` | Session tools: Quickshell Senren Banka shell, fuzzel, awww, swaync, screenshots, clipboard, wlogout/wlsunset/swaylock. |
-| `home/modules/apps.nix` | Daily apps, ChatGPT package, Firefox default. `gaming.nix` holds wine/steam/heroic. `mime.nix` holds dual-location mimeapps, figma handler, Claude webapp, Dolphin dark theme, nvim-terminal entry. |
-| `themes/<name>/theme.conf` | Colors, bar border + icons, focus rings, terminal opacity, cava/cmatrix/fetch/catnap values, wallpaper path, character metadata. Schema: `themes/SCHEMA.md`. |
-| `themes/templates/<app>/` | Source templates with `{{PLACEHOLDERS}}` for all 12 themed apps. |
-| `scripts/theme-switch` | Full switcher: `list`, `current`, `preview`, `picker`, and direct `<theme>` apply with wallpaper + app reload. |
-| `picker-rs/src/main.rs` | Ratatui picker with wallpaper image preview; Enter calls `theme-switch`. |
-| `pkgs/*` | Local Nix packages for binaries not cleanly in nixpkgs. |
-| `shells/*` | Reproducible `nix develop .#<name>` toolsets (10 total). |
-| `config/nvim` | Editor config, store-symlinked, not theme-generated. |
-| `wallpapers/` | Active wallpaper assets (5 jpgs). |
-
-## 🥞 My stacks
-
-### Desktop shell (lightweight — no Qt6 bloat)
-
-| Piece | What it does for me |
-|---|---|
-| **niri** | my tiling compositor — scrollable columns, tabbed, overview |
-| **quickshell bar** | Senren Banka kamidana strip — torii launcher, hanko workspace seals, focused title left; VN clock + ❀ media center; ema status + settings right |
-| **quickshell popover** | dialogue-box quick-settings — Wi-Fi, Bluetooth, volume, brightness, media, battery, quick actions (`Mod+S` or bar status click) |
-| **swaync** | my notifications |
-| **fuzzel** | launcher + dmenu |
-| **wlogout** | session menu (power off, reboot, logout) |
-| **qylock** | my lock screen (patched so mouse clicks work) — swaylock as backup |
-| **wlsunset** | night light, manual toggle (`Mod+Ctrl+W`) |
-| **cliphist** | clipboard history (`Mod+Ctrl+V`) |
-| **grim + slurp + swappy** | screenshots + region annotate (`Print` family) |
-| **awww** | wallpaper daemon with fade transitions |
-
-Eww/waybar gone. Quickshell owns bar + media + popover.
-
-### Theming
-
-- **theme-switch** — one command, re-colors 12 apps: niri,
-  quickshell, swaync, fuzzel, ghostty, alacritty, foot, kitty, catnap, fetch, cava, cmatrix
-- **picker-rs** — Rust picker with live wallpaper previews; fzf fallback included
-- **Cache** — generated configs live in `~/.config/theme/cache/<name>/`; active theme
-  in `~/.config/theme/active`; shell env in `~/.config/theme/env`
-
-| Theme | Character / source | Accent | Wallpaper here? |
-|---|---|---|---|
-| `sana` | Sana Inui / Mashiro-iro Symphony | `#e05050` red | yes |
-| `harumi` | Harumi | pink | yes |
-| `nanami` | Nanami | dark purple | yes |
-| `natsume` | Natsume | warm pastel | yes |
-| `nene` | Nene | lavender | yes |
-
-Parked in `themes/incomplete/` until wallpapers land: `meguru` (`#f09a4c` orange),
-`tsumuki` (`#e6c055` gold). Schema: `themes/SCHEMA.md`.
-
-### Terminal and editor
-
-- ghostty (default), kitty, alacritty, foot — all themed
-- zsh with completion, autosuggestions, syntax highlighting, theme env sourcing
-- catnap fetch on shell open with cache + `clear` redraw; `mini` alias for small view
-- areofyl fetch (spinning logo) for the `larp` wall (`Mod+G`)
-- nvim (LazyVim), vscodium, zed-editor
-- yazi, fzf, ripgrep, fd, btop/htop, fun fetch toys (`pkmn`, `cmx`, `cave`, etc.)
-
-### Apps, gaming, media
-
-- Firefox default + librewolf + chrome, vesktop/discord, obs-studio
-- dolphin/ark, qimgv, vlc/mpv/yt-dlp, qbittorrent
-- wine, steam (system `programs.steam` + user packages), steam-run, heroic
-- MPD user service + rmpc + playerctl, foliate, figma-linux
-
-### AI tools
-
-- **claude-code** — Anthropic CLI (`claude`), from nixpkgs
-- **codex** — OpenAI CLI (`codex`), from nixpkgs
-- **ChatGPT** — official Linux desktop app, packaged from OpenAI's RPM
-- **Claude launcher** — Firefox web-app entry (`claude.ai`) in the app menu
-
-### Dev shells
-
-```bash
-nix develop              # full shell (all languages combined)
-nix develop .#rust       # Rust + rust-analyzer/clippy/cargo tools
-nix develop .#python     # Python + ruff/pyright/uv
-nix develop .#go         # Go + gopls/gofumpt/linter
-nix develop .#tester     # QA: pytest/k6/playwright/httpie
-nix develop .#docker     # containers + scan/lint tools
-nix develop .#security   # authorized-targets-only security toolkit
-nix develop .#common     # shared CLI tools only
-nix develop .#webapp     # webapp workflow
-nix develop .#pg-computer # computer-control MCP env
-```
-
-Full details: `docs/DEVELOPMENT.md`.
-
-### Scripts
-
-| Script | Purpose |
-|---|---|
-| `theme-switch <theme>\|list\|current\|preview\|picker` | Generate + apply theme, restart affected apps |
-| `tspick` | Shortcut to the interactive picker |
-| `larp [open\|kill]` | 2x2 hacker wall: fetch + tty-clock + cmatrix + cava |
-| `dropterm` | Toggle quake terminal under bar |
-| `cliphist-pick` | Clipboard history with correct image/text paste |
-| `ram show\|diet\|watch` | RAM breakdown + safe diet |
-| `unzzz start\|stop` / `zzz` | Stay awake with lid closed / hibernate |
-| `mk-boot-partition --i-know` | LIVE-USB ONLY XBOOTLDR helper |
-
-### Keybinds I actually use
-
-| Key | Action |
-|---|---|
-| `Mod+Return` | terminal (ghostty) |
-| `Mod+Shift+Return` | mini terminal |
-| `Mod+grave` | dropdown terminal (quake-style under bar) |
-| `Mod+G` | larp wall (2x2: fetch, clock, matrix, cava) |
-| `Mod+D` | app launcher (fuzzel) |
-| `Mod+S` | quick settings popover (quickshell) |
-| `Mod+Ctrl+V` | clipboard history |
-| `Mod+Shift+W` | session menu (wlogout) |
-| `Mod+Ctrl+W` | night light toggle |
-| `Super+Alt+L` | lock (qylock) |
-| `Print` / `Ctrl+Print` / `Alt+Print` / `Shift+Print` | screenshot / screen / window / annotate |
-| `Mod+Shift+/` | hotkey overlay (all binds listed) |
-| `Mod+O` | overview |
-
-Full list: press `Mod+Shift+/` anytime.
-
-## 🚀 Installing (if you're me)
-
-### Fresh machine
-
-```bash
-bash <(curl -s https://raw.githubusercontent.com/NunoiEnter/erogeDOTS/main/install.sh)
-```
-
-That clones the repo, runs `sudo nixos-rebuild switch --flake .#NixChan`, then
-compiles the Rust theme-picker once into `~/.local/bin/theme-picker`.
-
-### How the picker build actually works
-
-The **install.sh script does the compiling** — you don't touch cargo yourself:
-
-1. `git clone` the repo → `~/erogeDOTS`
-2. `sudo nixos-rebuild switch` — installs EVERYTHING including `cargo` (it's in
-   my `home/modules/dev.nix` packages). This order matters: cargo must exist
-   *before* the build step.
-3. `cd picker-rs && cargo build --release` — compiles the Rust picker from source
-   (`picker-rs/src/main.rs`)
-4. `cp target/release/theme-picker ~/.local/bin/` — drops the binary into PATH
-
-**When does it build?** Only **once, during install.sh**. Nixos-rebuild NEVER
-recompiles it — that's the point: picker is Rust, not a Nix package, so rebuilds
-stay fast. The binary just sits in `~/.local/bin/theme-picker` and keeps working.
-
-**When would I rebuild it manually?** Only if you edit the picker source
-(`picker-rs/src/main.rs`, e.g. add a theme option) — then:
-
-```bash
-cd ~/erogeDOTS/picker-rs
-cargo build --release
-cp target/release/theme-picker ~/.local/bin/
-```
-
-**No cargo?** install.sh falls back to fzf-based picker (no Rust build). Only
-matters on a machine without the toolchain.
-
-### Already cloned — just rebuild
-
-```bash
+git clone https://github.com/NunoiEnter/erogeDOTS.git ~/erogeDOTS
 cd ~/erogeDOTS
-sudo nixos-rebuild switch --flake .#NixChan
+./install.sh
 ```
 
-### Theme/config tweaks (no rebuild needed)
+The installer detects the hostname, creates a host from `hosts/_template` when
+needed, generates hardware configuration, checks the flake, builds, switches,
+applies the current theme, and verifies the result. It asks no configuration
+questions. NixOS may ask once for the sudo password. Full output is saved at
+`~/.local/state/erogedots/install.log`.
+
+`NixChan` keeps its special GRUB layout. New hosts default to UEFI systemd-boot.
+Automatic creation intentionally refuses BIOS-only machines.
+
+## Everyday commands
 
 ```bash
-theme-switch sana          # or: harumi nanami natsume nene
-# regenerates Quickshell, reloads niri, restarts Quickshell
+sudo nixos-rebuild switch --flake path:$HOME/erogeDOTS#NixChan
+theme-switch list
+theme-switch harumi
+theme-switch picker
+nix develop                         # full development shell
+nix develop .#rust                  # named shell
 ```
 
-Edit colors in `themes/<name>/theme.conf` (schema: `themes/SCHEMA.md`); edit
-layout/behavior in `themes/templates/<app>/`; add an app by creating
-`themes/templates/<new-app>/` and adding its name to `APPS` in
-`scripts/lib/common.sh`.
+Rollback after a bad activation:
 
-## ⚠️ Read this before you copy me
+```bash
+sudo nixos-rebuild switch --rollback
+```
 
-- Hostname is **`NixChan`** — hardware-configuration is for MY hardware only.
-- My aliases, my colors, my keybinds. Yours will (and should) differ.
-- `allowUnfree` overlap deliberately left alone.
-- `meguru` and `tsumuki` are parked in `themes/incomplete/` until their wallpapers land.
-- Removed things + how to restore: `docs/RETIRED.md`.
-- **Still building.** Expect churn.
+## Secrets
 
-## 📚 My notes
+Keep these outside the repository:
 
-- `agent.md` — agent identity plus full working reference for this repo
-- `docs/LOGS.md` — append-only work log, newest at bottom; every finished fix lands here
-- `docs/DEVELOPMENT.md`, `docs/INSTALL.md`
-- `docs/larper.md`, `docs/vpn-instructions.md`
+- Discord tokens: `~/.config/opencode/discord-bot.env` (`0600`)
+- SSH private keys: `~/.ssh/`
+- Wi-Fi passwords: NetworkManager connection store
+- VPN profiles and keys: import them into NetworkManager from private storage
+- Any `.env`, `*.ovpn`, `*.key`, `*.pem`, `*.p12`, or `*.pfx`
 
-### 🤖 Agent sessions (`/erodots`)
+Only the blank Discord example is tracked. `.gitignore` blocks common secret
+files, but ignore rules cannot remove a secret from old Git history. Rotate any
+credential that was ever committed before publishing.
 
-Any opencode session can load this machine's context by running `/erodots`.
-It loads the `eroricer` skill (source of truth in
-`.opencode/skills/eroricer/SKILL.md`, symlinked into the global opencode config
-so it works from any directory), reads `agent.md` plus recent `docs/LOGS.md`
-entries, and reports theme + git state. After each fix, the agent appends a log
-entry so the next session knows what was done.
+## Layout: what each file does
 
----
+Core:
 
-**VER ALPHA 1.3** — personal, WIP, waifu-powered. えへへ 💕
+| File | Purpose |
+|---|---|
+| `flake.nix` | Pins inputs, discovers hosts, exports packages and dev shells. |
+| `flake.lock` | Exact dependency revisions for repeatable builds. |
+| `nixos.nix` | Shared NixOS system: users, Nix, network, SSH, desktop, audio, power, locale, fonts, Steam. |
+| `home/moni.nix` | All Home Manager packages, GNOME-adjacent desktop apps, Kitty/Alacritty/Ghostty/Foot, shell, MIME defaults, Firefox, Discord service. |
+| `install.sh` | Unattended host detection, generation, check, build, switch, theme, verification. |
+| `shells.nix` | All named development environments in one file. |
+| `.gitignore` | Keeps builds, local OpenCode state, and secret file types out of Git. |
+| `.gitattributes` | GitHub language/display hints. |
+| `LICENSE` | MIT terms for repository code. |
+
+Hosts and editor:
+
+| File | Purpose |
+|---|---|
+| `hosts/NixChan/configuration.nix` | NixChan hostname and its GRUB/EFI choices. |
+| `hosts/NixChan/hardware-configuration.nix` | NixChan disks and detected hardware. |
+| `hosts/_template/configuration.nix` | Safe UEFI default copied for a new hostname. |
+| `config/nvim/init.lua` | Neovim entrypoint. |
+| `config/nvim/lua/config/*.lua` | Autocommands, keys, plugin loader, and options. |
+| `config/nvim/lua/plugins/init.lua` | Neovim plugin declarations. |
+
+Packages:
+
+| File | Purpose |
+|---|---|
+| `picker-rs/Cargo.toml` / `Cargo.lock` | Rust picker manifest and locked dependencies. |
+| `picker-rs/src/main.rs` | Interactive terminal theme picker. |
+| `picker-rs/default.nix` | Reproducible Nix build for the picker. |
+| `pkgs/chatgpt/default.nix` | Nix wrapper for the official ChatGPT Linux package. |
+| `pkgs/discord-opencode/Cargo.toml` / `Cargo.lock` | Discord bridge manifest and dependency lock. |
+| `pkgs/discord-opencode/default.nix` | Nix build for the Discord bridge. |
+| `pkgs/discord-opencode/discord-bot.env.example` | Blank, safe credential template. |
+| `pkgs/discord-opencode/src/*.rs` | Bridge config, Discord/OpenCode adapters, permissions, projects, repository, settings, and tasks. |
+
+Scripts:
+
+| File | Purpose |
+|---|---|
+| `scripts/theme-switch` | Validates a theme, renders templates, applies configs, wallpaper, and reloads apps. |
+| `scripts/cliphist-pick` | Clipboard history picker. |
+| `scripts/dropterm` | Toggleable drop-down Ghostty terminal. |
+| `scripts/fcitx5-cycle.sh` | Cycle English, Japanese, and Thai input. |
+| `scripts/larp` | Opens or closes the four-pane terminal wall. |
+| `scripts/ram` | Shows memory use and optionally stops safe user processes. |
+| `scripts/unzzz` | Starts/stops a user-level lid/sleep inhibitor. |
+
+Themes:
+
+| File | Purpose |
+|---|---|
+| `themes/SCHEMA.md` | Supported theme keys and template rules. |
+| `themes/{harumi,nanami,natsume,nene,sana}/theme.conf` | Complete color, wallpaper, and character metadata. |
+| `themes/incomplete/{meguru,tsumuki}/theme.conf` | Parked themes whose wallpapers are missing; pickers ignore them. |
+| `themes/templates/<app>/*` | Source templates for Niri, Quickshell, terminals, Fuzzel, SwayNC, Fetch, Cava, and CMatrix. |
+| `wallpapers/*.jpg` | Wallpaper assets for complete themes. |
+
+## Add another machine
+
+Use the same three install commands. If its hostname is new, `install.sh` creates
+`hosts/<hostname>/configuration.nix` and `hardware-configuration.nix`. Review and
+commit those two machine-specific files afterward. Shared changes belong in
+`nixos.nix`; personal applications belong in `home/moni.nix`.
+
+## License
+
+Code is MIT licensed. Wallpapers and upstream package assets keep their original
+rights and are not relicensed by this repository.

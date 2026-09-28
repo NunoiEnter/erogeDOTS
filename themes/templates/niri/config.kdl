@@ -160,7 +160,7 @@ window-rule {
 binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
     Mod+Return hotkey-overlay-title="Open a Terminal" { spawn "ghostty"; }
-    Mod+Shift+Return hotkey-overlay-title="Mini Terminal" { spawn "sh" "-c" "ghostty --title=mini -e sh -c 'export MINI=1; catnap -c $HOME/.config/catnap/config-mini.cat; exec zsh'"; }
+    Mod+Shift+Return hotkey-overlay-title="Mini Terminal" { spawn "sh" "-c" "ghostty --title=mini -e sh -c 'fetch --frames 60; exec zsh'"; }
     Mod+grave hotkey-overlay-title="Dropdown Terminal" { spawn-sh "dropterm"; }
     Mod+G hotkey-overlay-title="Larp Wall" { spawn-sh "larp"; }
     Mod+S hotkey-overlay-title="Quick Settings" { spawn-sh "quickshell ipc -n call quick-settings toggle"; }

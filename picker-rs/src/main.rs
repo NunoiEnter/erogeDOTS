@@ -4,8 +4,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
 use crossterm::execute;
+use crossterm::terminal::{
+    disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
+};
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
@@ -41,17 +43,30 @@ impl Theme {
     }
 }
 
+fn repo_root() -> PathBuf {
+    std::env::var_os("EROGEDOTS_ROOT")
+        .map(PathBuf::from)
+        .or_else(|| dirs::home_dir().map(|home| home.join("erogeDOTS")))
+        .unwrap_or_default()
+}
+
 fn expand_path(p: &str) -> PathBuf {
     if let Some(rest) = p.strip_prefix("~/") {
         if let Some(home) = dirs::home_dir() {
             return home.join(rest);
         }
     }
-    PathBuf::from(p)
+    let path = PathBuf::from(p);
+    if path.is_absolute() {
+        path
+    } else {
+        repo_root().join(path)
+    }
 }
 
 fn parse_theme_conf(path: &Path) -> Theme {
-    let name = path.parent()
+    let name = path
+        .parent()
         .and_then(|p| p.file_name())
         .map(|n| n.to_string_lossy().to_string())
         .unwrap_or_default();
@@ -91,11 +106,8 @@ fn parse_theme_conf(path: &Path) -> Theme {
 }
 
 fn discover_themes() -> Vec<Theme> {
-    let Some(home) = dirs::home_dir() else {
-        return vec![];
-    };
-
-    let themes_dir = home.join("erogeDOTS").join("themes");
+    let root = repo_root();
+    let themes_dir = root.join("themes");
     let Ok(entries) = fs::read_dir(&themes_dir) else {
         return vec![];
     };
@@ -105,6 +117,7 @@ fn discover_themes() -> Vec<Theme> {
         .filter(|e| {
             e.file_type().map(|ft| ft.is_dir()).unwrap_or(false)
                 && e.file_name() != "templates"
+                && e.file_name() != "incomplete"
         })
         .filter_map(|e| {
             let conf = themes_dir.join(e.file_name()).join("theme.conf");
@@ -189,10 +202,7 @@ impl App {
 
         let target_cols: u32 = 36;
         let target_rows: u32 = 10;
-        let size = ratatui::layout::Size::new(
-            target_cols as u16,
-            target_rows as u16,
-        );
+        let size = ratatui::layout::Size::new(target_cols as u16, target_rows as u16);
 
         match picker.new_protocol(dyn_img, size, ratatui_image::Resize::Fit(None)) {
             Ok(proto) => self.image_protocol = Some(proto),
@@ -217,11 +227,12 @@ fn main() -> io::Result<()> {
     let mut terminal = Terminal::new(backend)?;
 
     // Setup ratatui-image picker (auto-detects kitty protocol)
-    let mut picker = Picker::from_query_stdio()
-        .unwrap_or_else(|_| Picker::halfblocks());
+    let mut picker = Picker::from_query_stdio().unwrap_or_else(|_| Picker::halfblocks());
 
     // Load initial wallpaper
-    let first_wallpaper = app.themes.first()
+    let first_wallpaper = app
+        .themes
+        .first()
         .map(|t| t.wallpaper.clone())
         .unwrap_or_default();
     if !first_wallpaper.is_empty() {
@@ -243,8 +254,7 @@ fn main() -> io::Result<()> {
     if app.cursor < app.themes.len() {
         let sel = &app.themes[app.cursor];
         if sel.name != app.current {
-            let home = dirs::home_dir().unwrap_or_default();
-            let script = home.join("erogeDOTS").join("scripts").join("theme-switch");
+            let script = repo_root().join("scripts").join("theme-switch");
             let _ = Command::new(script).arg(&sel.name).status();
         } else {
             println!("Already on {}", sel.name);
@@ -268,7 +278,11 @@ fn run_app(
             }
 
             match key.code {
-                KeyCode::Char('c') if key.modifiers.contains(crossterm::event::KeyModifiers::CONTROL) => {
+                KeyCode::Char('c')
+                    if key
+                        .modifiers
+                        .contains(crossterm::event::KeyModifiers::CONTROL) =>
+                {
                     return Ok(());
                 }
                 KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
@@ -305,19 +319,19 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(3),  // header
+            Constraint::Length(3), // header
             Constraint::Min(10),   // content
             Constraint::Length(2), // footer
         ])
         .split(f.area());
 
     // Header
-    let header = Paragraph::new(Line::from(vec![
-        Span::styled(
-            "✿ erogeDOTS Theme Picker",
-            Style::default().fg(Color::Rgb(255, 143, 177)).add_modifier(Modifier::BOLD),
-        ),
-    ]));
+    let header = Paragraph::new(Line::from(vec![Span::styled(
+        "✿ erogeDOTS Theme Picker",
+        Style::default()
+            .fg(Color::Rgb(255, 143, 177))
+            .add_modifier(Modifier::BOLD),
+    )]));
     f.render_widget(header, chunks[0]);
 
     // Content: list + preview
@@ -325,7 +339,7 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
         .direction(Direction::Horizontal)
         .constraints([
             Constraint::Length(24), // list
-            Constraint::Min(30),   // preview
+            Constraint::Min(30),    // preview
         ])
         .split(chunks[1]);
 
@@ -333,12 +347,10 @@ fn ui(f: &mut ratatui::Frame, app: &App) {
     render_preview(f, app, content_chunks[1]);
 
     // Footer
-    let footer = Paragraph::new(Line::from(vec![
-        Span::styled(
-            "[↑↓] Navigate   [Enter] Select   [q] Cancel",
-            Style::default().fg(Color::Rgb(86, 95, 137)),
-        ),
-    ]));
+    let footer = Paragraph::new(Line::from(vec![Span::styled(
+        "[↑↓] Navigate   [Enter] Select   [q] Cancel",
+        Style::default().fg(Color::Rgb(86, 95, 137)),
+    )]));
     f.render_widget(footer, chunks[2]);
 }
 
@@ -374,10 +386,7 @@ fn render_list(f: &mut ratatui::Frame, app: &App, area: Rect) {
 
         let line = Line::from(vec![
             Span::styled(format!(" {} ", marker), Style::default().fg(marker_color)),
-            Span::styled(
-                format!(" {} ", theme.name),
-                Style::default().fg(fg).bg(bg),
-            ),
+            Span::styled(format!(" {} ", theme.name), Style::default().fg(fg).bg(bg)),
         ]);
 
         let row = Rect {
@@ -412,7 +421,15 @@ fn render_preview(f: &mut ratatui::Frame, app: &App, area: Rect) {
             .fg(Color::Rgb(255, 143, 177))
             .add_modifier(Modifier::BOLD),
     )]);
-    f.render_widget(Paragraph::new(name_line), Rect { x: inner.x, y, width: inner.width, height: 1 });
+    f.render_widget(
+        Paragraph::new(name_line),
+        Rect {
+            x: inner.x,
+            y,
+            width: inner.width,
+            height: 1,
+        },
+    );
     y += 2;
 
     // Color blocks
@@ -442,7 +459,15 @@ fn render_preview(f: &mut ratatui::Frame, app: &App, area: Rect) {
                 Style::default().fg(Color::Rgb(86, 95, 137)),
             ),
         ]);
-        f.render_widget(Paragraph::new(line), Rect { x: inner.x, y, width: inner.width, height: 1 });
+        f.render_widget(
+            Paragraph::new(line),
+            Rect {
+                x: inner.x,
+                y,
+                width: inner.width,
+                height: 1,
+            },
+        );
         y += 1;
     }
 
@@ -467,6 +492,14 @@ fn render_preview(f: &mut ratatui::Frame, app: &App, area: Rect) {
             format!("✎ {}", theme.wallpaper),
             Style::default().fg(Color::Rgb(86, 95, 137)),
         )]);
-        f.render_widget(Paragraph::new(path_line), Rect { x: inner.x, y, width: inner.width, height: 1 });
+        f.render_widget(
+            Paragraph::new(path_line),
+            Rect {
+                x: inner.x,
+                y,
+                width: inner.width,
+                height: 1,
+            },
+        );
     }
 }

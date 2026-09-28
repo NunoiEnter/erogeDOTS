@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-# zzz: hibernate now. Needs swap + resume config; fails without them.
-set -euo pipefail
-exec systemctl hibernate

@@ -4,8 +4,33 @@
 
 set -euo pipefail
 
-# shellcheck disable=SC1091
-source "$(dirname "$(readlink -f "$0")")/lib/common.sh"
+# The variable also makes isolated tests possible; installed config uses ~/erogeDOTS.
+DOTFILES="${EROGEDOTS_ROOT:-$HOME/erogeDOTS}"
+THEMES_DIR="$DOTFILES/themes"
+STATE_DIR="$HOME/.config/theme"
+STATE_FILE="$STATE_DIR/active"
+TEMPLATES_DIR="$THEMES_DIR/templates"
+APPS=(niri quickshell fetch fuzzel swaync ghostty alacritty foot kitty cava cmatrix)
+SKIP_DIRS=(templates incomplete)
+
+should_skip() {
+    local name="$1" skip
+    for skip in "${SKIP_DIRS[@]}"; do
+        [[ "$name" == "$skip" ]] && return 0
+    done
+    return 1
+}
+
+sed_escape() {
+    printf '%s' "$1" | sed -e 's/[&|\\]/\\&/g'
+}
+
+resolve_wallpaper() {
+    local path="$1"
+    path="${path/#\~/$HOME}"
+    [[ "$path" == /* ]] || path="$DOTFILES/$path"
+    printf '%s\n' "$path"
+}
 
 # Colors
 RED='\033[0;31m'
@@ -169,7 +194,7 @@ generate_configs() {
     mkdir -p "$cache_dir"
 
     parse_theme "$theme_name"
-    validate_theme "$theme_name" || true
+    validate_theme "$theme_name" || return 1
 
     for app in "${APPS[@]}"; do
         if [[ -d "$TEMPLATES_DIR/$app" ]]; then
@@ -187,7 +212,7 @@ generate_configs() {
     # Cache wallpaper thumbnail for fast picker preview
     local wallpaper="${COLORS[WALLPAPER]:-}"
     if [[ -n "$wallpaper" ]]; then
-        wallpaper="${wallpaper/#\~/$HOME}"
+        wallpaper="$(resolve_wallpaper "$wallpaper")"
         if [[ -f "$wallpaper" ]] && command -v convert &>/dev/null; then
             convert "$wallpaper" -resize 320x200 "$cache_dir/thumb.png" 2>/dev/null || true
         fi
@@ -206,21 +231,19 @@ apply_theme() {
 
         mkdir -p "$target"
 
-        # Resolve symlinks
-        local real_target="$target"
+        # Generated configs must be regular writable files, never Nix-store links.
         if [[ -L "$target" ]]; then
-            real_target="$(readlink -f "$target")"
+            warn "Refusing to overwrite symlink: $target"
+            return 1
         fi
 
         # Overwrite with theme-specific configs
         if [[ -d "$theme_dir" ]]; then
-            cp -r "$theme_dir"/* "$real_target"/ 2>/dev/null || true
+            cp -r "$theme_dir"/* "$target"/
         fi
     done
 
     step "Configs applied: $theme_name"
-    # One-release cleanup: catnap replaced by fetch (see docs/RETIRED.md).
-    rm -rf "$HOME/.config/catnap" "$HOME/.cache/catnap_output" 2>/dev/null || true
     sync
 }
 
@@ -233,7 +256,7 @@ apply_wallpaper() {
     wallpaper=$(grep "^wallpaper" "$conf_file" | head -1 | cut -d'=' -f2 | xargs | tr -d '"')
 
     if [[ -n "$wallpaper" ]]; then
-        wallpaper="${wallpaper/#\~/$HOME}"
+        wallpaper="$(resolve_wallpaper "$wallpaper")"
         if [[ -f "$wallpaper" ]]; then
             awww img "$wallpaper" --transition-type fade 2>/dev/null || true
             step "Wallpaper set"
@@ -354,7 +377,7 @@ picker_preview() {
     else
         local wallpaper="${COLORS[WALLPAPER]:-}"
         if [[ -n "$wallpaper" ]]; then
-            wallpaper="${wallpaper/#\~/$HOME}"
+            wallpaper="$(resolve_wallpaper "$wallpaper")"
             if [[ -f "$wallpaper" ]] && command -v chafa &>/dev/null; then
                 echo ""
                 echo -e "${DIM}Loading preview...${NC}" >&2
@@ -365,20 +388,9 @@ picker_preview() {
 }
 
 picker() {
-    # Prefer compiled Rust binary (auto-build if missing)
-    local binary="$HOME/.local/bin/theme-picker"
-    if [[ ! -x "$binary" ]]; then
-        if command -v cargo &>/dev/null; then
-            step "Building theme-picker (one-time)..."
-            cd "$DOTFILES/picker-rs"
-            cargo build --release 2>&1 | tail -1
-            mkdir -p "$HOME/.local/bin"
-            cp target/release/theme-picker "$binary"
-            step "theme-picker built"
-        fi
-    fi
-    if [[ -x "$binary" ]]; then
-        "$binary"
+    # Nix installs the Rust picker; fzf remains the fallback.
+    if command -v theme-picker &>/dev/null; then
+        theme-picker
         return
     fi
 
@@ -475,7 +487,11 @@ EOF
 
             echo "$theme_name" > "$STATE_FILE"
 
-            restart_apps "$theme_name"
+            if [[ "${EROGEDOTS_NO_RESTART:-0}" == "1" ]]; then
+                step "Skip app restarts (installer mode)"
+            else
+                restart_apps "$theme_name"
+            fi
 
             done_msg "Theme switched to: $theme_name"
 

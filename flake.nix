@@ -1,5 +1,5 @@
 {
-  description = "erogeDOTS - The Pro Edition";
+  description = "erogeDOTS ALPHA 1.4 - personal NixOS fleet";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -17,50 +17,50 @@
   outputs = { self, nixpkgs, home-manager, qylock, rust-overlay, ... }@inputs:
   let
     system = "x86_64-linux";
+    lib = nixpkgs.lib;
     pkgs = import nixpkgs {
       inherit system;
       overlays = [ rust-overlay.overlays.default ];
       config.allowUnfree = true;
     };
-    catnap = pkgs.callPackage ./pkgs/catnap/default.nix {};
     chatgpt = pkgs.callPackage ./pkgs/chatgpt/default.nix {};
     discord-opencode-bot = pkgs.callPackage ./pkgs/discord-opencode {};
+    theme-picker = pkgs.callPackage ./picker-rs {};
+
+    hostEntries = builtins.readDir ./hosts;
+    hostNames = builtins.filter
+      (name:
+        hostEntries.${name} == "directory"
+        && !(lib.hasPrefix "_" name)
+        && builtins.pathExists (./hosts + "/${name}/configuration.nix"))
+      (builtins.attrNames hostEntries);
+
+    mkHost = hostName: lib.nixosSystem {
+      inherit system;
+      specialArgs = { inherit inputs; };
+      modules = [
+        (./hosts + "/${hostName}/configuration.nix")
+        inputs.qylock.nixosModules.default
+
+        home-manager.nixosModules.home-manager
+        {
+          home-manager.useGlobalPkgs = true;
+          home-manager.useUserPackages = true;
+          home-manager.extraSpecialArgs = {
+            inherit chatgpt discord-opencode-bot theme-picker;
+          };
+          home-manager.users.moni = import ./home/moni.nix;
+        }
+      ];
+    };
   in
   {
     packages.${system} = {
-      inherit catnap chatgpt discord-opencode-bot;
+      inherit chatgpt discord-opencode-bot theme-picker;
     };
 
-    nixosConfigurations = {
-      NixChan = nixpkgs.lib.nixosSystem {
-        specialArgs = { inherit inputs; };
-        modules = [
-          ./hosts/NixChan/hardware-configuration.nix
-          ./hosts/NixChan/configuration.nix
-          inputs.qylock.nixosModules.default
+    nixosConfigurations = lib.genAttrs hostNames mkHost;
 
-          home-manager.nixosModules.home-manager
-          {
-            home-manager.useGlobalPkgs = true;
-            home-manager.useUserPackages = true;
-            home-manager.extraSpecialArgs = { inherit catnap chatgpt discord-opencode-bot; };
-            home-manager.users.moni = import ./home/moni.nix;
-          }
-        ];
-      };
-    };
-
-    devShells.${system} = {
-      default = import ./shells/full.nix { inherit pkgs; };
-      rust = import ./shells/rust.nix { inherit pkgs; };
-      python = import ./shells/python.nix { inherit pkgs; };
-      go = import ./shells/go.nix { inherit pkgs; };
-      common = import ./shells/common.nix { inherit pkgs; };
-      tester = import ./shells/tester.nix { inherit pkgs; };
-      docker = import ./shells/docker.nix { inherit pkgs; };
-      security = import ./shells/security.nix { inherit pkgs; };
-      webapp = import ./shells/webapp.nix { inherit pkgs; };
-      pg-computer = import ./shells/pg-computer.nix { inherit pkgs; };
-    };
+    devShells.${system} = import ./shells.nix { inherit pkgs; };
   };
 }
