@@ -92,7 +92,7 @@ Home Manager ดูแลโปรแกรมของผู้ใช้ alias 
 
 ### Theme
 
-กด `Mod+T` หรือใช้ `ts` เพื่อเลือก theme ที่มีอยู่ ตัว picker จะแสดง wallpaper ของ theme ที่เลือกไว้ข้างรายการ โดยใช้ระบบแสดงภาพของ terminal ถ้ารองรับ และใช้ภาพสีแบบครึ่งบล็อกเป็นตัวสำรอง กด `Mod+Shift+T` หรือใช้ `tsadd` เพื่อสร้างใหม่ Rust TUI จะถาม ID ของ theme, ข้อมูลตัวละคร, ให้เลือกรูปจาก `wallpapers/`, `~/Pictures` หรือ `~/Downloads` แล้วให้เลือกหนึ่งในหกชุดสี จากนั้นจะคัดลอกรูปและเขียน `theme.conf` ที่ครบให้เอง ไม่ต้องพิมพ์ path รูปหรือรหัสสี
+กด `Mod+T` หรือใช้ `ts` เพื่อเลือก theme ที่มีอยู่ ตัว picker จะแสดง wallpaper ข้างรายการ โดยใช้ระบบแสดงภาพของ terminal ถ้ารองรับ และใช้ภาพสีแบบครึ่งบล็อกเป็นตัวสำรอง กด `Mod+Shift+T` หรือใช้ `tsadd` เพื่อสร้างใหม่ Rust TUI จะถาม ID กับข้อมูลตัวละคร แล้วแสดงรูปจริงขณะเลื่อนเลือกรูปจาก `wallpapers/`, `~/Pictures` หรือ `~/Downloads` ขั้นเลือกชุดสีมี swatch และค่า hex จริงครบหกชุด จากนั้นหน้าปรับสีจะแสดงทุกช่องสีของ theme รวม Niri และ Bottom: กด `Enter` เลือกช่องสี, เลือก swatch, กด `Tab` เลือก R/G/B (หรือ alpha ของเงา), `←/→` ปรับทีละ 1, `[`/`]` ปรับทีละ 16 และ `s` เพื่อไปต่อ TUI จะคัดลอกรูปและเขียน `theme.conf` ให้ครบ ส่วน Fetch กับ Cmatrix รองรับแค่ชื่อสี จึงใช้ชื่อสีที่ใกล้ primary accent ที่เลือกที่สุด
 
 ยังใช้คำสั่งตรงได้:
 
@@ -107,7 +107,7 @@ theme-switch harumi
 
 ### Development shell
 
-ใช้ `dev` หรือกด `Mod+Ctrl+D` แล้วเลือก `default`, `rust`, `python`, `go`, `common`, `tester`, `docker`, `security`, `webapp` หรือ `pg-computer` TUI จะเปิด `nix develop` ตัวที่เลือกให้ ใช้ตรงก็ยังได้ เช่น `nix develop .#rust`
+ใช้ `dev` หรือกด `Mod+Ctrl+D` แล้วเลือก `default`, `rust`, `python`, `go`, `java`, `common`, `tester`, `docker`, `security`, `webapp` หรือ `pg-computer` TUI จะเปิด `nix develop` ตัวที่เลือกให้ ใช้ตรงก็ยังได้ เช่น `nix develop .#rust` (`nix develop .#java` สำหรับ JDK 21 + Maven + Gradle + IntelliJ IDEA)
 
 ## หน้าที่ของทุกไฟล์ใน repo
 

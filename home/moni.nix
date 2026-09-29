@@ -147,7 +147,7 @@ in
 
     packages = with pkgs; [
       # Terminals and shell tools
-      ghostty kitty alacritty vim git wget curl gnutar yazi fzf fetch fastfetch
+      ghostty kitty alacritty vim git wget curl gnutar yazi fzf fetch fastfetch eza
 
       # Desktop
       quickshell fuzzel awww swaynotificationcenter libnotify
@@ -192,6 +192,7 @@ in
     enable = true;
     profiles.default = {
       id = 0;
+      path = "tg7nhhxp.default-1787541953087";
       settings = {
         "gfx.webrender.all" = true;
         "gfx.webrender.enabled" = true;
@@ -217,6 +218,7 @@ in
     autosuggestion.enable = false;
     syntaxHighlighting.enable = false;
     shellAliases = {
+      els = "eza -l --sort=size --icons --no-permissions --no-user --no-time --total-size" ;
       tslist = "theme-switch list";
       tscurrent = "theme-switch current";
       tspreview = "theme-switch preview";
@@ -243,7 +245,7 @@ in
       pkmn = "pokemon-colorscripts -r 1 --no-title | lolcat";
       shout = "figlet -f small -c | lolcat";
       train = "sl";
-      sc = "soruce ~/.zshrc" ;
+      sc = "source ~/.zshrc" ;
     };
     initContent = ''
       setopt PROMPT_SUBST

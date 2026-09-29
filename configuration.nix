@@ -118,6 +118,22 @@ in
   };
   environment.systemPackages = [ qylockQs ];
 
+  # Remote desktop / screen share. Niri needs GNOME portal for PipeWire share.
+  # Sunshine uses KMS capture, bypasses portal, best for iPad Moonlight mirror.
+  xdg.portal = {
+    enable = true;
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-gnome
+      xdg-desktop-portal-gtk
+    ];
+  };
+  services.sunshine = {
+    enable = true;
+    autoStart = true;
+    capSysAdmin = true;
+    openFirewall = true;
+  };
+
   # Audio, Bluetooth and power
   security.rtkit.enable = true;
   services.pipewire = {

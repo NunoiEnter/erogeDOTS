@@ -12,6 +12,7 @@ use crossterm::terminal::{
 use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
+use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph};
 use ratatui::Terminal;
 use ratatui_image::picker::Picker;
@@ -45,7 +46,6 @@ struct Palette {
     fg: &'static str,
     fg_dim: &'static str,
     icon: &'static str,
-    cli_color: &'static str,
 }
 
 const PALETTES: [Palette; 6] = [
@@ -60,7 +60,6 @@ const PALETTES: [Palette; 6] = [
         fg: "#c0caf5",
         fg_dim: "#a9b1d6",
         icon: "🌸",
-        cli_color: "magenta",
     },
     Palette {
         name: "Honey Gold",
@@ -73,7 +72,6 @@ const PALETTES: [Palette; 6] = [
         fg: "#f3e6cf",
         fg_dim: "#c8b99e",
         icon: "◆",
-        cli_color: "yellow",
     },
     Palette {
         name: "Forest",
@@ -86,7 +84,6 @@ const PALETTES: [Palette; 6] = [
         fg: "#d5e8d8",
         fg_dim: "#9fb8a4",
         icon: "🌿",
-        cli_color: "green",
     },
     Palette {
         name: "Lavender",
@@ -99,7 +96,6 @@ const PALETTES: [Palette; 6] = [
         fg: "#e0def4",
         fg_dim: "#aaa6c3",
         icon: "✿",
-        cli_color: "magenta",
     },
     Palette {
         name: "Crimson",
@@ -112,7 +108,6 @@ const PALETTES: [Palette; 6] = [
         fg: "#f4dfe4",
         fg_dim: "#bea5ab",
         icon: "♥",
-        cli_color: "red",
     },
     Palette {
         name: "Ocean",
@@ -125,15 +120,65 @@ const PALETTES: [Palette; 6] = [
         fg: "#d7e8f5",
         fg_dim: "#9fb7ca",
         icon: "◇",
-        cli_color: "cyan",
     },
 ];
 
-const DEV_SHELLS: [(&str, &str); 10] = [
+// Every hex color consumed by the theme templates. The same order is used by
+// the editor and by theme_config, so new themes cannot omit a template color.
+const COLOR_ROLES: [(&str, &str); 15] = [
+    ("primary", "Primary accent"),
+    ("primary_light", "Light accent"),
+    ("primary_dark", "Dark accent"),
+    ("bg", "Background"),
+    ("bg_light", "Raised background"),
+    ("bg_surface", "Surface"),
+    ("fg", "Text"),
+    ("fg_dim", "Muted text"),
+    ("bar_border", "Bar border"),
+    ("niri_focus_active", "Active focus ring"),
+    ("niri_focus_inactive", "Inactive focus ring"),
+    ("niri_shadow", "Window shadow RGBA"),
+    ("btm_header", "Bottom header"),
+    ("btm_sel_bg", "Bottom selection"),
+    ("btm_teal", "Bottom teal"),
+];
+
+type ThemeColors = [String; COLOR_ROLES.len()];
+
+fn colors_from_palette(palette: Palette) -> ThemeColors {
+    [
+        palette.primary.into(),
+        palette.light.into(),
+        palette.dark.into(),
+        palette.bg.into(),
+        palette.bg_light.into(),
+        palette.surface.into(),
+        palette.fg.into(),
+        palette.fg_dim.into(),
+        palette.light.into(),
+        palette.primary.into(),
+        "#505050".into(),
+        "#00000077".into(),
+        "#7aa2f7".into(),
+        "#34548a".into(),
+        "#7dcfff".into(),
+    ]
+}
+
+fn theme_color<'a>(colors: &'a ThemeColors, key: &str) -> &'a str {
+    let index = COLOR_ROLES
+        .iter()
+        .position(|(role, _)| *role == key)
+        .expect("known theme color");
+    &colors[index]
+}
+
+const DEV_SHELLS: [(&str, &str); 11] = [
     ("default", "Rust + Python + Go + common tools"),
     ("rust", "Rust toolchain, clippy, rustfmt, audit"),
     ("python", "Python, uv, ruff, pyright, test tools"),
     ("go", "Go, gopls, linters, debugger helpers"),
+    ("java", "JDK 21, Maven, Gradle, IntelliJ IDEA"),
     ("common", "Git, Neovim, Nix, formatters, shellcheck"),
     ("tester", "pytest, Playwright, k6, HTTP tools"),
     ("docker", "Docker, Podman, image scanners"),
@@ -163,16 +208,70 @@ fn wallpaper_path(value: &str) -> PathBuf {
 
 fn hex_color(value: &str) -> Color {
     let hex = value.trim_start_matches('#');
-    if hex.len() == 6 {
-        if let (Ok(red), Ok(green), Ok(blue)) = (
+    if hex.len() == 6 || hex.len() == 8 {
+        if let (Ok(mut red), Ok(mut green), Ok(mut blue)) = (
             u8::from_str_radix(&hex[0..2], 16),
             u8::from_str_radix(&hex[2..4], 16),
             u8::from_str_radix(&hex[4..6], 16),
         ) {
+            if hex.len() == 8 {
+                if let Ok(alpha) = u8::from_str_radix(&hex[6..8], 16) {
+                    // RGBA has no single visible color; preview it over dark gray.
+                    let blend = |channel: u8| {
+                        ((channel as u16 * alpha as u16 + 32 * (255 - alpha as u16)) / 255) as u8
+                    };
+                    red = blend(red);
+                    green = blend(green);
+                    blue = blend(blue);
+                }
+            }
             return Color::Rgb(red, green, blue);
         }
     }
     Color::Reset
+}
+
+fn rgba(value: &str) -> [u8; 4] {
+    let hex = value.trim_start_matches('#');
+    let channel = |start| u8::from_str_radix(&hex[start..start + 2], 16).unwrap_or(0);
+    if hex.len() != 6 && hex.len() != 8 {
+        return [0, 0, 0, 255];
+    }
+    [
+        channel(0),
+        channel(2),
+        channel(4),
+        if hex.len() == 8 { channel(6) } else { 255 },
+    ]
+}
+
+fn color_hex(value: [u8; 4], alpha: bool) -> String {
+    if alpha {
+        format!(
+            "#{:02x}{:02x}{:02x}{:02x}",
+            value[0], value[1], value[2], value[3]
+        )
+    } else {
+        format!("#{:02x}{:02x}{:02x}", value[0], value[1], value[2])
+    }
+}
+
+fn color_line(label: &str, value: &str) -> Line<'static> {
+    Line::from(vec![
+        Span::styled("    ", Style::default().bg(hex_color(value))),
+        Span::raw(format!("  {value}  {label}")),
+    ])
+}
+
+fn load_preview_image(path: &Path, picker: &mut Picker) -> Option<Protocol> {
+    let image = image::ImageReader::open(path).ok()?.decode().ok()?;
+    picker
+        .new_protocol(
+            image,
+            ratatui::layout::Size::new(48, 16),
+            ratatui_image::Resize::Fit(None),
+        )
+        .ok()
 }
 
 fn parse_theme(path: &Path) -> Theme {
@@ -397,15 +496,380 @@ fn collect_images(dir: &Path, depth: u8, out: &mut Vec<PathBuf>) {
 
 fn discover_images() -> Vec<PathBuf> {
     let mut images = vec![];
-    collect_images(&repo_root().join("wallpapers"), 2, &mut images);
-    if let Some(home) = dirs::home_dir() {
+    let wallpapers = repo_root().join("wallpapers");
+    let home = dirs::home_dir();
+    collect_images(&wallpapers, 2, &mut images);
+    if let Some(home) = &home {
         collect_images(&home.join("Pictures"), 4, &mut images);
         collect_images(&home.join("Downloads"), 2, &mut images);
     }
     let mut seen = HashSet::new();
     images.retain(|p| seen.insert(p.clone()));
-    images.sort();
+    let pictures = home.map(|path| path.join("Pictures"));
+    let rank = |path: &Path| {
+        if path.starts_with(&wallpapers) {
+            0
+        } else if pictures.as_ref().is_some_and(|dir| path.starts_with(dir)) {
+            1
+        } else {
+            2
+        }
+    };
+    images.sort_by(|a, b| rank(a).cmp(&rank(b)).then_with(|| a.cmp(b)));
     images
+}
+
+fn select_image(term: &mut Term, images: &[PathBuf]) -> io::Result<Option<usize>> {
+    if images.is_empty() {
+        return Ok(None);
+    }
+    let mut picker = Picker::from_query_stdio().unwrap_or_else(|_| Picker::halfblocks());
+    let mut cursor = 0;
+    let mut preview = load_preview_image(&images[cursor], &mut picker);
+    loop {
+        term.draw(|frame| {
+            let page = Layout::vertical([
+                Constraint::Length(2),
+                Constraint::Min(10),
+                Constraint::Length(2),
+            ])
+            .split(frame.area());
+            frame.render_widget(
+                Paragraph::new("6/9 Choose wallpaper · live preview").style(
+                    Style::default()
+                        .fg(Color::Magenta)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                page[0],
+            );
+            let body = Layout::horizontal([Constraint::Percentage(40), Constraint::Percentage(60)])
+                .split(page[1]);
+            let rows: Vec<ListItem> = images
+                .iter()
+                .map(|path| ListItem::new(path.file_name().unwrap_or_default().to_string_lossy()))
+                .collect();
+            let mut state = ListState::default().with_selected(Some(cursor));
+            frame.render_stateful_widget(
+                List::new(rows)
+                    .block(Block::default().title("Images").borders(Borders::ALL))
+                    .highlight_symbol("› ")
+                    .highlight_style(Style::default().fg(Color::Black).bg(Color::LightMagenta)),
+                body[0],
+                &mut state,
+            );
+            let block = Block::default()
+                .title("Wallpaper preview")
+                .borders(Borders::ALL);
+            let inner = block.inner(body[1]);
+            frame.render_widget(block, body[1]);
+            let detail = Layout::vertical([Constraint::Length(2), Constraint::Min(1)]).split(inner);
+            frame.render_widget(
+                Paragraph::new(images[cursor].display().to_string())
+                    .style(Style::default().fg(Color::Gray)),
+                detail[0],
+            );
+            if let Some(protocol) = &preview {
+                frame.render_widget(Image::new(protocol), detail[1]);
+            } else {
+                frame.render_widget(
+                    Paragraph::new("Image could not be loaded")
+                        .style(Style::default().fg(Color::DarkGray)),
+                    detail[1],
+                );
+            }
+            frame.render_widget(
+                Paragraph::new("[↑↓/jk] preview another image  [Enter] choose  [Esc] cancel")
+                    .style(Style::default().fg(Color::DarkGray)),
+                page[2],
+            );
+        })?;
+        let next = match key()? {
+            KeyCode::Up | KeyCode::Char('k') => cursor.saturating_sub(1),
+            KeyCode::Down | KeyCode::Char('j') => (cursor + 1).min(images.len() - 1),
+            KeyCode::Enter if preview.is_some() => return Ok(Some(cursor)),
+            KeyCode::Esc => return Ok(None),
+            _ => cursor,
+        };
+        if next != cursor {
+            cursor = next;
+            preview = load_preview_image(&images[cursor], &mut picker);
+        }
+    }
+}
+
+fn select_palette(term: &mut Term) -> io::Result<Option<usize>> {
+    let mut cursor = 0;
+    loop {
+        term.draw(|frame| {
+            let page = Layout::vertical([
+                Constraint::Length(2),
+                Constraint::Min(10),
+                Constraint::Length(2),
+            ])
+            .split(frame.area());
+            frame.render_widget(
+                Paragraph::new("7/9 Choose starting color scheme").style(
+                    Style::default()
+                        .fg(Color::Magenta)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                page[0],
+            );
+            let body = Layout::horizontal([Constraint::Percentage(36), Constraint::Percentage(64)])
+                .split(page[1]);
+            let rows: Vec<ListItem> = PALETTES
+                .iter()
+                .map(|p| ListItem::new(color_line(p.name, p.primary)))
+                .collect();
+            let mut state = ListState::default().with_selected(Some(cursor));
+            frame.render_stateful_widget(
+                List::new(rows)
+                    .block(Block::default().title("Schemes").borders(Borders::ALL))
+                    .highlight_symbol("› ")
+                    .highlight_style(Style::default().fg(Color::Black).bg(Color::LightMagenta)),
+                body[0],
+                &mut state,
+            );
+            let block = Block::default()
+                .title("Exact scheme colors")
+                .borders(Borders::ALL);
+            let inner = block.inner(body[1]);
+            frame.render_widget(block, body[1]);
+            let colors = colors_from_palette(PALETTES[cursor]);
+            let lines: Vec<Line> = COLOR_ROLES[..8]
+                .iter()
+                .enumerate()
+                .map(|(i, (_, label))| color_line(label, &colors[i]))
+                .collect();
+            frame.render_widget(Paragraph::new(lines), inner);
+            frame.render_widget(
+                Paragraph::new("[↑↓/jk] preview scheme  [Enter] choose  [Esc] cancel")
+                    .style(Style::default().fg(Color::DarkGray)),
+                page[2],
+            );
+        })?;
+        match key()? {
+            KeyCode::Up | KeyCode::Char('k') => cursor = cursor.saturating_sub(1),
+            KeyCode::Down | KeyCode::Char('j') => cursor = (cursor + 1).min(PALETTES.len() - 1),
+            KeyCode::Enter => return Ok(Some(cursor)),
+            KeyCode::Esc => return Ok(None),
+            _ => {}
+        }
+    }
+}
+
+fn sample_colors() -> Vec<(String, String)> {
+    let mut samples = Vec::new();
+    let mut seen = HashSet::new();
+    for palette in PALETTES {
+        for (label, hex) in [
+            ("Primary", palette.primary),
+            ("Light", palette.light),
+            ("Dark", palette.dark),
+            ("Background", palette.bg),
+            ("Raised", palette.bg_light),
+            ("Surface", palette.surface),
+            ("Text", palette.fg),
+            ("Muted", palette.fg_dim),
+        ] {
+            if seen.insert(hex) {
+                samples.push((format!("{} · {label}", palette.name), hex.into()));
+            }
+        }
+    }
+    for (label, hex) in [
+        ("Bottom header", "#7aa2f7"),
+        ("Bottom selection", "#34548a"),
+        ("Bottom teal", "#7dcfff"),
+        ("Niri inactive", "#505050"),
+        ("Black", "#000000"),
+        ("White", "#ffffff"),
+    ] {
+        if seen.insert(hex) {
+            samples.push((label.into(), hex.into()));
+        }
+    }
+    samples
+}
+
+fn pick_color(
+    term: &mut Term,
+    label: &str,
+    current: &str,
+    alpha: bool,
+) -> io::Result<Option<String>> {
+    let samples = sample_colors();
+    let mut cursor = samples
+        .iter()
+        .position(|(_, hex)| hex == current)
+        .unwrap_or(0);
+    let mut value = rgba(current);
+    let mut channel = 0;
+    let channel_count = if alpha { 4 } else { 3 };
+    loop {
+        let hex = color_hex(value, alpha);
+        term.draw(|frame| {
+            let page = Layout::vertical([
+                Constraint::Length(2),
+                Constraint::Min(10),
+                Constraint::Length(3),
+            ])
+            .split(frame.area());
+            frame.render_widget(
+                Paragraph::new(format!("Choose {label} · {hex}"))
+                    .style(Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD)),
+                page[0],
+            );
+            let body = Layout::horizontal([Constraint::Percentage(48), Constraint::Percentage(52)])
+                .split(page[1]);
+            let rows: Vec<ListItem> = samples
+                .iter()
+                .map(|(name, hex)| ListItem::new(color_line(name, hex)))
+                .collect();
+            let mut state = ListState::default().with_selected(Some(cursor));
+            frame.render_stateful_widget(
+                List::new(rows)
+                    .block(Block::default().title("Color palette").borders(Borders::ALL))
+                    .highlight_symbol("› ")
+                    .highlight_style(Style::default().fg(Color::Black).bg(Color::LightMagenta)),
+                body[0],
+                &mut state,
+            );
+            let block = Block::default().title("Exact color").borders(Borders::ALL);
+            let inner = block.inner(body[1]);
+            frame.render_widget(block, body[1]);
+            let detail = Layout::vertical([
+                Constraint::Length(2),
+                Constraint::Min(3),
+                Constraint::Length(2),
+            ])
+            .split(inner);
+            frame.render_widget(Paragraph::new(format!("{label}\n{hex}")), detail[0]);
+            frame.render_widget(
+                Block::default().style(Style::default().bg(hex_color(&hex))),
+                detail[1],
+            );
+            let channels = ["R", "G", "B", "A"];
+            let values: Vec<Span> = (0..channel_count)
+                .map(|i| {
+                    Span::styled(
+                        format!(" {} {:03} ", channels[i], value[i]),
+                        if i == channel {
+                            Style::default().fg(Color::Black).bg(Color::LightMagenta)
+                        } else {
+                            Style::default()
+                        },
+                    )
+                })
+                .collect();
+            frame.render_widget(Paragraph::new(Line::from(values)), detail[2]);
+            let help = if alpha {
+                "[↑↓/jk] swatch  [Tab] R/G/B/A  [←→] ±1  [ and ] ±16\n[Enter] use hex  [Esc] back · shadow shown on dark gray"
+            } else {
+                "[↑↓/jk] swatch  [Tab] R/G/B  [←→] ±1  [ and ] ±16\n[Enter] use exact hex  [Esc] keep previous color"
+            };
+            frame.render_widget(
+                Paragraph::new(help).style(Style::default().fg(Color::DarkGray)),
+                page[2],
+            );
+        })?;
+        match key()? {
+            KeyCode::Up | KeyCode::Char('k') => {
+                cursor = cursor.saturating_sub(1);
+                value[..3].copy_from_slice(&rgba(&samples[cursor].1)[..3]);
+            }
+            KeyCode::Down | KeyCode::Char('j') => {
+                cursor = (cursor + 1).min(samples.len() - 1);
+                value[..3].copy_from_slice(&rgba(&samples[cursor].1)[..3]);
+            }
+            KeyCode::Tab => channel = (channel + 1) % channel_count,
+            KeyCode::Left => value[channel] = value[channel].saturating_sub(1),
+            KeyCode::Right => value[channel] = value[channel].saturating_add(1),
+            KeyCode::Char('[') => value[channel] = value[channel].saturating_sub(16),
+            KeyCode::Char(']') => value[channel] = value[channel].saturating_add(16),
+            KeyCode::Enter => return Ok(Some(color_hex(value, alpha))),
+            KeyCode::Esc => return Ok(None),
+            _ => {}
+        }
+    }
+}
+
+fn edit_colors(term: &mut Term, mut colors: ThemeColors) -> io::Result<Option<ThemeColors>> {
+    let mut cursor = 0;
+    loop {
+        term.draw(|frame| {
+            let page = Layout::vertical([
+                Constraint::Length(2),
+                Constraint::Min(10),
+                Constraint::Length(2),
+            ])
+            .split(frame.area());
+            frame.render_widget(
+                Paragraph::new("8/9 Fine-tune every theme color").style(
+                    Style::default()
+                        .fg(Color::Magenta)
+                        .add_modifier(Modifier::BOLD),
+                ),
+                page[0],
+            );
+            let body = Layout::horizontal([Constraint::Percentage(62), Constraint::Percentage(38)])
+                .split(page[1]);
+            let rows: Vec<ListItem> = COLOR_ROLES
+                .iter()
+                .enumerate()
+                .map(|(i, (_, label))| ListItem::new(color_line(label, &colors[i])))
+                .collect();
+            let mut state = ListState::default().with_selected(Some(cursor));
+            frame.render_stateful_widget(
+                List::new(rows)
+                    .block(
+                        Block::default()
+                            .title("All color roles")
+                            .borders(Borders::ALL),
+                    )
+                    .highlight_symbol("› ")
+                    .highlight_style(Style::default().fg(Color::Black).bg(Color::LightMagenta)),
+                body[0],
+                &mut state,
+            );
+            let block = Block::default()
+                .title("Selected color")
+                .borders(Borders::ALL);
+            let inner = block.inner(body[1]);
+            frame.render_widget(block, body[1]);
+            let detail = Layout::vertical([Constraint::Length(3), Constraint::Min(1)]).split(inner);
+            frame.render_widget(
+                Paragraph::new(format!("{}\n{}", COLOR_ROLES[cursor].1, colors[cursor])),
+                detail[0],
+            );
+            frame.render_widget(
+                Block::default().style(Style::default().bg(hex_color(&colors[cursor]))),
+                detail[1],
+            );
+            frame.render_widget(
+                Paragraph::new("[↑↓/jk] role  [Enter] choose/edit color  [s] next  [Esc] cancel")
+                    .style(Style::default().fg(Color::DarkGray)),
+                page[2],
+            );
+        })?;
+        match key()? {
+            KeyCode::Up | KeyCode::Char('k') => cursor = cursor.saturating_sub(1),
+            KeyCode::Down | KeyCode::Char('j') => cursor = (cursor + 1).min(COLOR_ROLES.len() - 1),
+            KeyCode::Enter => {
+                if let Some(hex) = pick_color(
+                    term,
+                    COLOR_ROLES[cursor].1,
+                    &colors[cursor],
+                    COLOR_ROLES[cursor].0 == "niri_shadow",
+                )? {
+                    colors[cursor] = hex;
+                }
+            }
+            KeyCode::Char('s') => return Ok(Some(colors)),
+            KeyCode::Esc => return Ok(None),
+            _ => {}
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -417,13 +881,14 @@ struct NewTheme {
     quote: String,
     image: PathBuf,
     palette: usize,
+    colors: ThemeColors,
 }
 
 fn add_flow(term: &mut Term) -> io::Result<Option<NewTheme>> {
     let slug = loop {
         let Some(value) = input(
             term,
-            "1/8 Theme ID",
+            "1/9 Theme ID",
             "lowercase letters, numbers and hyphens; Enter = next, Esc = cancel",
         )?
         else {
@@ -433,48 +898,34 @@ fn add_flow(term: &mut Term) -> io::Result<Option<NewTheme>> {
             break value;
         }
     };
-    let Some(char_name) = input(term, "2/8 Character", "display name (any language)")? else {
+    let Some(char_name) = input(term, "2/9 Character", "display name (any language)")? else {
         return Ok(None);
     };
-    let Some(char_full) = input(term, "3/8 Full name", "romanized/full character name")? else {
+    let Some(char_full) = input(term, "3/9 Full name", "romanized/full character name")? else {
         return Ok(None);
     };
-    let Some(game) = input(term, "4/8 Game", "source title")? else {
+    let Some(game) = input(term, "4/9 Game", "source title")? else {
         return Ok(None);
     };
-    let Some(quote) = input(term, "5/8 Quote", "short quote")? else {
+    let Some(quote) = input(term, "5/9 Quote", "short quote")? else {
         return Ok(None);
     };
 
     let images = discover_images();
-    let image_rows: Vec<String> = images.iter().map(|p| p.display().to_string()).collect();
-    let Some(image) = select(
-        term,
-        "6/8 Choose wallpaper",
-        "[↑↓/jk] move  [Enter] choose  [Esc] cancel",
-        &image_rows,
-    )?
-    else {
+    let Some(image) = select_image(term, &images)? else {
         return Ok(None);
     };
-    let palette_rows: Vec<String> = PALETTES
-        .iter()
-        .map(|p| format!("{}  {}", p.icon, p.name))
-        .collect();
-    let Some(palette) = select(
-        term,
-        "7/8 Choose color scheme",
-        "Colors are presets: choose, do not type.",
-        &palette_rows,
-    )?
-    else {
+    let Some(palette) = select_palette(term)? else {
+        return Ok(None);
+    };
+    let Some(colors) = edit_colors(term, colors_from_palette(PALETTES[palette]))? else {
         return Ok(None);
     };
     let confirm = vec![
         format!("Create {slug} with {}", PALETTES[palette].name),
         "Cancel".into(),
     ];
-    if select(term, "8/8 Confirm", "[Enter] confirm", &confirm)? != Some(0) {
+    if select(term, "9/9 Confirm", "[Enter] confirm", &confirm)? != Some(0) {
         return Ok(None);
     }
     Ok(Some(NewTheme {
@@ -485,6 +936,7 @@ fn add_flow(term: &mut Term) -> io::Result<Option<NewTheme>> {
         quote,
         image: images[image].clone(),
         palette,
+        colors,
     }))
 }
 
@@ -495,67 +947,75 @@ fn quoted(value: &str) -> String {
         .replace(['\n', '\r'], " ")
 }
 
+fn closest_named_color(value: &str) -> &'static str {
+    let Color::Rgb(red, green, blue) = hex_color(value) else {
+        return "magenta";
+    };
+    const COLORS: [(&str, [u8; 3]); 7] = [
+        ("red", [240, 90, 100]),
+        ("green", [130, 210, 110]),
+        ("yellow", [235, 200, 90]),
+        ("blue", [110, 150, 245]),
+        ("magenta", [225, 125, 210]),
+        ("cyan", [100, 210, 230]),
+        ("white", [230, 230, 230]),
+    ];
+    COLORS
+        .iter()
+        .min_by_key(|(_, candidate)| {
+            [red, green, blue]
+                .iter()
+                .zip(candidate)
+                .map(|(actual, expected)| (*actual as i32 - *expected as i32).pow(2))
+                .sum::<i32>()
+        })
+        .map(|(name, _)| *name)
+        .unwrap_or("magenta")
+}
+
 fn theme_config(new: &NewTheme, wallpaper: &str) -> String {
     let p = PALETTES[new.palette];
+    let color_values = COLOR_ROLES
+        .iter()
+        .enumerate()
+        .map(|(index, (key, _))| format!("{key} = \"{}\"\n", new.colors[index]))
+        .collect::<String>();
+    let primary = theme_color(&new.colors, "primary");
+    let cli_color = closest_named_color(primary);
     format!(
         r##"# Generated by theme-picker
 
 [colors]
-primary = "{}"
-primary_light = "{}"
-primary_dark = "{}"
-bg = "{}"
-bg_light = "{}"
-bg_surface = "{}"
-fg = "{}"
-fg_dim = "{}"
+{color_values}
 
 [desktop]
-bar_border = "{}"
 bar_workspace_active = "◆"
 bar_workspace_default = "◇"
-bar_clock_icon = "{}"
-niri_focus_active = "{}"
-niri_focus_inactive = "#505050"
-niri_shadow = "#0007"
-ghostty_opacity = "0.8"
-wallpaper = "{}"
+bar_clock_icon = "{icon}"
+ghostty_opacity = "0.55"
+wallpaper = "{wallpaper}"
 
 [terminal]
-cava_colors = "{}:{}:{}"
-cmatrix_color = "{}"
-fetch_label = "{}"
-fetch_logo_outer = "{}"
+cava_colors = "{primary}:{dark}:{light}"
+cmatrix_color = "{cli_color}"
+fetch_label = "{cli_color}"
+fetch_logo_outer = "{cli_color}"
 fetch_logo_inner = "white"
 
 [character]
-char_name = "{}"
-char_full = "{}"
-char_game = "{}"
-char_quote = "{}"
+char_name = "{char_name}"
+char_full = "{char_full}"
+char_game = "{game}"
+char_quote = "{quote}"
 "##,
-        p.primary,
-        p.light,
-        p.dark,
-        p.bg,
-        p.bg_light,
-        p.surface,
-        p.fg,
-        p.fg_dim,
-        p.light,
-        p.icon,
-        p.primary,
-        wallpaper,
-        p.primary,
-        p.dark,
-        p.light,
-        p.cli_color,
-        p.cli_color,
-        p.cli_color,
-        quoted(&new.char_name),
-        quoted(&new.char_full),
-        quoted(&new.game),
-        quoted(&new.quote)
+        icon = p.icon,
+        wallpaper = quoted(wallpaper),
+        dark = theme_color(&new.colors, "primary_dark"),
+        light = theme_color(&new.colors, "primary_light"),
+        char_name = quoted(&new.char_name),
+        char_full = quoted(&new.char_full),
+        game = quoted(&new.game),
+        quote = quoted(&new.quote),
     )
 }
 
@@ -616,21 +1076,7 @@ impl ThemeChooser {
             return;
         };
         let path = wallpaper_path(&theme.wallpaper);
-        let Ok(reader) = image::ImageReader::open(path) else {
-            self.image = None;
-            return;
-        };
-        let Ok(image) = reader.decode() else {
-            self.image = None;
-            return;
-        };
-        self.image = picker
-            .new_protocol(
-                image,
-                ratatui::layout::Size::new(48, 16),
-                ratatui_image::Resize::Fit(None),
-            )
-            .ok();
+        self.image = load_preview_image(&path, picker);
     }
 }
 
@@ -826,19 +1272,17 @@ mod tests {
             quote: "Q".into(),
             image: "a.jpg".into(),
             palette: 0,
+            colors: colors_from_palette(PALETTES[0]),
         };
+        let mut new = new;
+        new.colors[0] = "#123456".into();
         let text = theme_config(&new, "wallpapers/test.jpg");
-        for key in [
-            "primary =",
-            "primary_light =",
-            "primary_dark =",
-            "bg =",
-            "fg =",
-            "wallpaper =",
-            "char_name =",
-        ] {
-            assert!(text.contains(key), "missing {key}");
+        for (role, _) in COLOR_ROLES {
+            assert!(text.contains(&format!("{role} =")), "missing {role}");
         }
+        assert!(text.contains("primary = \"#123456\""));
+        assert!(text.contains("ghostty_opacity = \"0.55\""));
+        assert!(text.contains("wallpaper = \"wallpapers/test.jpg\""));
         assert!(text.contains("A \\\"B\\\""));
     }
 }

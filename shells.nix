@@ -16,6 +16,12 @@ let
   goTools = with pkgs; [
     go gopls gofumpt golangci-lint gotools go-tools govulncheck air
   ];
+  javaTools = with pkgs; [
+    jdk21 maven gradle jdt-language-server jetbrains.idea
+    # jetbrains.idea is unfree unified IDEA (replaces community/ultimate).
+    # allowUnfree already true in flake.nix. Free fallback jetbrains.idea-oss
+    # currently insecure / unmaintained in nixpkgs, so not default.
+  ];
   commonTools = with pkgs; [
     git lazygit neovim nixfmt shfmt prettier shellcheck ripgrep fd jq yq-go tree
     htop file unzip curl wget
@@ -47,6 +53,11 @@ in
     GOPATH = "$HOME/go";
     GOBIN = "$HOME/go/bin";
     shellHook = ''echo "Go $(go version | awk '{print $3}')"'';
+  };
+
+  java = mkShell javaTools {
+    JAVA_HOME = "${pkgs.jdk21}/lib/openjdk";
+    shellHook = ''echo "Java $(java -version 2>&1 | head -n1) | Maven $(mvn -v 2>/dev/null | head -n1 | awk '{print $3}') | Gradle $(gradle --version 2>/dev/null | grep Gradle | awk '{print $2}') | IntelliJ IDEA"'';
   };
 
   common = mkShell commonTools {

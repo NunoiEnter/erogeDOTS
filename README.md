@@ -92,7 +92,7 @@ Every script has a keyboard route. Long names also get a short shell alias; alre
 
 ### Themes
 
-Use `Mod+T` or `ts` to choose an existing theme. The picker shows each theme's wallpaper beside the list, using the terminal's image protocol when available and a colored half-block preview as fallback. Use `Mod+Shift+T` or `tsadd` to create one. The Rust TUI asks for the theme ID, character details, a wallpaper selected from `wallpapers/`, `~/Pictures`, or `~/Downloads`, and one of six color presets. It copies the image and writes a complete `theme.conf`; no color codes or image paths need to be typed.
+Use `Mod+T` or `ts` to choose an existing theme. The picker shows each theme's wallpaper beside the list, using the terminal's image protocol when available and a colored half-block preview as fallback. Use `Mod+Shift+T` or `tsadd` to create one. The Rust TUI asks for the theme ID and character details, then shows a live image preview while browsing `wallpapers/`, `~/Pictures`, and `~/Downloads`. Choose one of six color schemes with visible swatches and exact hex values. The next screen shows every editable theme color, including Niri and Bottom: press `Enter` on a color to choose a swatch, use `Tab` to select R/G/B (or shadow alpha), `←/→` to change it by 1, `[`/`]` by 16, and `s` to continue. The TUI copies the image and writes a complete `theme.conf`. Fetch and Cmatrix support named colors only, so their color follows the nearest named color to the chosen primary accent.
 
 Manual commands remain available:
 
@@ -107,7 +107,7 @@ To add a palette manually, copy any complete `themes/<name>/theme.conf` and its 
 
 ### Development shells
 
-Run `dev` or press `Mod+Ctrl+D`. The TUI offers `default`, `rust`, `python`, `go`, `common`, `tester`, `docker`, `security`, `webapp`, and `pg-computer`, then starts the selected `nix develop` shell. Direct use still works: `nix develop .#rust`.
+Run `dev` or press `Mod+Ctrl+D`. The TUI offers `default`, `rust`, `python`, `go`, `java`, `common`, `tester`, `docker`, `security`, `webapp`, and `pg-computer`, then starts the selected `nix develop` shell. Direct use still works: `nix develop .#rust` (`nix develop .#java` for JDK 21 + Maven + Gradle + IntelliJ IDEA).
 
 ## Every tracked file
 
