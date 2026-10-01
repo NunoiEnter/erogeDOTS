@@ -5,6 +5,16 @@ target/
 *.zwc
 __pycache__/
 .opencode/
+.impeccable/hook.cache.json
+
+# Private account/profile exports never belong in a public dotfile repository.
+secrets/
+auth.json
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+*.nmconnection
 
 # Local credentials and identity material. Examples with explicit .example suffix
 # are safe to track; real values stay outside this repository.
