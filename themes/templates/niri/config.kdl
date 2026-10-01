@@ -18,7 +18,7 @@ input {
 }
 
 layout {
-    gaps 6
+    gaps 10
     center-focused-column "never"
 
     preset-column-widths {
@@ -30,7 +30,7 @@ layout {
     default-column-width { proportion 0.5; }
 
     focus-ring {
-        width 4
+        width 2
         active-color "{{NIRI_FOCUS_ACTIVE}}"
         inactive-color "{{NIRI_FOCUS_INACTIVE}}"
     }
@@ -43,7 +43,7 @@ layout {
     }
 
     struts {
-        top 12
+        top 2
     }
 }
 
@@ -96,7 +96,7 @@ window-rule {
     default-floating-position x=64 y=64 relative-to="bottom-left"
     default-column-width { fixed 600; }
     default-window-height { fixed 320; }
-    geometry-corner-radius 8
+    geometry-corner-radius 5
     clip-to-geometry true
 }
 
@@ -104,10 +104,10 @@ window-rule {
 window-rule {
     match app-id=r#"^com\.mitchellh\.ghostty$"# title="^dropdown$"
     open-floating true
-    default-floating-position x=0 y=52 relative-to="top"
+    default-floating-position x=0 y=64 relative-to="top"
     default-column-width { fixed 900; }
     default-window-height { fixed 500; }
-    geometry-corner-radius 12
+    geometry-corner-radius 5
     clip-to-geometry true
 }
 
@@ -117,7 +117,7 @@ window-rule {
     open-floating true
     default-column-width { fixed 900; }
     default-window-height { fixed 620; }
-    geometry-corner-radius 12
+    geometry-corner-radius 5
     clip-to-geometry true
 }
 
@@ -127,7 +127,7 @@ window-rule {
     open-floating true
     default-column-width { fixed 1000; }
     default-window-height { fixed 660; }
-    geometry-corner-radius 12
+    geometry-corner-radius 5
     clip-to-geometry true
 }
 
@@ -138,7 +138,7 @@ window-rule {
     match app-id=r#"^com\.mitchellh\.ghostty$"# title=r#"^larp-(tl|tr|bl|br)$"#
     open-focused false
     default-column-width { proportion 0.5; }
-    geometry-corner-radius 12
+    geometry-corner-radius 5
     clip-to-geometry true
 }
 
@@ -154,10 +154,10 @@ binds {
     Mod+Alt+R hotkey-overlay-title="RAM Monitor" { spawn "ghostty" "--title=ram-watch" "-e" "ram" "watch"; }
     Mod+Alt+B hotkey-overlay-title="System Monitor" { spawn "ghostty" "--title=btm-monitor" "-e" "btm"; }
     Mod+Alt+Z hotkey-overlay-title="Toggle Stay Awake" { spawn "unzzz" "toggle"; }
-    Mod+S hotkey-overlay-title="Quick Settings" { spawn-sh "quickshell ipc -n call quick-settings toggle"; }
+    Mod+S hotkey-overlay-title="Quick Settings" { spawn-sh "quickshell ipc -p ~/.config/quickshell/shell.qml call quick-settings toggle"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
     Mod+Ctrl+V hotkey-overlay-title="Clipboard History" { spawn-sh "cliphist-pick"; }
-    Mod+Shift+W hotkey-overlay-title="Session Menu: wlogout" { spawn "wlogout"; }
+    Mod+Shift+W hotkey-overlay-title="Session Menu: wlogout" { spawn "env" "GDK_BACKEND=wayland" "wlogout" "--protocol" "layer-shell" "--buttons-per-row" "5" "--margin-top" "280" "--margin-bottom" "280"; }
     Mod+Ctrl+W hotkey-overlay-title="Toggle Night Light: wlsunset" { spawn-sh "pkill wlsunset || { wlsunset -l 13.736717 -L 100.523186 & }"; }
     Super+Alt+L allow-when-locked=true hotkey-overlay-title="Lock the Screen: qylock" { spawn "qylock-lock"; }
     Mod+Shift+Space hotkey-overlay-title="Cycle Input Method" {

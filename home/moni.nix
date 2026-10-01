@@ -381,7 +381,7 @@ in
   '';
 
   services.mpd = {
-    enable = false;
+    enable = true;
     musicDirectory = "${config.home.homeDirectory}/Music";
     playlistDirectory = "${config.home.homeDirectory}/Music/playlists";
     network = {
@@ -389,6 +389,7 @@ in
       port = 6600;
     };
     extraConfig = ''
+      auto_update "yes"
       audio_output {
         type "pipewire"
         name "PipeWire Output"

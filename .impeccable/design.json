@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-01T10:22:50.149425+00:00",
+  "title": "Design System: erogeDOTS",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "tonalRamp": [
+          "oklch(15.00% 0.01351 78.26)",
+          "oklch(26.43% 0.01351 78.26)",
+          "oklch(37.86% 0.01351 78.26)",
+          "oklch(49.29% 0.01351 78.26)",
+          "oklch(60.71% 0.01351 78.26)",
+          "oklch(72.14% 0.01351 78.26)",
+          "oklch(83.57% 0.01351 78.26)",
+          "oklch(95.00% 0.01351 78.26)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.03314 309.82)",
+          "oklch(26.43% 0.03314 309.82)",
+          "oklch(37.86% 0.03314 309.82)",
+          "oklch(49.29% 0.03314 309.82)",
+          "oklch(60.71% 0.03314 309.82)",
+          "oklch(72.14% 0.03314 309.82)",
+          "oklch(83.57% 0.03314 309.82)",
+          "oklch(95.00% 0.03314 309.82)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15.00% 0.03736 326.09)",
+          "oklch(26.43% 0.03736 326.09)",
+          "oklch(37.86% 0.03736 326.09)",
+          "oklch(49.29% 0.03736 326.09)",
+          "oklch(60.71% 0.03736 326.09)",
+          "oklch(72.14% 0.03736 326.09)",
+          "oklch(83.57% 0.03736 326.09)",
+          "oklch(95.00% 0.03736 326.09)"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Accent",
+        "tonalRamp": [
+          "oklch(15.00% 0.08932 350.93)",
+          "oklch(26.43% 0.08932 350.93)",
+          "oklch(37.86% 0.08932 350.93)",
+          "oklch(49.29% 0.08932 350.93)",
+          "oklch(60.71% 0.08932 350.93)",
+          "oklch(72.14% 0.08932 350.93)",
+          "oklch(83.57% 0.08932 350.93)",
+          "oklch(95.00% 0.08932 350.93)"
+        ]
+      },
+      "tint": {
+        "role": "secondary",
+        "displayName": "Tint",
+        "tonalRamp": [
+          "oklch(15.00% 0.02736 354.55)",
+          "oklch(26.43% 0.02736 354.55)",
+          "oklch(37.86% 0.02736 354.55)",
+          "oklch(49.29% 0.02736 354.55)",
+          "oklch(60.71% 0.02736 354.55)",
+          "oklch(72.14% 0.02736 354.55)",
+          "oklch(83.57% 0.02736 354.55)",
+          "oklch(95.00% 0.02736 354.55)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "tonalRamp": [
+          "oklch(15.00% 0.03018 347.28)",
+          "oklch(26.43% 0.03018 347.28)",
+          "oklch(37.86% 0.03018 347.28)",
+          "oklch(49.29% 0.03018 347.28)",
+          "oklch(60.71% 0.03018 347.28)",
+          "oklch(72.14% 0.03018 347.28)",
+          "oklch(83.57% 0.03018 347.28)",
+          "oklch(95.00% 0.03018 347.28)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "title": {
+        "displayName": "Serif title",
+        "purpose": "Character names and section headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Standard controls and status."
+      },
+      "label": {
+        "displayName": "Compact label",
+        "purpose": "Compact controls and supporting information."
+      }
+    },
+    "shadows": [],
+    "motion": [],
+    "breakpoints": [
+      {
+        "name": "menu-wallpaper-column",
+        "value": "680px"
+      },
+      {
+        "name": "bar-sound",
+        "value": "760px"
+      },
+      {
+        "name": "bar-window-title",
+        "value": "860px"
+      },
+      {
+        "name": "bar-date",
+        "value": "1050px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Choice button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Standard desktop action.",
+      "html": "<button class=\"ds-button\">Return</button>",
+      "css": ".ds-button{position:relative;min-width:72px;height:38px;padding:0 12px;border:1px solid #cbb4bf;border-radius:3px;background:#fff9f0;color:#43394b;font:12px \"Noto Sans\",sans-serif;cursor:pointer}.ds-button:after{content:\"\";position:absolute;inset:3px;border:1px solid #fff9f0;border-radius:1px;pointer-events:none}.ds-button:hover,.ds-button:active{background:#f3dce4}.ds-button:focus-visible{outline:none;border:2px solid #995b78}.ds-button:disabled{color:#776477;cursor:default}.ds-button:disabled span{opacity:.65}"
+    },
+    {
+      "name": "Selected choice",
+      "kind": "button",
+      "refersTo": "button-selected",
+      "description": "Enabled toggle or current choice.",
+      "html": "<button class=\"ds-button ds-selected\" aria-pressed=\"true\">Wi-Fi · On</button>",
+      "css": ".ds-button{position:relative;min-width:72px;height:38px;padding:0 12px;border:1px solid #cbb4bf;border-radius:3px;background:#fff9f0;color:#43394b;font:12px \"Noto Sans\",sans-serif;cursor:pointer}.ds-button:after{content:\"\";position:absolute;inset:3px;border:1px solid #fff9f0;border-radius:1px;pointer-events:none}.ds-button:hover,.ds-button:active{background:#f3dce4}.ds-button:focus-visible{outline:none;border:2px solid #995b78}.ds-button:disabled{color:#776477;cursor:default}.ds-button:disabled span{opacity:.65}.ds-selected,.ds-selected:hover,.ds-selected:active{background:#995b78;color:#fff9f0;font-weight:700}.ds-selected:after{border-color:#f3dce4}"
+    },
+    {
+      "name": "Quiet compact button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Low-emphasis chapter-bar action.",
+      "html": "<button class=\"ds-button ds-quiet\">Log</button>",
+      "css": ".ds-button{position:relative;min-width:72px;height:38px;padding:0 12px;border:1px solid #cbb4bf;border-radius:3px;background:#fff9f0;color:#43394b;font:12px \"Noto Sans\",sans-serif;cursor:pointer}.ds-button:after{content:\"\";position:absolute;inset:3px;border:1px solid #fff9f0;border-radius:1px;pointer-events:none}.ds-button:hover,.ds-button:active{background:#f3dce4}.ds-button:focus-visible{outline:none;border:2px solid #995b78}.ds-button:disabled{color:#776477;cursor:default}.ds-button:disabled span{opacity:.65}.ds-quiet{min-width:32px;height:30px;padding:0 6px;font-size:11px;border-color:transparent}.ds-quiet:after{display:none}.ds-quiet:hover{border-color:#cbb4bf}.ds-quiet:hover:after{display:block}.ds-quiet:focus-visible{border-color:#995b78}"
+    },
+    {
+      "name": "Workspace navigation",
+      "kind": "nav",
+      "refersTo": "workspace",
+      "description": "Compact numbered workspaces with the current workspace filled.",
+      "html": "<nav class=\"ds-workspaces\" aria-label=\"Workspaces\"><button class=\"ds-button ds-selected\" aria-current=\"true\">01</button><button class=\"ds-button\">02</button><button class=\"ds-button\">03</button></nav>",
+      "css": ".ds-button{position:relative;min-width:72px;height:38px;padding:0 12px;border:1px solid #cbb4bf;border-radius:3px;background:#fff9f0;color:#43394b;font:12px \"Noto Sans\",sans-serif;cursor:pointer}.ds-button:after{content:\"\";position:absolute;inset:3px;border:1px solid #fff9f0;border-radius:1px;pointer-events:none}.ds-button:hover,.ds-button:active{background:#f3dce4}.ds-button:focus-visible{outline:none;border:2px solid #995b78}.ds-button:disabled{color:#776477;cursor:default}.ds-button:disabled span{opacity:.65}.ds-selected,.ds-selected:hover,.ds-selected:active{background:#995b78;color:#fff9f0;font-weight:700}.ds-selected:after{border-color:#f3dce4}.ds-workspaces{display:flex;gap:4px}.ds-workspaces .ds-button{min-width:30px;height:30px;padding:0 6px;font-size:11px}"
+    },
+    {
+      "name": "Dialogue frame",
+      "kind": "card",
+      "refersTo": "dialogue-frame",
+      "description": "Paper container with inset rule and geometric floral corners.",
+      "html": "<div class=\"ds-frame\"><span class=\"ds-flower ds-first\" aria-hidden=\"true\"><i></i><i></i><i></i><i></i><b></b></span><p>System menu</p><span class=\"ds-flower ds-last\" aria-hidden=\"true\"><i></i><i></i><i></i><i></i><b></b></span></div>",
+      "css": ".ds-frame{position:relative;padding:24px;background:#fff9f0;border:1px solid #995b78;border-radius:5px;color:#43394b;font:12px \"Noto Sans\",sans-serif}.ds-frame:before{content:\"\";position:absolute;inset:5px;border:1px solid #cbb4bf;border-radius:2px;pointer-events:none}.ds-frame p{margin:0;font:700 16px \"Noto Serif JP\",serif}.ds-flower{position:absolute;width:26px;height:26px}.ds-first{left:-6px;top:-6px}.ds-last{right:-6px;bottom:-6px}.ds-flower i{position:absolute;left:10px;top:3px;width:6px;height:9px;background:#f3dce4;border:1px solid #995b78;border-radius:3px;transform-origin:3px 10px}.ds-flower i:nth-child(2){transform:rotate(90deg)}.ds-flower i:nth-child(3){transform:rotate(180deg)}.ds-flower i:nth-child(4){transform:rotate(270deg)}.ds-flower b{position:absolute;left:11px;top:11px;width:4px;height:4px;border-radius:2px;background:#995b78}"
+    },
+    {
+      "name": "Volume slider",
+      "kind": "input",
+      "description": "Visual translation of the labeled QML slider; preview thumb moves without system integration.",
+      "html": "<label class=\"ds-slider\">Volume<input aria-label=\"Volume\" type=\"range\" min=\"0\" max=\"100\" value=\"50\"></label>",
+      "css": ".ds-slider{display:grid;gap:6px;color:#43394b;font:12px \"Noto Sans\",sans-serif}.ds-slider input{appearance:none;height:8px;background:#f3dce4;border:1px solid #cbb4bf;border-radius:2px;accent-color:#995b78}.ds-slider input::-webkit-slider-thumb{appearance:none;width:13px;height:20px;background:#fff9f0;border:1px solid #995b78;border-radius:2px}.ds-slider input::-moz-range-thumb{width:13px;height:20px;background:#fff9f0;border:1px solid #995b78;border-radius:2px}.ds-slider input::-moz-range-progress{height:8px;background:#995b78}.ds-slider input:focus-visible{outline:none}.ds-slider input:focus-visible::-webkit-slider-thumb{border-width:2px}.ds-slider input:focus-visible::-moz-range-thumb{border-width:2px}.ds-slider input:disabled{opacity:.5}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Romance VN Stationery",
+    "overview": "A daily desktop framed like an early-2000s romance visual novel: cream stationery, pastel character colors, floral corners and serif names. The five existing character identities and wallpapers supply the imagery.\n\nCompact controls keep everyday actions readable and predictable. This document records the Quickshell templates; Harumi is the concrete reference palette below, while each character theme supplies the same semantic roles. Terminal palettes remain separately dark.",
+    "keyCharacteristics": [
+      "Cream dialogue frames with fine double borders.",
+      "Pastel character accents and geometric floral ornaments.",
+      "Serif titles paired with compact sans-serif controls.",
+      "Visible keyboard focus and restrained, immediate state changes."
+    ],
+    "rules": [
+      {
+        "name": "The Character Palette Rule",
+        "body": "Read panel colors through Theme roles so the same components follow the selected character.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Voices Rule",
+        "body": "Use the serif for names and section titles; use the sans-serif for controls, status and supporting text.",
+        "section": "typography"
+      },
+      {
+        "name": "The Stationery Frame Rule",
+        "body": "Separate surfaces with paper, fine outlines and an inset border; keep ornaments at frame corners.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do reuse the existing character names and wallpaper assets.",
+      "Do show selected controls with accent fill and paper text.",
+      "Do retain visible keyboard focus and readable unavailable states."
+    ],
+    "donts": [
+      "Don't invent character artwork or quotations.",
+      "Don't replace the cream panel roles with the terminal background palette.",
+      "Don't use decorative motion at the expense of predictable daily controls."
+    ]
+  }
+}

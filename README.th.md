@@ -168,9 +168,18 @@ theme-switch harumi
 - `themes/templates/ghostty/config` — สีและความโปร่งใสของ Ghostty
 - `themes/templates/kitty/kitty.conf` — สีและความโปร่งใสของ Kitty
 - `themes/templates/niri/config.kdl` — layout, กฎหน้าต่าง, โปรแกรมเริ่มต้น และ hotkey ทั้งหมดของ Niri
-- `themes/templates/quickshell/shell.qml` — panel และ quick settings ที่รับสีจาก theme
+- `themes/templates/quickshell/` — shell สไตล์ romance VN แยก bar, เมนูตั้งค่า, สี และ state เป็นไฟล์ย่อย โดย `NiriState.qml` รับ event จาก Niri
+- `themes/templates/wlogout/` — เมนู session ที่ใช้สีเดียวกัน
 - `themes/templates/swaync/config.json` — พฤติกรรมของ notification center
 - `themes/templates/swaync/style.css` — สีและหน้าตาของ notification center
+
+## เดสก์ท็อปสไตล์ romance VN
+
+ใช้ panel สีครีม สี pastel ตามตัวละคร ป้ายชื่อฟอนต์ serif และกรอบลายดอกไม้ เปิดเมนูระบบด้วย `Mod+S`, launcher ด้วย `Mod+D` และเมนู session ด้วย `Mod+Shift+W` กด Escape หรือคลิกนอกกรอบเพื่อปิดเมนูระบบ ปุ่มและ slider ใช้คีย์บอร์ดได้ ส่วน Bluetooth จะแสดงว่าไม่พร้อมใช้เมื่อไม่มี adapter
+
+ปรับสี UI ด้วย `vn_paper`, `vn_ink`, `vn_muted`, `vn_accent`, `vn_tint`, `vn_line` ใน `theme.conf` โดย theme เก่าที่ยังไม่มีค่าเหล่านี้จะใช้สีครีมและชมพูเป็นค่าเริ่มต้น Terminal ยังใช้สีเข้มและความทึบ 92% อาจต้องเปิดหน้าต่าง terminal ใหม่เพื่อรับค่า
+
+แก้ template ใน repo แล้วใช้ `theme-switch <name>` เพื่อ apply ระบบจะสร้างไฟล์ QML ย่อยและ `qmldir` พร้อม restart เฉพาะ shell นี้ ไม่ควรแก้ไฟล์ที่สร้างใน `~/.config` โดยตรง
 
 ## ความเป็นเจ้าของและการนำไปใช้
 

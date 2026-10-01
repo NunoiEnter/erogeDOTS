@@ -168,9 +168,26 @@ The list is intentionally explicit. If a file is not here, it should not be part
 - `themes/templates/ghostty/config` — Ghostty colors and opacity.
 - `themes/templates/kitty/kitty.conf` — Kitty colors and opacity.
 - `themes/templates/niri/config.kdl` — Niri layout, window rules, startup commands, and all hotkeys.
-- `themes/templates/quickshell/shell.qml` — themed desktop panel and quick settings UI.
+- `themes/templates/quickshell/` — romance VN shell: `shell.qml` assembles the chapter bar and illustrated settings menu; `Theme.qml` supplies the palette, `ShellState.qml` owns hardware state, and `NiriState.qml` follows compositor events.
+- `themes/templates/wlogout/` — matching session menu.
 - `themes/templates/swaync/config.json` — notification-center behavior.
 - `themes/templates/swaync/style.css` — notification-center colors and styling.
+
+## Romance VN desktop
+
+The shell uses cream panels, pastel character accents, serif nameplates and small floral frames. `Mod+S` opens the system menu; `Mod+D` opens the launcher; `Mod+Shift+W` opens session choices. Escape or clicking outside closes the system menu. Buttons and sliders support keyboard focus. Bluetooth controls are unavailable when the system has no enabled adapter.
+
+The five themes share `vn_paper`, `vn_ink`, and `vn_muted`, with individual `vn_accent`, `vn_tint`, and `vn_line` colors. Older themes and themes made by the picker inherit the rose interface defaults; add those six keys to customize them. Terminal backgrounds remain dark at 92% opacity. Existing terminal windows may need reopening.
+
+Run `theme-switch <name>` to apply changes. It renders every flat file in the template folders, including QML components and `qmldir`, and safely restarts only this desktop shell. Edit source templates in this repository, not generated files under `~/.config`.
+
+Validation (requires Python 3.11+, Niri, Fuzzel and Quickshell):
+
+```sh
+python3 tests/theme-render.py
+bash tests/check-niri-state.sh
+cargo test --locked --manifest-path picker-rs/Cargo.toml
+```
 
 ## Ownership and reuse
 

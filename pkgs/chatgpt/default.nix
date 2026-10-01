@@ -37,7 +37,7 @@
 }:
 
 let
-  version = "26.917.61114";
+  version = "26.928.31416";
 
   source = stdenvNoCC.mkDerivation {
     pname = "chatgpt-unwrapped";
@@ -45,7 +45,7 @@ let
 
     src = fetchurl {
       url = "https://persistent.oaistatic.com/codex-app-prod/linux/rpm/latest/chatgpt.x86_64.rpm";
-      hash = "sha256-VyOu35iASa3ROwNdUB68wVh6PMncLwUrV+9N8Cx4U1Q=";
+      hash = "sha256-iKU64q5e+HEwlLNwrZ0F2cPYtIs6M/2J6LWMKpMNC9I=";
     };
 
     nativeBuildInputs = [ rpmextract ];

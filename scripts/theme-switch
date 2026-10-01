@@ -8,7 +8,7 @@ THEMES_DIR="$DOTFILES/themes"
 TEMPLATES_DIR="$THEMES_DIR/templates"
 STATE_DIR="$CONFIG_HOME/theme"
 STATE_FILE="$STATE_DIR/active"
-APPS=(niri quickshell fetch fuzzel swaync ghostty alacritty kitty cava cmatrix bottom)
+APPS=(niri quickshell fetch fuzzel swaync wlogout ghostty alacritty kitty cava cmatrix bottom)
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 info() { printf "${CYAN}→${NC} %s\n" "$*"; }
@@ -49,9 +49,14 @@ parse_theme() {
     while IFS= read -r line || [[ -n "$line" ]]; do
         [[ "$line" =~ ^[[:space:]]*(#|\[|$) || "$line" != *'='* ]] && continue
         key="${line%%=*}"; value="${line#*=}"
-        key="$(printf '%s' "$key" | xargs | tr '[:lower:]-' '[:upper:]_')"
-        value="$(printf '%s' "$value" | xargs)"
-        value="${value#\"}"; value="${value%\"}"
+        key="${key//[[:space:]]/}"
+        [[ "$key" =~ ^[a-zA-Z0-9_-]+$ ]] || die "invalid theme key: $key"
+        key="${key^^}"; key="${key//-/_}"
+        value="${value#"${value%%[![:space:]]*}"}"
+        value="${value%"${value##*[![:space:]]}"}"
+        if [[ "$value" == \"* ]]; then
+            value="$(jq -er 'select(type == "string")' <<< "$value")" || die "invalid string for $key"
+        fi
         THEME["$key"]="$value"
     done < "$conf"
 }
@@ -65,6 +70,18 @@ require_theme() {
     for key in PRIMARY PRIMARY_LIGHT PRIMARY_DARK BG BG_LIGHT BG_SURFACE FG FG_DIM WALLPAPER; do
         [[ -n "${THEME[$key]:-}" ]] || die "$name misses required key: ${key,,}"
     done
+    # Older and newly created themes inherit the romance VN interface palette.
+    THEME[VN_PAPER]="${THEME[VN_PAPER]:-#fff9f0}"
+    THEME[VN_INK]="${THEME[VN_INK]:-#43394b}"
+    THEME[VN_MUTED]="${THEME[VN_MUTED]:-#776477}"
+    THEME[VN_ACCENT]="${THEME[VN_ACCENT]:-#995b78}"
+    THEME[VN_TINT]="${THEME[VN_TINT]:-#f3dce4}"
+    THEME[VN_LINE]="${THEME[VN_LINE]:-#cbb4bf}"
+    # Metadata is QML source only after JSON escaping (quotes, slashes, newlines).
+    for key in CHAR_NAME CHAR_FULL CHAR_GAME; do
+        THEME[${key}_JSON]="$(jq -cn --arg value "${THEME[$key]:-}" '$value')"
+    done
+    THEME[WALLPAPER_PATH_JSON]="$(jq -cn --arg value "$(wallpaper_path)" '$value')"
 }
 
 wallpaper_path() {
@@ -74,22 +91,24 @@ wallpaper_path() {
     printf '%s\n' "$path"
 }
 
-sed_escape() { printf '%s' "$1" | sed 's/[&|\\]/\\&/g'; }
-
 render_template() {
-    local source="$1" target="$2" key escaped
-    cp "$source" "$target"
+    local source="$1" target="$2" key escaped rules=""
     for key in "${!THEME[@]}"; do
-        escaped="$(sed_escape "${THEME[$key]}")"
-        sed -i "s|{{$key}}|$escaped|g" "$target"
+        escaped="${THEME[$key]//\\/\\\\}"
+        escaped="${escaped//&/\\&}"
+        escaped="${escaped//|/\\|}"
+        escaped="${escaped//$'\n'/\\$'\n'}"
+        rules+="s|{{$key}}|$escaped|g"$'\n'
     done
+    sed "$rules" "$source" > "$target"
     if grep -Eq '\{\{[A-Z0-9_]+\}\}' "$target"; then
         die "unresolved value in template: ${source#"$DOTFILES/"}"
     fi
 }
 
 render_configs() {
-    local name="$1" cache="$STATE_DIR/cache/$name" app template
+    local name="$1" app template
+    local cache="$STATE_DIR/cache/$name"
     mkdir -p "$cache"
     for app in "${APPS[@]}"; do
         [[ -d "$TEMPLATES_DIR/$app" ]] || continue
@@ -102,7 +121,8 @@ render_configs() {
 }
 
 install_configs() {
-    local name="$1" cache="$STATE_DIR/cache/$name" app target
+    local name="$1" app target
+    local cache="$STATE_DIR/cache/$name"
     for app in "${APPS[@]}"; do
         [[ -d "$cache/$app" ]] || continue
         target="$CONFIG_HOME/$app"
@@ -127,17 +147,36 @@ EOF
     printf '%s\n' "$name" > "$STATE_FILE"
 }
 
+stop_desktop_shell() {
+    local pid attempt
+    command -v quickshell >/dev/null || return 0
+    # Stop before copying QML: live reload must not see half of a new theme.
+    # Read Quickshell's registry instead of matching every quickshell process.
+    while read -r pid; do
+        [[ "$pid" =~ ^[0-9]+$ ]] || continue
+        kill -TERM "$pid" 2>/dev/null || continue
+        for ((attempt = 0; attempt < 20; attempt++)); do
+            kill -0 "$pid" 2>/dev/null || break
+            sleep 0.05
+        done
+    done < <(quickshell list -j -p "$CONFIG_HOME/quickshell/shell.qml" 2>/dev/null | jq -r '.[].pid' 2>/dev/null)
+}
+
 reload_desktop() {
     local wallpaper
     wallpaper="$(wallpaper_path)"
-    [[ -f "$wallpaper" ]] && awww img "$wallpaper" --transition-type fade 2>/dev/null || warn "wallpaper not found: $wallpaper"
+    if [[ -f "$wallpaper" ]]; then
+        awww img "$wallpaper" --transition-type fade 2>/dev/null || warn "could not apply wallpaper: $wallpaper"
+    else
+        warn "wallpaper not found: $wallpaper"
+    fi
     pgrep -x niri >/dev/null && niri msg action load-config-file >/dev/null 2>&1 || true
-    pgrep -x swaync >/dev/null && swaync-client --reload-config >/dev/null 2>&1 || true
-    if pgrep -f '[q]uickshell.*shell.qml' >/dev/null; then
-        pkill -f '[q]uickshell.*shell.qml' || true
+    if pgrep -x swaync >/dev/null; then
+        swaync-client --reload-config >/dev/null 2>&1 || true
+        swaync-client --reload-css >/dev/null 2>&1 || true
     fi
     if command -v quickshell >/dev/null && [[ -f "$CONFIG_HOME/quickshell/shell.qml" ]]; then
-        nohup quickshell -n -p "$CONFIG_HOME/quickshell/shell.qml" >/dev/null 2>&1 </dev/null &
+        quickshell -d -n -p "$CONFIG_HOME/quickshell/shell.qml" >/dev/null 2>&1 </dev/null
     fi
 }
 
@@ -149,6 +188,7 @@ apply_theme() {
     mkdir -p "$STATE_DIR"
     render_configs "$name"
     info "installing configs"
+    [[ "${EROGEDOTS_NO_RESTART:-0}" == 1 ]] || stop_desktop_shell
     install_configs "$name"
     info "saving state"
     write_state "$name"

@@ -1,0 +1,19 @@
+* { font-family: "Noto Serif JP"; font-size: 20px; }
+window { background-color: rgba(34, 26, 39, 0.75); }
+button {
+  background-color: {{VN_PAPER}};
+  background-image: none;
+  color: {{VN_INK}};
+  border: 2px solid {{VN_LINE}};
+  border-radius: 5px;
+  margin: 12px;
+  padding: 32px;
+  box-shadow: none;
+  text-shadow: none;
+}
+button:hover, button:focus {
+  background-color: {{VN_TINT}};
+  border-color: {{VN_ACCENT}};
+  color: {{VN_INK}};
+}
+button:active { background-color: {{VN_ACCENT}}; color: {{VN_PAPER}}; }

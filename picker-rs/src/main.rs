@@ -992,7 +992,7 @@ fn theme_config(new: &NewTheme, wallpaper: &str) -> String {
 bar_workspace_active = "◆"
 bar_workspace_default = "◇"
 bar_clock_icon = "{icon}"
-ghostty_opacity = "0.55"
+ghostty_opacity = "0.92"
 wallpaper = "{wallpaper}"
 
 [terminal]
@@ -1281,7 +1281,7 @@ mod tests {
             assert!(text.contains(&format!("{role} =")), "missing {role}");
         }
         assert!(text.contains("primary = \"#123456\""));
-        assert!(text.contains("ghostty_opacity = \"0.55\""));
+        assert!(text.contains("ghostty_opacity = \"0.92\""));
         assert!(text.contains("wallpaper = \"wallpapers/test.jpg\""));
         assert!(text.contains("A \\\"B\\\""));
     }

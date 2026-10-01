@@ -1,17 +1,16 @@
 {
-  "$schema": "/tmp/schema.json",
   "position": "top-right",
   "control-center": "top-right",
   "keyboard-shortcuts": true,
   "image-visibility": "transition",
-  "notification-window-width": 340,
+  "notification-window-width": 380,
   "timeout": 5,
   "timeout-low": 3,
   "timeout-critical": 0,
   "fit-to-screen": true,
-  "control-center-margin-top": 10,
+  "control-center-margin-top": 64,
   "control-center-margin-bottom": 10,
-  "control-center-margin-right": 10,
+  "control-center-margin-right": 12,
   "control-center-margin-left": 0,
   "notification-2fa-action": true,
   "notification-inline-replies": true,
@@ -22,7 +21,7 @@
   ],
   "widget-config": {
     "title": {
-      "text": "Notifications",
+      "text": "Message log",
       "clear-all-button": true,
       "button-text": "Clear All"
     },

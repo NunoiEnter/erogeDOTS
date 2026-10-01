@@ -1,0 +1,10 @@
+ChapterBar 1.0 ChapterBar.qml
+NiriState 1.0 NiriState.qml
+Ornament 1.0 Ornament.qml
+SettingsMenu 1.0 SettingsMenu.qml
+ShellState 1.0 ShellState.qml
+singleton Theme 1.0 Theme.qml
+VnButton 1.0 VnButton.qml
+VnFrame 1.0 VnFrame.qml
+VnSlider 1.0 VnSlider.qml
+VnText 1.0 VnText.qml
