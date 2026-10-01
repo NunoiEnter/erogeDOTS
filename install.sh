@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# erogeDOTS ALPHA 1.4 — unattended installer after git clone
+# erogeDOTS ALPHA 2.0 — unattended installer after git clone
 set -euo pipefail
 
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -84,7 +84,7 @@ step "Verify"
 command -v theme-picker >/dev/null || die "theme-picker missing after activation"
 
 echo
-echo "ALPHA 1.4 installed successfully on $HOST_NAME"
+echo "ALPHA 2.0 installed successfully on $HOST_NAME"
 echo "Log: $LOG_FILE"
 if [[ "$NEW_HOST" == true ]]; then
     echo "New hardware file created: $HOST_DIR/hardware-configuration.nix"

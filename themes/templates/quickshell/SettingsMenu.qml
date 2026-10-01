@@ -7,7 +7,7 @@ import Quickshell.Wayland
 PanelWindow {
     id: menu
     required property var state
-    visible: state.shown
+    visible: state.shown && Theme.retro
     screen: state.menuScreen
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
@@ -15,7 +15,7 @@ PanelWindow {
     WlrLayershell.namespace: "eroge-vn-menu"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: state.shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-    onVisibleChanged: if (visible) Qt.callLater(() => closeButton.forceActiveFocus())
+    onVisibleChanged: if (visible) Qt.callLater(() => { closeButton.forceActiveFocus(); scroll.contentY = menu.state.menuSection === "music" ? Math.min(musicRoom.y, Math.max(0, scroll.contentHeight - scroll.height)) : 0; })
 
     // The entire visible backdrop accepts clicks; the card blocks them below.
     Rectangle { anchors.fill: parent; color: "#3d242432" }
@@ -27,13 +27,14 @@ PanelWindow {
             id: card
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: Math.max(18, Math.min(48, menu.height * 0.055))
+            anchors.bottomMargin: Math.max(36, Math.min(120, menu.height * 0.14))
             width: Math.min(800, menu.width - 32)
-            height: Math.min(540, menu.height - 100)
+            height: Math.min(610, menu.height - 110)
             // Keep taps in the dialogue frame from dismissing it.
             MouseArea { anchors.fill: parent }
 
             Rectangle {
+                visible: !Theme.retro
                 x: 24
                 y: -18
                 width: Math.min(nameplate.implicitWidth + 40, card.width - 48)
@@ -53,18 +54,28 @@ PanelWindow {
                     font.bold: true
                 }
             }
+            Rectangle {
+                visible: Theme.retro
+                x: 5; y: 5; width: card.width - 10; height: 28
+                color: Theme.accent
+                VnText {
+                    anchors.fill: parent; anchors.leftMargin: 10
+                    text: "erogeDOTS — " + Theme.fullName
+                    color: "#ffffff"; font.bold: true
+                }
+            }
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 24
-                anchors.topMargin: 30
-                spacing: 14
+                anchors.topMargin: Theme.retro ? 44 : 30
+                spacing: 12
                 RowLayout {
                     Layout.fillWidth: true
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: 2
-                        VnText { Layout.fillWidth: true; text: "System menu"; font.family: Theme.titleFont; font.pixelSize: 25; font.bold: true }
-                        VnText { Layout.fillWidth: true; text: "A little pause between chapters."; color: Theme.muted; font.pixelSize: 12 }
+                        VnText { Layout.fillWidth: true; text: Theme.retro ? "Control Panel" : "System menu"; font.family: Theme.titleFont; font.pixelSize: Theme.retro ? 21 : 25; font.bold: true }
+                        VnText { Layout.fillWidth: true; text: Theme.retro ? "Connections, sound and your music room." : "A little pause between chapters."; color: Theme.muted; font.pixelSize: 12 }
                     }
                     VnButton { id: closeButton; text: "Return"; onClicked: menu.state.shown = false }
                 }
@@ -98,15 +109,10 @@ PanelWindow {
                         }
                         VnText { Layout.fillWidth: true; text: Theme.fullName; font.family: Theme.titleFont; font.pixelSize: 16; font.bold: true }
                         VnText { Layout.fillWidth: true; text: Theme.game; color: Theme.muted; wrapMode: Text.WordWrap; elide: Text.ElideNone; font.pixelSize: 11 }
-                        VnButton {
-                            Layout.fillWidth: true
-                            text: "Choose a character theme"
-                            onClicked: menu.state.launch(["ghostty", "--title=theme-tools", "-e", "theme-switch", "picker"])
-                        }
                     }
                     Flickable {
                         id: scroll
-                        Layout.minimumWidth: 280
+                        Layout.minimumWidth: 160
                         Layout.preferredWidth: 450
                         Layout.fillWidth: true
                         Layout.fillHeight: true
@@ -118,7 +124,7 @@ PanelWindow {
                         ColumnLayout {
                             id: controls
                             width: scroll.width - 12
-                            spacing: 12
+                            spacing: 9
                             VnText { text: "Connections"; font.family: Theme.titleFont; font.pixelSize: 16; font.bold: true }
                             RowLayout {
                                 Layout.fillWidth: true
@@ -164,7 +170,14 @@ PanelWindow {
                             }
                             Rectangle { Layout.fillWidth: true; height: 1; color: Theme.line }
                             RowLayout {
+                                id: musicRoom
                                 Layout.fillWidth: true
+                                MediaArtwork {
+                                    Layout.preferredWidth: 64
+                                    Layout.preferredHeight: 64
+                                    source: menu.state.player?.trackArtUrl || ""
+                                    Accessible.name: "Current track artwork"
+                                }
                                 ColumnLayout {
                                     Layout.fillWidth: true
                                     spacing: 3
@@ -182,24 +195,14 @@ PanelWindow {
                                         font.pixelSize: 11
                                     }
                                 }
-                                VnButton {
-                                    compact: true
-                                    text: "Prev"
-                                    enabled: menu.state.player?.canGoPrevious ?? false
-                                    onClicked: menu.state.player.previous()
-                                }
-                                VnButton {
-                                    compact: true
-                                    text: menu.state.player?.isPlaying ? "Pause" : "Play"
-                                    enabled: menu.state.player?.canTogglePlaying ?? false
-                                    onClicked: menu.state.player.togglePlaying()
-                                }
-                                VnButton {
-                                    compact: true
-                                    text: "Next"
-                                    enabled: menu.state.player?.canGoNext ?? false
-                                    onClicked: menu.state.player.next()
-                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                VnButton { compact: true; text: "Prev"; enabled: menu.state.player?.canGoPrevious ?? false; onClicked: menu.state.player.previous() }
+                                VnButton { compact: true; text: menu.state.player?.isPlaying ? "Pause" : "Play"; enabled: menu.state.player?.canTogglePlaying ?? false; onClicked: menu.state.player.togglePlaying() }
+                                VnButton { compact: true; text: "Next"; enabled: menu.state.player?.canGoNext ?? false; onClicked: menu.state.player.next() }
+                                Item { Layout.fillWidth: true }
+                                VnText { text: menu.state.player?.identity || ""; color: Theme.muted; font.pixelSize: 11; Layout.maximumWidth: 140 }
                             }
                             VnText {
                                 Layout.fillWidth: true
@@ -216,13 +219,23 @@ PanelWindow {
                                 VnButton { Layout.fillWidth: true; text: "Sound"; enabled: menu.state.hasApp("pavucontrol"); onClicked: menu.state.launch(["pavucontrol"]) }
                                 VnButton { Layout.fillWidth: true; text: "Bluetooth"; enabled: menu.state.bluetoothAvailable && menu.state.hasApp("blueman-manager"); onClicked: menu.state.launch(["blueman-manager"]) }
                             }
-                            VnButton {
-                                Layout.fillWidth: true
-                                visible: card.width < 680
-                                text: "Choose a character theme"
-                                onClicked: menu.state.launch(["ghostty", "--title=theme-tools", "-e", "theme-switch", "picker"])
-                            }
                         }
+                    }
+                }
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    VnButton {
+                        Layout.fillWidth: true
+                        text: card.width < 600 ? "Character" : "Character theme"
+                        hint: "Choose a character palette and wallpaper"
+                        onClicked: menu.state.launch(["ghostty", "--title=theme-tools", "-e", "theme-switch", "picker"])
+                    }
+                    VnButton {
+                        Layout.fillWidth: true
+                        text: "Style: " + (card.width < 600 ? (Theme.retro ? "Win98" : "VN") : Theme.styleName)
+                        hint: "Switch to " + (Theme.retro ? "Romance VN" : "Windows 98")
+                        onClicked: menu.state.switchStyle()
                     }
                 }
                 Rectangle { Layout.fillWidth: true; height: 1; color: Theme.line }
@@ -234,7 +247,7 @@ PanelWindow {
                     VnButton { compact: true; text: "Log"; onClicked: menu.state.launch(["swaync-client", "-t", "-sw"]) }
                     Item { Layout.fillWidth: true }
                     VnText { text: "Esc to return"; color: Theme.muted; font.pixelSize: 11; visible: card.width > 620 }
-                    VnButton { compact: true; text: "Session…"; onClicked: menu.state.launch(["env", "GDK_BACKEND=wayland", "wlogout", "--protocol", "layer-shell", "--buttons-per-row", "5", "--margin-top", "280", "--margin-bottom", "280"]) }
+                    VnButton { compact: true; text: "Session…"; onClicked: menu.state.session() }
                 }
             }
         }

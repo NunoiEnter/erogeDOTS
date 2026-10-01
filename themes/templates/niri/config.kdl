@@ -91,12 +91,22 @@ window-rule {
 
 // Mini terminal — Mod+Shift+Return opens small floating ghostty bottom-left
 window-rule {
+    match app-id=r#"^org\.erogedots\.TitleTerminal$"#
+    open-floating true
+    default-floating-position x=48 y=140 relative-to="top-right"
+    default-column-width { fixed 820; }
+    default-window-height { fixed 500; }
+    geometry-corner-radius {{UI_RADIUS}}
+    clip-to-geometry true
+}
+
+window-rule {
     match app-id=r#"^com\.mitchellh\.ghostty$"# title="^mini$"
     open-floating true
     default-floating-position x=64 y=64 relative-to="bottom-left"
     default-column-width { fixed 600; }
     default-window-height { fixed 320; }
-    geometry-corner-radius 5
+    geometry-corner-radius {{UI_RADIUS}}
     clip-to-geometry true
 }
 
@@ -107,7 +117,7 @@ window-rule {
     default-floating-position x=0 y=64 relative-to="top"
     default-column-width { fixed 900; }
     default-window-height { fixed 500; }
-    geometry-corner-radius 5
+    geometry-corner-radius {{UI_RADIUS}}
     clip-to-geometry true
 }
 
@@ -117,7 +127,7 @@ window-rule {
     open-floating true
     default-column-width { fixed 900; }
     default-window-height { fixed 620; }
-    geometry-corner-radius 5
+    geometry-corner-radius {{UI_RADIUS}}
     clip-to-geometry true
 }
 
@@ -127,7 +137,7 @@ window-rule {
     open-floating true
     default-column-width { fixed 1000; }
     default-window-height { fixed 660; }
-    geometry-corner-radius 5
+    geometry-corner-radius {{UI_RADIUS}}
     clip-to-geometry true
 }
 
@@ -138,13 +148,13 @@ window-rule {
     match app-id=r#"^com\.mitchellh\.ghostty$"# title=r#"^larp-(tl|tr|bl|br)$"#
     open-focused false
     default-column-width { proportion 0.5; }
-    geometry-corner-radius 5
+    geometry-corner-radius {{UI_RADIUS}}
     clip-to-geometry true
 }
 
 binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
-    Mod+Return hotkey-overlay-title="Open a Terminal" { spawn "ghostty"; }
+    Mod+Return hotkey-overlay-title="Open a Terminal" { spawn "open-terminal"; }
     Mod+Shift+Return hotkey-overlay-title="Mini Terminal" { spawn "sh" "-c" "ghostty --title=mini -e sh -c 'fetch --frames 60; EROGEDOTS_NO_FASTFETCH=1 exec zsh'"; }
     Mod+grave hotkey-overlay-title="Dropdown Terminal" { spawn-sh "dropterm"; }
     Mod+G hotkey-overlay-title="Larp Wall" { spawn-sh "larp"; }

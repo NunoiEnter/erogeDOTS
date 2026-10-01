@@ -1,4 +1,4 @@
-# erogeDOTS — Alpha 1.4
+# erogeDOTS — Alpha 2.0
 
 [คู่มือภาษาอังกฤษ](README.md)
 
@@ -101,6 +101,8 @@ theme-switch list
 theme-switch current
 theme-switch preview harumi
 theme-switch harumi
+theme-switch style win98
+theme-switch style vn
 ```
 
 ถ้าจะเพิ่มด้วยมือ ให้คัดลอก `themes/<ชื่อ>/theme.conf` ที่สมบูรณ์พร้อม wallpaper ใช้ ID ตัวพิมพ์เล็กที่ปลอดภัย (`a-z`, `0-9`, `-`) แล้วรัน `theme-switch <ชื่อ>` แต่แนะนำให้ใช้ TUI เพราะมันใส่ค่าที่ template ต้องการให้ครบ
@@ -168,18 +170,40 @@ theme-switch harumi
 - `themes/templates/ghostty/config` — สีและความโปร่งใสของ Ghostty
 - `themes/templates/kitty/kitty.conf` — สีและความโปร่งใสของ Kitty
 - `themes/templates/niri/config.kdl` — layout, กฎหน้าต่าง, โปรแกรมเริ่มต้น และ hotkey ทั้งหมดของ Niri
-- `themes/templates/quickshell/` — shell สไตล์ romance VN แยก bar, เมนูตั้งค่า, สี และ state เป็นไฟล์ย่อย โดย `NiriState.qml` รับ event จาก Niri
+- `themes/templates/quickshell/` — หน้าจอชื่อเรื่อง VN และ panel ที่เปิดเมื่อชี้เมาส์ พร้อม bar และเมนูระบบ Windows 98 โดย `NiriState.qml` รับ event จาก Niri
 - `themes/templates/wlogout/` — เมนู session ที่ใช้สีเดียวกัน
 - `themes/templates/swaync/config.json` — พฤติกรรมของ notification center
 - `themes/templates/swaync/style.css` — สีและหน้าตาของ notification center
 
-## เดสก์ท็อปสไตล์ romance VN
+## เดสก์ท็อปสไตล์ Romance VN และ Windows 98
 
-ใช้ panel สีครีม สี pastel ตามตัวละคร ป้ายชื่อฟอนต์ serif และกรอบลายดอกไม้ เปิดเมนูระบบด้วย `Mod+S`, launcher ด้วย `Mod+D` และเมนู session ด้วย `Mod+Shift+W` กด Escape หรือคลิกนอกกรอบเพื่อปิดเมนูระบบ ปุ่มและ slider ใช้คีย์บอร์ดได้ ส่วน Bluetooth จะแสดงว่าไม่พร้อมใช้เมื่อไม่มี adapter
+สไตล์ Romance VN เปิดหน้าจอชื่อเรื่องเต็มจอด้วย `Mod+S` (Super+S) ใช้ wallpaper ตัวละคร เมนูสองภาษา ฟอนต์ serif และ panel สีครีม **New Game** เปิดตัวค้นหาโปรแกรม, **Load** เลือกตัวละครและ wallpaper, **Continue** กลับเดสก์ท็อป, **Flowchart** เลือก workspace หรือหน้าต่าง, **Music Room** ควบคุมเพลง, **Extra Mode** เปิดเครื่องมือ, **System Config** ปรับระบบ และ **Exit** เปิดเมนู session เลือกด้วยลูกศรขึ้น/ลงหรือ Tab แล้วกด Enter หรือ Enter บนแป้นตัวเลข กด Escape เพื่อกลับจากหน้าที่เลือกสู่เมนูหลัก แล้วกดอีกครั้งเพื่อปิด `Mod+D` เปิด launcher โดยตรง และ `Mod+Shift+W` เปิดเมนู session
+
+กด **Terminal** หรือ Super+Enter ระหว่างเปิดหน้าจอชื่อเรื่องเพื่อเปิด Ghostty แบบลอยบนภาพตัวละคร ใช้ workspace ว่างและกลับ workspace เดิมเมื่อปิด terminal กด **Menu focus** เพื่อให้คีย์บอร์ดควบคุมเมนูอีกครั้ง และ **Terminal** เพื่อกลับไปพิมพ์คำสั่ง นอกหน้าจอชื่อเรื่อง Super+Enter เปิด terminal ตามปกติ
+
+Music Room มี spectrum 48 แถบจาก CAVA จับเสียงจริงของ output ปัจจุบัน ใช้ process เดียวเฉพาะตอนเปิดหน้าเพลง ถ้าไม่มีเสียงจะแสดงแถบราบ
+
+ใน **System Config → NixOS & Niri** แท็บ **Packages** ตรวจสอบชื่อ package กับ Nixpkgs ที่ pin ไว้และบันทึกใน `home/desktop-packages.json` แท็บ **Niri layout** ปรับช่องว่าง กรอบ focus และความกว้าง column ส่วน **Config files** แก้ไฟล์ NixOS, Home Manager หรือ Niri พร้อมตรวจ syntax และ backup ไว้ใน `~/.local/state/erogedots/config-backups/` ถ้าไฟล์ถูกแก้จากที่อื่นจะไม่เขียนทับ ใช้ **Apply Niri** เพื่อ reload เดสก์ท็อป, **Check NixOS** เพื่อตรวจ flake และ **Apply NixOS** เพื่อ rebuild ผ่าน terminal ที่ถามรหัสผ่าน ปิด title terminal เดิมก่อนเริ่มงานใหม่ การ build ใช้สำเนาชั่วคราวของไฟล์ที่ track และไฟล์ใหม่ที่ไม่ถูก ignore จึงไม่รวมประวัติ Git หรือ build artifact ที่ถูก ignore
+
+ชี้เมาส์ที่ **Dashboard**, **Music Room**, **Chapters**, **Characters** หรือ **Sound** บนแถบด้านบนเพื่อให้ panel เลื่อนลงอย่างนุ่มนวล เมนูจะค้างเมื่อเลื่อนเมาส์เข้าไปใช้งานและปิดเมื่อออกจากบริเวณ คลิกชื่อเมนูเพื่อปักหมุด แล้วคลิกซ้ำ กด Escape หรือใช้ **Return** เพื่อปิด Gallery ตัวละครเปลี่ยน theme จริงและเปิดกลับมาแสดงตัวที่เลือก Music Room แสดงปกจากโปรแกรมเล่นเพลง ถ้าไม่มีปกจะแสดงแผ่นดิสก์แทน
+
+ปุ่ม **Style** ข้าง **Character theme** สลับระหว่าง Romance VN กับ Windows 98 ซึ่งใช้พื้นสีเทา ปุ่มเหลี่ยมนูน และแถบชื่อสีน้ำเงินเข้ม เก็บสไตล์แยกไว้ใน `~/.config/theme/style` จึงเปลี่ยนตัวละครได้โดยไม่เสียสไตล์ที่เลือก และเปลี่ยนสไตล์ได้โดยคงตัวละครกับ wallpaper เดิมไว้ Launcher, notification, เมนู session และมุมหน้าต่าง Niri เปลี่ยนตามสไตล์ด้วย
+
+แถบ VN มี tray, เสียง, notification log และนาฬิกา เลื่อนล้อเมาส์บน **Chapters** เพื่อสลับ workspace หรือบน **Sound** เพื่อปรับเสียง คลิกขวาที่ **Sound** เพื่อปิดเสียง Dashboard และ **System Config** แสดงสถานะเครือข่าย แบตเตอรี่ ความสว่าง และเสียง ส่วน Bluetooth ไม่พร้อมใช้เมื่อไม่มี adapter ที่เปิดอยู่ Windows 98 ยังคงเมนูระบบแบบมีกรอบและแถบสถานะพร้อมปุ่มเพลงและความสว่าง ทั้งสองสไตล์คลิกขวาที่ notification เพื่อสลับ Do Not Disturb และที่ tray เพื่อเปิดเมนูของโปรแกรม คลิกนาฬิกาเพื่อดูปฏิทิน แล้วกด Escape หรือคลิกด้านนอกเพื่อปิด
 
 ปรับสี UI ด้วย `vn_paper`, `vn_ink`, `vn_muted`, `vn_accent`, `vn_tint`, `vn_line` ใน `theme.conf` โดย theme เก่าที่ยังไม่มีค่าเหล่านี้จะใช้สีครีมและชมพูเป็นค่าเริ่มต้น Terminal ยังใช้สีเข้มและความทึบ 92% อาจต้องเปิดหน้าต่าง terminal ใหม่เพื่อรับค่า
 
 แก้ template ใน repo แล้วใช้ `theme-switch <name>` เพื่อ apply ระบบจะสร้างไฟล์ QML ย่อยและ `qmldir` พร้อม restart เฉพาะ shell นี้ ไม่ควรแก้ไฟล์ที่สร้างใน `~/.config` โดยตรง
+
+ตรวจสอบการสร้าง theme และพฤติกรรม shell:
+
+```sh
+python3 tests/theme-render.py
+python3 tests/desktop-config.py
+bash tests/check-niri-state.sh
+bash tests/check-drawer-state.sh
+bash tests/check-title-keys.sh # ต้องมี Qt 6 qmltestrunner หรือกำหนด QMLTESTRUNNER
+```
 
 ## ความเป็นเจ้าของและการนำไปใช้
 

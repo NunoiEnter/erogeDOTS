@@ -1,10 +1,36 @@
-# erogeDOTS — Alpha 1.4
+# erogeDOTS — Alpha 2.0
 
 [Thai version](README.th.md)
 
 Personal NixOS configuration for `moni`, built around Niri with GNOME kept as a fallback desktop. Kitty, Alacritty, Ghostty, Discord, Vesktop, Discordo, and the OpenCode CLI remain installed. The old custom Discord–OpenCode bridge is gone.
 
 This repository is public so it is easy to clone onto my own machines. It is not a general-purpose NixOS distribution and it is not licensed for reuse.
+
+## How these dotfiles work
+
+erogeDOTS has three layers. NixOS builds the machine configuration from `flake.nix`, `configuration.nix` and the matching hardware file in `hosts/`. Home Manager configures user packages, shell tools and desktop integration. The character themes then render the appearance of those applications without rebuilding NixOS.
+
+```text
+flake.nix + flake.lock
+    ├── configuration.nix + hosts/<hostname>/hardware-configuration.nix
+    └── home/moni.nix + home/desktop-packages.json
+                 ↓ NixOS build / activation
+       installed applications, services and shell tools
+
+themes/<character>/theme.conf + themes/templates/
+                 ↓ theme-switch <character>
+       ~/.config/<application>/ + wallpaper + Quickshell desktop
+```
+
+The repository holds source files. Files under `~/.config` are generated copies: edit the templates here, then run `theme-switch <character>` to apply them. The character ID is saved in `~/.config/theme/active`; the independent Romance VN or Windows 98 style is saved in `~/.config/theme/style`. A character switch updates wallpaper and colors while keeping the selected style.
+
+Quickshell draws the desktop ribbon, title screen and panels. Niri supplies live workspace and window events; MPRIS supplies music metadata and playback controls; PipeWire supplies audio controls; CAVA supplies the real audio spectrum. NetworkManager, UPower and the notification service provide the remaining status. The VN labels lead to actual desktop actions: applications, character selection, workspaces, music, tools and configuration. Super+S opens the title screen; the top ribbon previews panels on hover and pins them on click.
+
+To change installed software or system services, edit the Nix sources or use **System Config → NixOS & Niri**. Saving a configuration does not activate it: **Apply Niri** renders the current theme and reloads the desktop, while **Apply NixOS** rebuilds and activates the saved system configuration with normal sudo authentication. The installer automates the initial machine setup; theme changes remain independent afterward.
+
+Git transfers the tracked source files and wallpapers, not ignored Rust build output or Nix store packages. A fresh clone still downloads or builds the packages required by NixOS. Keep generated configs, temporary state, credentials and build artifacts outside the tracked tree.
+
+Alpha 2.0 is the first complete VN desktop snapshot: title choices, hover drawers, character/style selection, a floating title terminal, real music artwork and spectrum, and the NixOS/Niri configuration page. The usage sections below describe this snapshot.
 
 ## Cave mode
 
@@ -101,6 +127,8 @@ theme-switch list
 theme-switch current
 theme-switch preview harumi
 theme-switch harumi
+theme-switch style win98
+theme-switch style vn
 ```
 
 To add a palette manually, copy any complete `themes/<name>/theme.conf` and its wallpaper, keep the lowercase ID safe (`a-z`, `0-9`, `-`), then run `theme-switch <name>`. The generated TUI route is preferred because it fills every required template value.
@@ -168,14 +196,24 @@ The list is intentionally explicit. If a file is not here, it should not be part
 - `themes/templates/ghostty/config` — Ghostty colors and opacity.
 - `themes/templates/kitty/kitty.conf` — Kitty colors and opacity.
 - `themes/templates/niri/config.kdl` — Niri layout, window rules, startup commands, and all hotkeys.
-- `themes/templates/quickshell/` — romance VN shell: `shell.qml` assembles the chapter bar and illustrated settings menu; `Theme.qml` supplies the palette, `ShellState.qml` owns hardware state, and `NiriState.qml` follows compositor events.
+- `themes/templates/quickshell/` — a VN title screen and hover drawers, plus a Windows 98 bar and system menu; `Theme.qml` supplies style and palette, `ShellState.qml` owns hardware state, and `NiriState.qml` follows compositor events.
 - `themes/templates/wlogout/` — matching session menu.
 - `themes/templates/swaync/config.json` — notification-center behavior.
 - `themes/templates/swaync/style.css` — notification-center colors and styling.
 
-## Romance VN desktop
+## Romance VN and Windows 98 desktop
 
-The shell uses cream panels, pastel character accents, serif nameplates and small floral frames. `Mod+S` opens the system menu; `Mod+D` opens the launcher; `Mod+Shift+W` opens session choices. Escape or clicking outside closes the system menu. Buttons and sliders support keyboard focus. Bluetooth controls are unavailable when the system has no enabled adapter.
+In Romance VN style, `Mod+S` (Super+S) opens a full title screen over the character wallpaper: bilingual serif choices, cream panels and pastel accents. **New Game** launches applications, **Load** selects a character and wallpaper, **Continue** returns to the desktop, **Flowchart** selects workspaces or windows, **Music Room** controls playback, **Extra Mode** opens utilities, **System Config** opens hardware and configuration controls, and **Exit** opens session choices. Use Up/Down or Tab to choose and Enter (including keypad Enter) to activate. Escape returns from a page to the title choices, then closes the title screen. `Mod+D` opens the launcher directly; `Mod+Shift+W` opens session choices.
+
+Use **Terminal** or Super+Enter while the title screen is open to place a real floating Ghostty terminal over its artwork. It uses an empty workspace and returns to your previous workspace when closed. **Menu focus** gives keyboard control back to the title menu; **Terminal** returns focus to the shell. Outside the title screen, Super+Enter opens a terminal as usual.
+
+Hover over **Dashboard**, **Music Room**, **Chapters**, **Characters** or **Sound** on the top ribbon to reveal a panel smoothly. It stays open as the pointer enters its content and closes after leaving. Click a tab to pin its panel; click again, press Escape or use **Return** to close it. The character gallery applies an existing theme and reopens with the new selection. Music panels show actual player artwork, with a disc fallback when no cover is available. Music Room adds a live 48-bar CAVA spectrum from the default output monitor; one capture process runs only while the music page is open, and silence stays flat.
+
+In **System Config → NixOS & Niri**, **Packages** validates package names against the pinned Nixpkgs input and saves extra packages in `home/desktop-packages.json`. **Niri layout** adjusts gaps, focus outlines and default column width. **Config files** edits the NixOS, Home Manager or Niri source file, checks syntax and keeps backups under `~/.local/state/erogedots/config-backups/`; conflicting edits are rejected. **Apply Niri** renders your current theme and reloads the desktop. **Check NixOS** evaluates the complete flake; **Apply NixOS** installs saved changes through `sudo nixos-rebuild switch` in the title terminal. Close an existing title terminal before starting a new check or rebuild. The build uses a temporary copy of tracked and non-ignored new files, excluding Git history and ignored build artifacts.
+
+The **Style** button beside **Character theme** switches between Romance VN and Windows 98. Windows 98 uses grey surfaces, square raised controls and navy title bars. Style is stored separately in `~/.config/theme/style`, so changing characters keeps your chosen style and switching styles keeps your character. The launcher, notifications, session menu and Niri window corners follow the style too.
+
+The VN ribbon includes tray icons, sound, the notification log and a clock. Scroll over **Chapters** to switch workspaces or **Sound** to adjust volume; right-click **Sound** to mute. The dashboard and **System Config** expose network, battery, brightness and audio controls. Bluetooth controls are unavailable without an enabled adapter. Windows 98 retains its framed system menu and richer status bar, including music and brightness controls. In either style, right-click notifications to toggle Do Not Disturb or tray icons for their menus. Click the clock for the calendar; Escape or clicking outside closes it.
 
 The five themes share `vn_paper`, `vn_ink`, and `vn_muted`, with individual `vn_accent`, `vn_tint`, and `vn_line` colors. Older themes and themes made by the picker inherit the rose interface defaults; add those six keys to customize them. Terminal backgrounds remain dark at 92% opacity. Existing terminal windows may need reopening.
 
@@ -185,7 +223,10 @@ Validation (requires Python 3.11+, Niri, Fuzzel and Quickshell):
 
 ```sh
 python3 tests/theme-render.py
+python3 tests/desktop-config.py
 bash tests/check-niri-state.sh
+bash tests/check-drawer-state.sh
+bash tests/check-title-keys.sh # Qt 6 qmltestrunner; set QMLTESTRUNNER if absent from PATH
 cargo test --locked --manifest-path picker-rs/Cargo.toml
 ```
 

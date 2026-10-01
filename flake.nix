@@ -1,5 +1,5 @@
 {
-  description = "erogeDOTS ALPHA 1.4 - personal NixOS fleet";
+  description = "erogeDOTS ALPHA 2.0 - visual novel NixOS desktop";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";

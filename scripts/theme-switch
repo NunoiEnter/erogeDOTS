@@ -22,6 +22,7 @@ theme-switch picker        open the theme TUI
 theme-switch add           create a theme in the guided TUI
 theme-switch list          list themes
 theme-switch current       print active theme
+theme-switch style [vn|win98]  show or change the desktop style
 theme-switch preview [id]  print key colors
 EOF
 }
@@ -77,11 +78,50 @@ require_theme() {
     THEME[VN_ACCENT]="${THEME[VN_ACCENT]:-#995b78}"
     THEME[VN_TINT]="${THEME[VN_TINT]:-#f3dce4}"
     THEME[VN_LINE]="${THEME[VN_LINE]:-#cbb4bf}"
+    local style="${EROGEDOTS_STYLE:-$(cat "$STATE_DIR/style" 2>/dev/null || printf vn)}"
+    [[ "$style" == vn || "$style" == win98 ]] || die "unknown desktop style: $style"
+    THEME[UI_STYLE]="$style"
+    THEME[UI_RADIUS]=5
+    THEME[UI_CONTROL_RADIUS]=3
+    THEME[UI_TITLE_FONT]="Noto Serif JP"
+    THEME[UI_BEVEL]="none"
+    if [[ "$style" == win98 ]]; then
+        THEME[VN_PAPER]="#c0c0c0"
+        THEME[VN_INK]="#000000"
+        THEME[VN_MUTED]="#404040"
+        THEME[VN_ACCENT]="#000080"
+        THEME[VN_TINT]="#d6d6d6"
+        THEME[VN_LINE]="#808080"
+        THEME[NIRI_FOCUS_ACTIVE]="#000080"
+        THEME[NIRI_FOCUS_INACTIVE]="#808080"
+        THEME[UI_RADIUS]=0
+        THEME[UI_CONTROL_RADIUS]=0
+        THEME[UI_TITLE_FONT]="Noto Sans"
+        THEME[UI_BEVEL]="inset 1px 1px #ffffff, inset -1px -1px #404040"
+    fi
     # Metadata is QML source only after JSON escaping (quotes, slashes, newlines).
     for key in CHAR_NAME CHAR_FULL CHAR_GAME; do
         THEME[${key}_JSON]="$(jq -cn --arg value "${THEME[$key]:-}" '$value')"
     done
     THEME[WALLPAPER_PATH_JSON]="$(jq -cn --arg value "$(wallpaper_path)" '$value')"
+    THEME[THEME_ID_JSON]="$(jq -cn --arg value "$name" '$value')"
+    THEME[CHARACTERS_JSON]="$(character_catalog)"
+}
+
+character_catalog() {
+    local dir id
+    for dir in "$THEMES_DIR"/*/; do
+        id="$(basename "$dir")"
+        [[ "$id" =~ ^[a-z0-9][a-z0-9-]*$ && -f "$dir/theme.conf" ]] || continue
+        (
+            parse_theme "$dir/theme.conf"
+            [[ -n "${THEME[WALLPAPER]:-}" ]] || exit 0
+            jq -cn --arg id "$id" --arg name "${THEME[CHAR_FULL]:-$id}" \
+                --arg japanese "${THEME[CHAR_NAME]:-}" --arg game "${THEME[CHAR_GAME]:-}" \
+                --arg image "$(wallpaper_path)" --arg accent "${THEME[VN_ACCENT]:-#995b78}" \
+                '{id: $id, name: $name, japanese: $japanese, game: $game, image: $image, accent: $accent}'
+        )
+    done | jq -sc 'sort_by(.id)'
 }
 
 wallpaper_path() {
@@ -145,6 +185,7 @@ export CAVA_COLOR="${THEME[CAVA_COLORS]:-${THEME[PRIMARY]}}"
 export CMATRIX_COLOR="${THEME[CMATRIX_COLOR]:-cyan}"
 EOF
     printf '%s\n' "$name" > "$STATE_FILE"
+    printf '%s\n' "${THEME[UI_STYLE]}" > "$STATE_DIR/style"
 }
 
 stop_desktop_shell() {
@@ -212,7 +253,22 @@ case "${1:-help}" in
     add) exec theme-picker add ;;
     list) list_themes ;;
     current) cat "$STATE_FILE" 2>/dev/null || printf 'none\n' ;;
+    style)
+        if [[ -z "${2:-}" ]]; then
+            cat "$STATE_DIR/style" 2>/dev/null || printf 'vn\n'
+        else
+            [[ "$2" == vn || "$2" == win98 ]] || die "style must be vn or win98"
+            EROGEDOTS_STYLE="$2" apply_theme "$(cat "$STATE_FILE" 2>/dev/null || printf harumi)"
+            if [[ "${3:-}" == --show-menu && "${EROGEDOTS_NO_RESTART:-0}" != 1 ]]; then
+                quickshell ipc -p "$CONFIG_HOME/quickshell/shell.qml" call quick-settings open
+            fi
+        fi
+        ;;
     preview) preview "${2:-}" ;;
     help|-h|--help) usage ;;
     *) apply_theme "$1" ;;
 esac
+
+if [[ "${2:-}" == --show-menu && "${EROGEDOTS_NO_RESTART:-0}" != 1 ]]; then
+    quickshell ipc -p "$CONFIG_HOME/quickshell/shell.qml" call quick-settings page "${3:-characters}"
+fi

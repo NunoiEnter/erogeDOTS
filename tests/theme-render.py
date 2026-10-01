@@ -24,6 +24,11 @@ class ThemeRenderTests(unittest.TestCase):
         self.assertEqual((config / "theme/active").read_text().strip(), name)
         self.assertTrue((config / "quickshell/NiriState.qml").is_file())
         self.assertIn("ChapterBar 1.0 ChapterBar.qml", (config / "quickshell/qmldir").read_text())
+        qml = (config / "quickshell/Theme.qml").read_text()
+        catalog = json.loads(next(line.split(": ", 1)[1] for line in qml.splitlines() if "property var characters:" in line))
+        self.assertEqual([entry["id"] for entry in catalog], sorted(entry["id"] for entry in catalog))
+        self.assertIn(name, [entry["id"] for entry in catalog])
+        self.assertTrue(all(Path(entry["image"]).is_absolute() for entry in catalog))
         json.loads((config / "swaync/config.json").read_text())
         layout = (config / "wlogout/layout").read_text().strip()
         buttons = []
@@ -59,6 +64,8 @@ class ThemeRenderTests(unittest.TestCase):
             theme = (root / "config/quickshell/Theme.qml").read_text()
             value = next(line.split(": ", 1)[1] for line in theme.splitlines() if "string character:" in line)
             self.assertEqual(json.loads(value), name)
+            catalog = json.loads(next(line.split(": ", 1)[1] for line in theme.splitlines() if "property var characters:" in line))
+            self.assertEqual(catalog[0]["japanese"], name)
             self.assertIn('color paper: "#fff9f0"', theme)
 
     def test_interface_text_contrast(self):
@@ -71,6 +78,30 @@ class ThemeRenderTests(unittest.TestCase):
             for foreground in ("vn_ink", "vn_muted", "vn_accent"):
                 ratio = (luminance(data["vn_paper"]) + 0.05) / (luminance(data[foreground]) + 0.05)
                 self.assertGreaterEqual(ratio, 4.5, f"{theme.parent.name}: {foreground}")
+
+    def test_style_persists_independently_of_character(self):
+        with tempfile.TemporaryDirectory(prefix="desktop-style-") as directory:
+            config = Path(directory)
+            self.render("harumi", config)
+            env = dict(os.environ, EROGEDOTS_ROOT=str(ROOT),
+                       EROGEDOTS_CONFIG_HOME=str(config), EROGEDOTS_NO_RESTART="1")
+            switch = str(ROOT / "scripts/theme-switch")
+            subprocess.run([switch, "style", "win98"], env=env, check=True, capture_output=True)
+            self.assertEqual((config / "theme/active").read_text().strip(), "harumi")
+            self.render("nene", config)
+            theme = (config / "quickshell/Theme.qml").read_text()
+            self.assertIn('string style: "win98"', theme)
+            self.assertIn('color paper: "#c0c0c0"', theme)
+            self.assertIn('color accent: "#000080"', theme)
+            self.assertIn('radius=0', (config / "fuzzel/fuzzel.ini").read_text())
+            rejected = subprocess.run([switch, "style", "invalid"], env=env, capture_output=True)
+            self.assertNotEqual(rejected.returncode, 0)
+            self.assertEqual((config / "theme/style").read_text().strip(), "win98")
+            subprocess.run([switch, "style", "vn"], env=env, check=True, capture_output=True)
+            theme = (config / "quickshell/Theme.qml").read_text()
+            self.assertIn('string style: "vn"', theme)
+            self.assertIn('color accent: "#75608d"', theme)
+            self.assertEqual((config / "theme/active").read_text().strip(), "nene")
 
 
 if __name__ == "__main__":

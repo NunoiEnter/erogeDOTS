@@ -145,7 +145,7 @@ in
     ];
     sessionVariables.EROGEDOTS_ROOT = repo;
 
-    packages = with pkgs; [
+    packages = (with pkgs; [
       # Terminals and shell tools
       ghostty kitty alacritty vim git wget curl gnutar yazi fzf fetch fastfetch eza
 
@@ -173,7 +173,8 @@ in
 
       nvimDesktop
       theme-picker
-    ];
+    ]) ++ map (name: lib.getAttrFromPath (lib.splitString "." name) pkgs)
+      (builtins.fromJSON (builtins.readFile ./desktop-packages.json));
 
     file.".config/nvim".source = ../config/nvim;
   };

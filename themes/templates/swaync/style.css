@@ -4,11 +4,11 @@
   background: {{VN_PAPER}};
   color: {{VN_INK}};
   border: 2px solid {{VN_ACCENT}};
-  border-radius: 5px;
+  border-radius: {{UI_RADIUS}}px;
   padding: 10px;
 }
 .widget-title {
-  font-family: "Noto Serif JP";
+  font-family: "{{UI_TITLE_FONT}}";
   font-size: 20px;
   color: {{VN_ACCENT}};
   margin: 8px 8px 16px;
@@ -17,13 +17,13 @@
   background: {{VN_TINT}};
   color: {{VN_INK}};
   border: 1px solid {{VN_LINE}};
-  border-radius: 3px;
+  border-radius: {{UI_CONTROL_RADIUS}}px;
   padding: 6px 12px;
 }
 .widget-title button:hover, .notification-action:hover { background: {{VN_PAPER}}; border-color: {{VN_ACCENT}}; }
 .widget-title button:focus, .notification-action:focus { border: 2px solid {{VN_ACCENT}}; }
 .widget-dnd { color: {{VN_MUTED}}; margin: 0 8px 12px; }
-.widget-dnd switch { background: {{VN_TINT}}; border: 1px solid {{VN_LINE}}; border-radius: 3px; }
+.widget-dnd switch { background: {{VN_TINT}}; border: 1px solid {{VN_LINE}}; border-radius: {{UI_CONTROL_RADIUS}}px; }
 .widget-dnd switch:checked { background: {{VN_ACCENT}}; }
 .widget-dnd switch slider { background: {{VN_PAPER}}; border-radius: 2px; }
 .notification-row { outline: none; }
@@ -32,17 +32,20 @@
   background: {{VN_PAPER}};
   color: {{VN_INK}};
   border: 1px solid {{VN_ACCENT}};
-  border-radius: 5px;
+  border-radius: {{UI_RADIUS}}px;
   margin: 5px;
   padding: 3px;
 }
 .notification-content { background: {{VN_PAPER}}; padding: 12px; border: 1px solid {{VN_LINE}}; border-radius: 2px; }
-.notification .summary { font-family: "Noto Serif JP"; color: {{VN_INK}}; font-size: 15px; font-weight: bold; }
+.notification .summary { font-family: "{{UI_TITLE_FONT}}"; color: {{VN_INK}}; font-size: 15px; font-weight: bold; }
 .notification .body { color: {{VN_INK}}; font-size: 12px; }
 .notification .time, .notification .app-name { color: {{VN_MUTED}}; }
-.close-button { background: {{VN_TINT}}; color: {{VN_INK}}; border: 1px solid {{VN_LINE}}; border-radius: 3px; }
+.close-button { background: {{VN_TINT}}; color: {{VN_INK}}; border: 1px solid {{VN_LINE}}; border-radius: {{UI_CONTROL_RADIUS}}px; }
 .close-button:hover { background: {{VN_ACCENT}}; color: {{VN_PAPER}}; }
 .notification.critical { border: 2px solid #a14251; }
 scrollbar { background: transparent; }
-scrollbar slider { background: {{VN_LINE}}; border-radius: 3px; min-width: 5px; }
+scrollbar slider { background: {{VN_LINE}}; border-radius: {{UI_CONTROL_RADIUS}}px; min-width: 5px; }
 scrollbar slider:hover { background: {{VN_ACCENT}}; }
+
+/* Raised classic controls when the Windows 98 style is active. */
+.control-center, .notification, .widget-title button, .notification-action { box-shadow: {{UI_BEVEL}}; }

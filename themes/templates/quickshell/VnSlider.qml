@@ -28,25 +28,27 @@ ColumnLayout {
             y: slider.topPadding + slider.availableHeight / 2 - height / 2
             width: slider.availableWidth
             height: 8
-            radius: 2
+            radius: Theme.retro ? 0 : 2
             color: Theme.tint
             border.color: Theme.line
             Rectangle {
                 width: parent.width * slider.visualPosition
                 height: parent.height
-                radius: 2
+                radius: Theme.retro ? 0 : 2
                 color: Theme.accent
             }
+            RetroBevel { anchors.fill: parent; visible: Theme.retro; sunken: true }
         }
         handle: Rectangle {
             x: slider.leftPadding + slider.visualPosition * (slider.availableWidth - width)
             y: slider.topPadding + slider.availableHeight / 2 - height / 2
             width: 13
             height: 20
-            radius: 2
+            radius: Theme.retro ? 0 : 2
             color: Theme.paper
             border.color: Theme.accent
             border.width: slider.visualFocus ? 2 : 1
+            RetroBevel { anchors.fill: parent; visible: Theme.retro }
             Rectangle { anchors.centerIn: parent; width: 1; height: 9; color: Theme.line }
         }
         opacity: enabled ? 1 : 0.5

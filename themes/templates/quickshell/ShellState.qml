@@ -10,6 +10,20 @@ Scope {
     id: state
     property bool shown: false
     property var menuScreen: null
+    property string menuSection: "connections"
+    property string titlePage: ""
+    property string workshopSection: "packages"
+    property var audioLevels: Array(48).fill(0)
+    property string audioError: ""
+    property bool titleTerminalInput: false
+    property var titleTerminalOrigin: null
+    readonly property var titleTerminalWindow: Object.values(niri.windows).find(window => window.app_id === "org.erogedots.TitleTerminal") || null
+    readonly property bool titleTerminalVisible: !!titleTerminalWindow && niri.workspaces.some(workspace => workspace.is_focused && workspace.id === titleTerminalWindow.workspace_id)
+    readonly property var drawer: drawerState
+    property bool calendarShown: false
+    property var calendarScreen: null
+    property bool dnd: false
+    property int notificationCount: 0
     property bool wifiEnabled: false
     property string wifiSsid: ""
     property bool brightnessAvailable: false
@@ -32,13 +46,53 @@ Scope {
     readonly property string dateText: Qt.formatDateTime(clock.date, "ddd, d MMM")
 
     NiriState { id: niriState }
+    DrawerState { id: drawerState; allowed: !Theme.retro && !state.shown && !state.calendarShown }
     SystemClock { id: clock; precision: SystemClock.Minutes }
     PwObjectTracker { objects: [state.sink].filter(o => o) }
-    onShownChanged: if (shown) { refresh(); error = ""; }
+    onShownChanged: {
+        if (shown) { refresh(); error = ""; }
+        else if (titleTerminalOrigin !== null && titleTerminalVisible) returnFromTerminal();
+    }
     Component.onCompleted: refresh()
 
     function refresh() { network.running = true; if (pendingBrightness < 0) backlight.running = true; }
-    function toggle(screen) { menuScreen = screen; shown = !shown; }
+    function toggle(screen) { calendarShown = false; menuScreen = screen; titlePage = ""; shown = !shown; }
+    function openSection(screen, section) {
+        if (section.startsWith("workshop/")) {
+            const tab = section.split("/")[1];
+            if (["packages", "niri", "files"].includes(tab)) workshopSection = tab;
+            section = "workshop";
+        }
+        calendarShown = false; menuScreen = screen; menuSection = section; titlePage = section; shown = true;
+    }
+    function changeCharacter(id) {
+        if (!Theme.characters.some(character => character.id === id) || id === Theme.characterId) return;
+        drawer.close();
+        Quickshell.execDetached(["theme-switch", id, "--show-menu", "characters"]);
+        shown = false;
+    }
+    function focusWorkspace(index) { drawer.close(); shown = false; Quickshell.execDetached(["niri", "msg", "action", "focus-workspace", "--", index.toString()]); }
+    function focusWindow(id) { drawer.close(); shown = false; Quickshell.execDetached(["niri", "msg", "action", "focus-window", "--id", id.toString()]); }
+    function toggleCalendar(screen) { shown = false; calendarScreen = screen; calendarShown = !calendarShown; }
+    function switchStyle() {
+        Quickshell.execDetached(["theme-switch", "style", Theme.retro ? "vn" : "win98", "--show-menu"]);
+        shown = false;
+    }
+    function session() { launch(["env", "GDK_BACKEND=wayland", "wlogout", "--protocol", "layer-shell", "--buttons-per-row", "5", "--margin-top", "280", "--margin-bottom", "280"]); }
+    function toggleMute() { if (sink?.audio) sink.audio.muted = !sink.audio.muted; }
+    function scrollWorkspace(screen, delta) {
+        const workspaces = niri.workspaces.filter(w => w.output === screen.name);
+        const current = workspaces.findIndex(w => w.is_active);
+        const next = workspaces[current + (delta < 0 ? 1 : -1)];
+        if (next) Quickshell.execDetached(["niri", "msg", "action", "focus-workspace", "--", next.idx.toString()]);
+    }
+    function receiveNotifications(line) {
+        try {
+            const event = JSON.parse(line);
+            dnd = event.dnd === true;
+            notificationCount = Number(event.count) || 0;
+        } catch (_) {}
+    }
     function setVolume(value) {
         if (!sink?.audio) return;
         sink.audio.muted = false;
@@ -49,7 +103,7 @@ Scope {
         pendingBrightness = brightness;
         brightnessCommit.restart();
     }
-    function launch(command) { Quickshell.execDetached(command); shown = false; }
+    function launch(command) { drawer.close(); Quickshell.execDetached(command); shown = false; }
     function toggleWifi() {
         wifiToggle.command = ["nmcli", "radio", "wifi", wifiEnabled ? "off" : "on"];
         wifiToggle.running = true;
@@ -59,7 +113,61 @@ Scope {
         if (adapter) adapter.enabled = !adapter.enabled;
     }
     function hasApp(name) { return availableApps.indexOf(name) !== -1; }
+    function receiveSpectrum(line) {
+        const values = line.trim().split(";").filter(value => value !== "");
+        if (values.length !== 48) return;
+        const next = values.map(value => Number(value));
+        if (next.some(value => !Number.isFinite(value) || value < 0 || value > 1000)) return;
+        audioLevels = next.map(value => value / 1000);
+    }
+    Process {
+        id: audioSpectrum
+        running: !Theme.retro && ((state.shown && state.titlePage === "music") || (drawerState.shown && drawerState.page === "music"))
+        command: ["cava", "-p", Quickshell.env("XDG_CONFIG_HOME") ? Quickshell.env("XDG_CONFIG_HOME") + "/cava/quickshell.conf" : Quickshell.env("HOME") + "/.config/cava/quickshell.conf"]
+        onStarted: state.audioError = ""
+        stdout: SplitParser { onRead: data => state.receiveSpectrum(data) }
+        stderr: StdioCollector { id: audioLog }
+        onExited: code => { state.audioLevels = Array(48).fill(0); if (code !== 0) state.audioError = audioLog.text.trim() || "Audio capture could not start."; }
+    }
+    function returnFromTerminal() {
+        const origin = niri.workspaces.find(workspace => workspace.id === titleTerminalOrigin);
+        if (origin) Quickshell.execDetached(["niri", "msg", "action", "focus-workspace", origin.idx.toString()]);
+    }
+    function openTitleTerminal(command = []) {
+        if (titleTerminal.running) {
+            if (command.length) { error = "Close the current title terminal before starting another task."; return; }
+            if (titleTerminalWindow) Quickshell.execDetached(["niri", "msg", "action", "focus-window", "--id", titleTerminalWindow.id.toString()]);
+            titleTerminalInput = true;
+            return;
+        }
+        drawer.close();
+        if (!shown) {
+            menuScreen = Quickshell.screens.find(screen => screen.name === niri.output) || Quickshell.screens[0];
+            shown = true;
+        }
+        titleTerminalInput = true;
+        titleTerminal.command = ["vn-terminal"].concat(command);
+        titleTerminal.running = true;
+    }
+    Process {
+        id: titleTerminal
+        stdout: SplitParser {
+            onRead: data => {
+                try { const event = JSON.parse(data); if (event.origin !== undefined) state.titleTerminalOrigin = event.origin; if (event.error) state.error = event.error; } catch (_) {}
+            }
+        }
+        stderr: StdioCollector { id: terminalLog }
+        onExited: code => { state.titleTerminalInput = false; state.titleTerminalOrigin = null; if (code !== 0 && terminalLog.text.trim()) state.error = terminalLog.text.trim().slice(-300); }
+    }
 
+    Process {
+        id: notifications
+        running: true
+        command: ["swaync-client", "--subscribe"]
+        stdout: SplitParser { onRead: data => state.receiveNotifications(data) }
+        onExited: notificationReconnect.restart()
+    }
+    Timer { id: notificationReconnect; interval: 5000; onTriggered: notifications.running = true }
     Process {
         id: appProbe
         running: true

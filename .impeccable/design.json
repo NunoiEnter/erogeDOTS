@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-01T10:22:50.149425+00:00",
+  "generatedAt": "2026-10-01T12:09:44.703089+00:00",
   "title": "Design System: erogeDOTS",
   "extensions": {
     "colorMeta": {
@@ -87,6 +87,104 @@
           "oklch(83.57% 0.03018 347.28)",
           "oklch(95.00% 0.03018 347.28)"
         ]
+      },
+      "win98-paper": {
+        "role": "neutral",
+        "displayName": "Control grey",
+        "tonalRamp": [
+          "oklch(15.00% 0.000 0.00)",
+          "oklch(26.43% 0.000 0.00)",
+          "oklch(37.86% 0.000 0.00)",
+          "oklch(49.29% 0.000 0.00)",
+          "oklch(60.71% 0.000 0.00)",
+          "oklch(72.14% 0.000 0.00)",
+          "oklch(83.57% 0.000 0.00)",
+          "oklch(95.00% 0.000 0.00)"
+        ]
+      },
+      "win98-ink": {
+        "role": "neutral",
+        "displayName": "Black text",
+        "tonalRamp": [
+          "oklch(15.00% 0.000 0.00)",
+          "oklch(26.43% 0.000 0.00)",
+          "oklch(37.86% 0.000 0.00)",
+          "oklch(49.29% 0.000 0.00)",
+          "oklch(60.71% 0.000 0.00)",
+          "oklch(72.14% 0.000 0.00)",
+          "oklch(83.57% 0.000 0.00)",
+          "oklch(95.00% 0.000 0.00)"
+        ]
+      },
+      "win98-muted": {
+        "role": "neutral",
+        "displayName": "Dark bevel",
+        "tonalRamp": [
+          "oklch(15.00% 0.000 0.00)",
+          "oklch(26.43% 0.000 0.00)",
+          "oklch(37.86% 0.000 0.00)",
+          "oklch(49.29% 0.000 0.00)",
+          "oklch(60.71% 0.000 0.00)",
+          "oklch(72.14% 0.000 0.00)",
+          "oklch(83.57% 0.000 0.00)",
+          "oklch(95.00% 0.000 0.00)"
+        ]
+      },
+      "win98-accent": {
+        "role": "primary",
+        "displayName": "Navy selection",
+        "tonalRamp": [
+          "oklch(15.00% 0.215 264.05)",
+          "oklch(26.43% 0.215 264.05)",
+          "oklch(37.86% 0.215 264.05)",
+          "oklch(49.29% 0.215 264.05)",
+          "oklch(60.71% 0.215 264.05)",
+          "oklch(72.14% 0.215 264.05)",
+          "oklch(83.57% 0.215 264.05)",
+          "oklch(95.00% 0.215 264.05)"
+        ]
+      },
+      "win98-tint": {
+        "role": "secondary",
+        "displayName": "Hover grey",
+        "tonalRamp": [
+          "oklch(15.00% 0.000 0.00)",
+          "oklch(26.43% 0.000 0.00)",
+          "oklch(37.86% 0.000 0.00)",
+          "oklch(49.29% 0.000 0.00)",
+          "oklch(60.71% 0.000 0.00)",
+          "oklch(72.14% 0.000 0.00)",
+          "oklch(83.57% 0.000 0.00)",
+          "oklch(95.00% 0.000 0.00)"
+        ]
+      },
+      "win98-line": {
+        "role": "neutral",
+        "displayName": "Inset grey",
+        "tonalRamp": [
+          "oklch(15.00% 0.000 0.00)",
+          "oklch(26.43% 0.000 0.00)",
+          "oklch(37.86% 0.000 0.00)",
+          "oklch(49.29% 0.000 0.00)",
+          "oklch(60.71% 0.000 0.00)",
+          "oklch(72.14% 0.000 0.00)",
+          "oklch(83.57% 0.000 0.00)",
+          "oklch(95.00% 0.000 0.00)"
+        ]
+      },
+      "win98-highlight": {
+        "role": "neutral",
+        "displayName": "White highlight",
+        "tonalRamp": [
+          "oklch(15.00% 0.000 0.00)",
+          "oklch(26.43% 0.000 0.00)",
+          "oklch(37.86% 0.000 0.00)",
+          "oklch(49.29% 0.000 0.00)",
+          "oklch(60.71% 0.000 0.00)",
+          "oklch(72.14% 0.000 0.00)",
+          "oklch(83.57% 0.000 0.00)",
+          "oklch(95.00% 0.000 0.00)"
+        ]
       }
     },
     "typographyMeta": {
@@ -101,26 +199,133 @@
       "label": {
         "displayName": "Compact label",
         "purpose": "Compact controls and supporting information."
+      },
+      "win98-title": {
+        "displayName": "Windows 98 title",
+        "purpose": "Sans-serif character names and section headings."
+      },
+      "headline": {
+        "displayName": "VN choices and page titles",
+        "purpose": "Bilingual title choices and repeated page headings."
+      },
+      "section": {
+        "displayName": "Serif section",
+        "purpose": "Compact music titles and chapter section headings."
+      },
+      "ribbon": {
+        "displayName": "Serif ribbon",
+        "purpose": "Quiet top navigation tabs."
       }
     },
-    "shadows": [],
-    "motion": [],
+    "shadows": [
+      {
+        "name": "win98-inset-bevel",
+        "value": "inset 1px 1px #ffffff, inset -1px -1px #404040",
+        "purpose": "Renderer bevel for Windows 98 GTK surfaces; QML draws equivalent structural edges at 2px."
+      }
+    ],
+    "motion": [
+      {
+        "name": "drawer-slide",
+        "value": "360ms Easing.OutExpo",
+        "purpose": "Clip and slide the drawer over the desktop."
+      },
+      {
+        "name": "drawer-reposition",
+        "value": "220ms Easing.OutCubic",
+        "purpose": "Adapt drawer width and position as pages change."
+      },
+      {
+        "name": "hover-intent",
+        "value": "160ms",
+        "purpose": "Wait before revealing a new hover preview."
+      },
+      {
+        "name": "hover-grace",
+        "value": "320ms",
+        "purpose": "Allow pointer travel from ribbon to drawer."
+      },
+      {
+        "name": "choice-indent",
+        "value": "180ms Easing.OutCubic",
+        "purpose": "Move the hovered, selected or keyboard-focused English choice inward."
+      },
+      {
+        "name": "choice-fill",
+        "value": "150ms",
+        "purpose": "Fade title-choice highlight."
+      },
+      {
+        "name": "ribbon-fill",
+        "value": "140ms",
+        "purpose": "Fade ribbon hover fill."
+      },
+      {
+        "name": "ribbon-underline",
+        "value": "180ms Easing.OutCubic",
+        "purpose": "Reveal the active navigation rule."
+      }
+    ],
     "breakpoints": [
       {
         "name": "menu-wallpaper-column",
         "value": "680px"
       },
       {
+        "name": "bar-tray",
+        "value": "720px"
+      },
+      {
         "name": "bar-sound",
         "value": "760px"
       },
       {
+        "name": "bar-battery",
+        "value": "840px"
+      },
+      {
+        "name": "bar-session",
+        "value": "900px"
+      },
+      {
+        "name": "bar-wifi",
+        "value": "940px"
+      },
+      {
+        "name": "bar-media",
+        "value": "1100px"
+      },
+      {
         "name": "bar-window-title",
-        "value": "860px"
+        "value": "1180px"
+      },
+      {
+        "name": "bar-brightness",
+        "value": "1280px"
       },
       {
         "name": "bar-date",
-        "value": "1050px"
+        "value": "1440px"
+      },
+      {
+        "name": "vn-ribbon-long-labels",
+        "value": "960px"
+      },
+      {
+        "name": "vn-title-wide-choices",
+        "value": "1000px"
+      },
+      {
+        "name": "vn-ribbon-sound",
+        "value": "1120px"
+      },
+      {
+        "name": "vn-ribbon-tray",
+        "value": "1180px"
+      },
+      {
+        "name": "character-gallery-three-columns",
+        "value": "660px"
       }
     ]
   },
@@ -142,22 +347,6 @@
       "css": ".ds-button{position:relative;min-width:72px;height:38px;padding:0 12px;border:1px solid #cbb4bf;border-radius:3px;background:#fff9f0;color:#43394b;font:12px \"Noto Sans\",sans-serif;cursor:pointer}.ds-button:after{content:\"\";position:absolute;inset:3px;border:1px solid #fff9f0;border-radius:1px;pointer-events:none}.ds-button:hover,.ds-button:active{background:#f3dce4}.ds-button:focus-visible{outline:none;border:2px solid #995b78}.ds-button:disabled{color:#776477;cursor:default}.ds-button:disabled span{opacity:.65}.ds-selected,.ds-selected:hover,.ds-selected:active{background:#995b78;color:#fff9f0;font-weight:700}.ds-selected:after{border-color:#f3dce4}"
     },
     {
-      "name": "Quiet compact button",
-      "kind": "button",
-      "refersTo": "button-quiet",
-      "description": "Low-emphasis chapter-bar action.",
-      "html": "<button class=\"ds-button ds-quiet\">Log</button>",
-      "css": ".ds-button{position:relative;min-width:72px;height:38px;padding:0 12px;border:1px solid #cbb4bf;border-radius:3px;background:#fff9f0;color:#43394b;font:12px \"Noto Sans\",sans-serif;cursor:pointer}.ds-button:after{content:\"\";position:absolute;inset:3px;border:1px solid #fff9f0;border-radius:1px;pointer-events:none}.ds-button:hover,.ds-button:active{background:#f3dce4}.ds-button:focus-visible{outline:none;border:2px solid #995b78}.ds-button:disabled{color:#776477;cursor:default}.ds-button:disabled span{opacity:.65}.ds-quiet{min-width:32px;height:30px;padding:0 6px;font-size:11px;border-color:transparent}.ds-quiet:after{display:none}.ds-quiet:hover{border-color:#cbb4bf}.ds-quiet:hover:after{display:block}.ds-quiet:focus-visible{border-color:#995b78}"
-    },
-    {
-      "name": "Workspace navigation",
-      "kind": "nav",
-      "refersTo": "workspace",
-      "description": "Compact numbered workspaces with the current workspace filled.",
-      "html": "<nav class=\"ds-workspaces\" aria-label=\"Workspaces\"><button class=\"ds-button ds-selected\" aria-current=\"true\">01</button><button class=\"ds-button\">02</button><button class=\"ds-button\">03</button></nav>",
-      "css": ".ds-button{position:relative;min-width:72px;height:38px;padding:0 12px;border:1px solid #cbb4bf;border-radius:3px;background:#fff9f0;color:#43394b;font:12px \"Noto Sans\",sans-serif;cursor:pointer}.ds-button:after{content:\"\";position:absolute;inset:3px;border:1px solid #fff9f0;border-radius:1px;pointer-events:none}.ds-button:hover,.ds-button:active{background:#f3dce4}.ds-button:focus-visible{outline:none;border:2px solid #995b78}.ds-button:disabled{color:#776477;cursor:default}.ds-button:disabled span{opacity:.65}.ds-selected,.ds-selected:hover,.ds-selected:active{background:#995b78;color:#fff9f0;font-weight:700}.ds-selected:after{border-color:#f3dce4}.ds-workspaces{display:flex;gap:4px}.ds-workspaces .ds-button{min-width:30px;height:30px;padding:0 6px;font-size:11px}"
-    },
-    {
       "name": "Dialogue frame",
       "kind": "card",
       "refersTo": "dialogue-frame",
@@ -171,42 +360,100 @@
       "description": "Visual translation of the labeled QML slider; preview thumb moves without system integration.",
       "html": "<label class=\"ds-slider\">Volume<input aria-label=\"Volume\" type=\"range\" min=\"0\" max=\"100\" value=\"50\"></label>",
       "css": ".ds-slider{display:grid;gap:6px;color:#43394b;font:12px \"Noto Sans\",sans-serif}.ds-slider input{appearance:none;height:8px;background:#f3dce4;border:1px solid #cbb4bf;border-radius:2px;accent-color:#995b78}.ds-slider input::-webkit-slider-thumb{appearance:none;width:13px;height:20px;background:#fff9f0;border:1px solid #995b78;border-radius:2px}.ds-slider input::-moz-range-thumb{width:13px;height:20px;background:#fff9f0;border:1px solid #995b78;border-radius:2px}.ds-slider input::-moz-range-progress{height:8px;background:#995b78}.ds-slider input:focus-visible{outline:none}.ds-slider input:focus-visible::-webkit-slider-thumb{border-width:2px}.ds-slider input:focus-visible::-moz-range-thumb{border-width:2px}.ds-slider input:disabled{opacity:.5}"
+    },
+    {
+      "name": "Windows 98 choice",
+      "kind": "button",
+      "refersTo": "win98-button",
+      "description": "Square raised action in Windows 98 style.",
+      "html": "<button class=\"ds-retro-button\">Return</button>",
+      "css": ".ds-retro-button{height:38px;min-width:72px;padding:0 12px;background:#c0c0c0;color:#000000;border:0;border-radius:0;box-shadow:inset 2px 2px #ffffff,inset -2px -2px #404040;font:12px \"Noto Sans\",sans-serif;cursor:pointer}.ds-retro-button:hover{background:#d6d6d6}.ds-retro-button:focus-visible{outline:2px solid #000080;outline-offset:-4px}.ds-retro-button:active{box-shadow:inset 2px 2px #404040,inset -2px -2px #ffffff}.ds-retro-button:disabled{color:#404040;opacity:.65}"
+    },
+    {
+      "name": "Windows 98 selected choice",
+      "kind": "button",
+      "refersTo": "win98-button-selected",
+      "description": "Selected navy control with a sunken bevel.",
+      "html": "<button class=\"ds-retro-button ds-retro-selected\" aria-pressed=\"true\">Wi-Fi · On</button>",
+      "css": ".ds-retro-button{height:38px;min-width:72px;padding:0 12px;background:#c0c0c0;color:#000000;border:0;border-radius:0;box-shadow:inset 2px 2px #ffffff,inset -2px -2px #404040;font:12px \"Noto Sans\",sans-serif;cursor:pointer}.ds-retro-button:hover{background:#d6d6d6}.ds-retro-button:focus-visible{outline:2px solid #000080;outline-offset:-4px}.ds-retro-button:active{box-shadow:inset 2px 2px #404040,inset -2px -2px #ffffff}.ds-retro-button:disabled{color:#404040;opacity:.65}.ds-retro-selected,.ds-retro-selected:hover,.ds-retro-selected:active{background:#000080;color:#c0c0c0;font-weight:700;box-shadow:inset 2px 2px #404040,inset -2px -2px #ffffff}"
+    },
+    {
+      "name": "Windows 98 control panel",
+      "kind": "card",
+      "refersTo": "win98-frame",
+      "description": "Grey square menu frame with a navy title bar.",
+      "html": "<section class=\"ds-retro-frame\"><div class=\"ds-retro-title\">erogeDOTS — Harumi</div><p>Control Panel</p></section>",
+      "css": ".ds-retro-frame{position:relative;padding:44px 24px 24px;background:#c0c0c0;color:#000000;border-radius:0;box-shadow:inset 2px 2px #ffffff,inset -2px -2px #404040;font:12px \"Noto Sans\",sans-serif}.ds-retro-title{position:absolute;left:5px;right:5px;top:5px;height:28px;padding-left:10px;display:flex;align-items:center;background:#000080;color:#ffffff;font-weight:700}.ds-retro-frame p{margin:0;font:700 21px \"Noto Sans\",sans-serif}"
+    },
+    {
+      "name": "VN title choice",
+      "kind": "button",
+      "refersTo": "title-choice",
+      "description": "Bilingual desktop action; Load opens the real local character and wallpaper gallery. QML also supports Up/Down traversal and Return/keypad Enter activation.",
+      "html": "<button class=\"ds-title-choice\"><strong>Load</strong><span class=\"ds-japanese\">ロード</span><small>Choose your character and wallpaper</small></button>",
+      "css": ".ds-title-choice{position:relative;display:block;width:300px;height:58px;padding:0;background:transparent;border:0;border-bottom:1px solid #cbb4bf;color:#43394b;text-align:left;cursor:pointer}.ds-title-choice strong{display:block;font:25px \"Noto Serif JP\",serif;transition:margin-left 180ms ease-out}.ds-title-choice .ds-japanese{position:absolute;right:0;top:9px;font:11px \"Noto Serif JP\",serif;color:#776477}.ds-title-choice small{display:block;margin-top:8px;font:10px \"Noto Sans\",sans-serif;color:#776477}.ds-title-choice:hover,.ds-title-choice:focus-visible,.ds-title-choice:active{background:rgba(243,220,228,.72);outline:none}.ds-title-choice:hover strong,.ds-title-choice:focus-visible strong,.ds-title-choice:active strong{margin-left:12px;color:#995b78;font-weight:700}.ds-title-choice:focus-visible:before,.ds-title-choice:hover:before{content:\"\";position:absolute;left:-13px;top:17px;width:7px;height:7px;background:#995b78;transform:rotate(45deg)}"
+    },
+    {
+      "name": "VN ribbon tab",
+      "kind": "nav",
+      "refersTo": "ribbon-tab",
+      "description": "Serif tab with hover tint and an active fine rule.",
+      "html": "<button class=\"ds-ribbon-tab\">Music Room</button>",
+      "css": ".ds-ribbon-tab{position:relative;height:40px;padding:0 14px;border:0;background:transparent;color:#43394b;font:14px \"Noto Serif JP\",serif;cursor:pointer;transition:background 140ms}.ds-ribbon-tab:after{content:\"\";position:absolute;bottom:0;left:12px;right:12px;height:1px;background:#995b78;transform:scaleX(0);transition:transform 180ms ease-out}.ds-ribbon-tab:hover,.ds-ribbon-tab:focus-visible,.ds-ribbon-tab:active{background:rgba(243,220,228,.65);color:#995b78;outline:none}.ds-ribbon-tab:hover:after,.ds-ribbon-tab:focus-visible:after,.ds-ribbon-tab:active:after{transform:scaleX(1)}.ds-ribbon-tab:focus-visible:after{height:2px}"
     }
   ],
   "narrative": {
-    "northStar": "Romance VN Stationery",
-    "overview": "A daily desktop framed like an early-2000s romance visual novel: cream stationery, pastel character colors, floral corners and serif names. The five existing character identities and wallpapers supply the imagery.\n\nCompact controls keep everyday actions readable and predictable. This document records the Quickshell templates; Harumi is the concrete reference palette below, while each character theme supplies the same semantic roles. Terminal palettes remain separately dark.",
+    "northStar": "Romance VN Title Screen & Stationery",
+    "overview": "A daily desktop inhabits an early-2000s romance visual novel title screen and its extras: existing character art, cream stationery, pastel character colors, floral corners and bilingual serif choices. The established character identities and wallpapers supply the imagery. A quiet serif ribbon leads into the same paper-framed pages as the title menu.\n\nCompact controls keep everyday actions readable and predictable. Windows 98 remains a second world of grey control panels, navy title bars and square bevels, with its richer status bar and framed settings menu. Character names, wallpapers and desktop actions remain available in both styles; the title screen and sliding drawer belong to Romance VN.\n\nThis document records the shipped Quickshell templates and theme renderer; Harumi is the concrete Romance VN reference palette in the frontmatter. Character palettes supply the Romance VN semantic roles; Windows 98 overrides the interface roles independently. Terminal palettes remain separately dark. Style is saved separately from the character in `~/.config/theme/style` (`vn` or `win98`, default `vn`), following the configured config directory.",
     "keyCharacteristics": [
-      "Cream dialogue frames with fine double borders.",
+      "Full character imagery balanced by cream paper and fine rules.",
       "Pastel character accents and geometric floral ornaments.",
-      "Serif titles paired with compact sans-serif controls.",
-      "Visible keyboard focus and restrained, immediate state changes."
+      "Serif bilingual choices and titles paired with compact sans-serif details.",
+      "Hover previews with gentle sliding motion and deliberate keyboard focus.",
+      "Independent Windows 98 grey panels, navy selection and square bevels."
     ],
     "rules": [
       {
         "name": "The Character Palette Rule",
-        "body": "Read panel colors through Theme roles so the same components follow the selected character.",
+        "body": "Read panel colors through Theme roles so components follow the character palette in Romance VN and the fixed interface palette in Windows 98.",
         "section": "colors"
       },
       {
         "name": "The Two Voices Rule",
-        "body": "Use the serif for names and section titles; use the sans-serif for controls, status and supporting text.",
+        "body": "In Romance VN, use the serif for names, title choices, navigation and section titles; use the sans-serif for ordinary controls, status and supporting text. Windows 98 uses the sans-serif throughout.",
         "section": "typography"
       },
       {
         "name": "The Stationery Frame Rule",
-        "body": "Separate surfaces with paper, fine outlines and an inset border; keep ornaments at frame corners.",
+        "body": "In Romance VN, separate surfaces with paper, fine outlines and an inset border; keep ornaments at frame corners.",
         "section": "elevation"
+      },
+      {
+        "name": "The Beveled Control Rule",
+        "body": "In Windows 98, square frames and raised controls use light top/left and dark bottom/right edges; reverse the edges for pressed or selected controls.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Preview Focus Rule",
+        "body": "Hover may reveal desktop pages without taking keyboard focus; pinning makes the drawer an intentional keyboard surface.",
+        "section": "components"
       }
     ],
     "dos": [
       "Do reuse the existing character names and wallpaper assets.",
       "Do show selected controls with accent fill and paper text.",
-      "Do retain visible keyboard focus and readable unavailable states."
+      "Do retain visible keyboard focus and readable unavailable states.",
+      "Do preserve independent character and style choices.",
+      "Do use square bevels and sans-serif titles for Windows 98.",
+      "Do preserve desktop focus during hover previews and provide Escape for pinned drawers.",
+      "Do explain visual-novel menu names with their real desktop actions.",
+      "Do show live audio levels and honest idle or unavailable states.",
+      "Do keep configuration edits, validation and apply actions explicit, with terminal output for system checks and rebuilds."
     ],
     "donts": [
       "Don't invent character artwork or quotations.",
-      "Don't replace the cream panel roles with the terminal background palette.",
+      "Don't replace interface surface roles with the terminal background palette.",
+      "Don't turn Romance VN navigation back into an ordinary status-card strip.",
       "Don't use decorative motion at the expense of predictable daily controls."
     ]
   }

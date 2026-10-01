@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+"""Open a real floating terminal on an empty chapter beneath the VN title screen."""
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+
+def niri(*args):
+    return subprocess.check_output(["niri", "msg", *args], text=True)
+
+
+def main():
+    root = Path(os.environ.get("EROGEDOTS_ROOT", Path.home() / "erogeDOTS"))
+    workspaces = json.loads(niri("-j", "workspaces"))
+    origin = next(workspace for workspace in workspaces if workspace["is_focused"])
+    windows = json.loads(niri("-j", "windows"))
+    occupied = {window["workspace_id"] for window in windows}
+    empty = next((workspace for workspace in workspaces
+                  if workspace["output"] == origin["output"] and workspace["id"] not in occupied), None)
+    if empty is None:
+        raise RuntimeError("No empty chapter is available for the title terminal.")
+    print(json.dumps({"origin": origin["id"]}), flush=True)
+    niri("action", "focus-workspace", str(empty["idx"]))
+    command = ["ghostty", "--gtk-single-instance=false", "--class=org.erogedots.TitleTerminal",
+               "--title=Title Terminal", f"--working-directory={root}"]
+    if sys.argv[1:]:
+        command += ["-e", "bash", "-c",
+                    '"$@"; result=$?; printf "\\nTask finished (exit %s). Press Enter to return.\\n" "$result"; read -r; exit "$result"',
+                    "title-task", *sys.argv[1:]]
+    env = dict(os.environ, GDK_BACKEND="wayland")
+    try:
+        return subprocess.call(command, env=env)
+    finally:
+        current = json.loads(niri("-j", "workspaces"))
+        previous = next((workspace for workspace in current if workspace["id"] == origin["id"]), None)
+        if previous and any(workspace["id"] == empty["id"] and workspace["is_focused"] for workspace in current):
+            niri("action", "focus-workspace", str(previous["idx"]))
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except (RuntimeError, OSError, subprocess.SubprocessError, StopIteration) as error:
+        print(json.dumps({"error": str(error)}), flush=True)
+        sys.exit(1)
