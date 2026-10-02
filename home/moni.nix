@@ -162,7 +162,7 @@ in
 
       # Development
       neovim vscodium go cargo rustc bun gh opencode claude-code codex gcc gdb
-      ripgrep fd jq htop btop tree-sitter
+      ripgrep fd jq htop btop tree-sitter sqlite
 
       # Gaming and media
       wine steam steam-run heroic rmpc

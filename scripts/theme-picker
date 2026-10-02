@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec "${EROGEDOTS_ROOT:-$HOME/erogeDOTS}/scripts/rust-helper" theme-picker "$@"

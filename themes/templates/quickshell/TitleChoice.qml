@@ -1,22 +1,33 @@
 import QtQuick
 import QtQuick.Controls
+import "Keyboard.js" as Keyboard
 
 AbstractButton {
     id: choice
     property string japanese: ""
     property string description: ""
     property bool selected: false
+    property string symbol: ""
     hoverEnabled: true
     focusPolicy: Qt.StrongFocus
+    Keys.onTabPressed: event => { Keyboard.move(choice, !(event.modifiers & Qt.ShiftModifier)); event.accepted = true; }
+    Keys.onBacktabPressed: event => { Keyboard.move(choice, false); event.accepted = true; }
     Keys.onReturnPressed: event => { if (!event.isAutoRepeat) click(); event.accepted = true; }
     Keys.onEnterPressed: event => { if (!event.isAutoRepeat) click(); event.accepted = true; }
-    Keys.onUpPressed: event => { nextItemInFocusChain(false).forceActiveFocus(Qt.TabFocusReason); event.accepted = true; }
-    Keys.onDownPressed: event => { nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocusReason); event.accepted = true; }
+    Keys.onUpPressed: event => { Keyboard.move(choice, false); event.accepted = true; }
+    Keys.onDownPressed: event => { Keyboard.move(choice, true); event.accepted = true; }
     implicitHeight: 58
     implicitWidth: 300
     Accessible.name: text + ": " + description
     readonly property bool highlighted: hovered || selected || visualFocus
     contentItem: Item {
+        ActionIcon {
+            visible: choice.symbol !== ""
+            symbol: choice.symbol
+            width: 15; height: 15
+            anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.bottomMargin: 5
+            color: choice.highlighted ? Theme.accent : Theme.muted
+        }
         VnText {
             anchors.left: parent.left; anchors.top: parent.top
             anchors.leftMargin: choice.highlighted ? 12 : 0
@@ -35,6 +46,8 @@ AbstractButton {
         }
         VnText {
             anchors.left: parent.left; anchors.bottom: parent.bottom; anchors.bottomMargin: 6
+            anchors.leftMargin: choice.symbol !== "" ? 21 : 0
+            width: parent.width - anchors.leftMargin
             text: choice.description; font.pixelSize: 10; color: choice.highlighted ? Theme.ink : Theme.muted
         }
     }

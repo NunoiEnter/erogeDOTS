@@ -9,11 +9,24 @@ TEMPLATES_DIR="$THEMES_DIR/templates"
 STATE_DIR="$CONFIG_HOME/theme"
 STATE_FILE="$STATE_DIR/active"
 APPS=(niri quickshell fetch fuzzel swaync wlogout ghostty alacritty kitty cava cmatrix bottom)
+CURTAIN="$DOTFILES/scripts/theme-curtain.qml"
+TRANSITION_ACTIVE=0
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[0;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 info() { printf "${CYAN}→${NC} %s\n" "$*"; }
 warn() { printf "${YELLOW}warning:${NC} %s\n" "$*" >&2; }
 die() { printf "${RED}error:${NC} %s\n" "$*" >&2; exit 1; }
+
+theme_failure() {
+    local status="$?"
+    if [[ "$status" -ne 0 && "${EROGEDOTS_NO_RESTART:-0}" != 1 ]]; then
+        quickshell ipc -p "$CONFIG_HOME/quickshell/shell.qml" call theme-transition failed >/dev/null 2>&1 || true
+    fi
+    if [[ "$TRANSITION_ACTIVE" == 1 ]]; then
+        quickshell ipc -p "$CURTAIN" call theme-curtain release >/dev/null 2>&1 || true
+    fi
+}
+trap theme_failure EXIT
 
 usage() {
     cat <<'EOF'
@@ -23,6 +36,8 @@ theme-switch add           create a theme in the guided TUI
 theme-switch list          list themes
 theme-switch current       print active theme
 theme-switch style [vn|win98]  show or change the desktop style
+theme-switch appearance [light|dark]  show or change VN panel brightness
+theme-switch system [light|dark]  show or change the system app preference
 theme-switch preview [id]  print key colors
 EOF
 }
@@ -81,6 +96,20 @@ require_theme() {
     local style="${EROGEDOTS_STYLE:-$(cat "$STATE_DIR/style" 2>/dev/null || printf vn)}"
     [[ "$style" == vn || "$style" == win98 ]] || die "unknown desktop style: $style"
     THEME[UI_STYLE]="$style"
+    local appearance="${EROGEDOTS_APPEARANCE:-$(cat "$STATE_DIR/appearance" 2>/dev/null || printf light)}"
+    local system="${EROGEDOTS_SYSTEM_APPEARANCE:-$(cat "$STATE_DIR/system-appearance" 2>/dev/null || printf dark)}"
+    [[ "$appearance" == light || "$appearance" == dark ]] || die "appearance must be light or dark"
+    [[ "$system" == light || "$system" == dark ]] || die "system appearance must be light or dark"
+    THEME[UI_APPEARANCE]="$appearance"
+    THEME[SYSTEM_APPEARANCE]="$system"
+    if [[ "$style" == vn && "$appearance" == dark ]]; then
+        THEME[VN_PAPER]="${THEME[VN_DARK_PAPER]:-#211d29}"
+        THEME[VN_INK]="${THEME[VN_DARK_INK]:-#f7eef5}"
+        THEME[VN_MUTED]="${THEME[VN_DARK_MUTED]:-#c4b0c2}"
+        THEME[VN_ACCENT]="${THEME[VN_DARK_ACCENT]:-${THEME[PRIMARY_LIGHT]}}"
+        THEME[VN_TINT]="${THEME[VN_DARK_TINT]:-#393044}"
+        THEME[VN_LINE]="${THEME[VN_DARK_LINE]:-#76617a}"
+    fi
     THEME[UI_RADIUS]=5
     THEME[UI_CONTROL_RADIUS]=3
     THEME[UI_TITLE_FONT]="Noto Serif JP"
@@ -186,6 +215,13 @@ export CMATRIX_COLOR="${THEME[CMATRIX_COLOR]:-cyan}"
 EOF
     printf '%s\n' "$name" > "$STATE_FILE"
     printf '%s\n' "${THEME[UI_STYLE]}" > "$STATE_DIR/style"
+    printf '%s\n' "${THEME[UI_APPEARANCE]}" > "$STATE_DIR/appearance"
+    printf '%s\n' "${THEME[SYSTEM_APPEARANCE]}" > "$STATE_DIR/system-appearance"
+}
+
+apply_system_appearance() {
+    command -v gsettings >/dev/null || die "gsettings is needed to set the system appearance"
+    gsettings set org.gnome.desktop.interface color-scheme "prefer-${THEME[SYSTEM_APPEARANCE]}" || die "could not set the system appearance"
 }
 
 stop_desktop_shell() {
@@ -207,7 +243,7 @@ reload_desktop() {
     local wallpaper
     wallpaper="$(wallpaper_path)"
     if [[ -f "$wallpaper" ]]; then
-        awww img "$wallpaper" --transition-type fade 2>/dev/null || warn "could not apply wallpaper: $wallpaper"
+        awww img "$wallpaper" --transition-type fade --transition-duration 0.8 --transition-fps 60 2>/dev/null || warn "could not apply wallpaper: $wallpaper"
     else
         warn "wallpaper not found: $wallpaper"
     fi
@@ -217,16 +253,53 @@ reload_desktop() {
         swaync-client --reload-css >/dev/null 2>&1 || true
     fi
     if command -v quickshell >/dev/null && [[ -f "$CONFIG_HOME/quickshell/shell.qml" ]]; then
-        quickshell -d -n -p "$CONFIG_HOME/quickshell/shell.qml" >/dev/null 2>&1 </dev/null
+        quickshell -d -n -p "$CONFIG_HOME/quickshell/shell.qml" >/dev/null 2>&1 </dev/null 9>&-
     fi
 }
 
+wait_for_scene() {
+    local config="$1" target="$2" method="$3" attempt
+    for ((attempt = 0; attempt < 200; attempt++)); do
+        [[ "$(quickshell ipc -p "$config" call "$target" "$method" 2>/dev/null || true)" == true ]] && return 0
+        sleep 0.05
+    done
+    return 1
+}
+
+cover_scene() {
+    TRANSITION_ACTIVE=1
+    quickshell -d -n -p "$CURTAIN" >/dev/null 2>&1 </dev/null 9>&- || die "could not open theme curtain"
+    wait_for_scene "$CURTAIN" theme-curtain covered || die "theme curtain did not become ready"
+}
+
+reveal_scene() {
+    local show_title="$1" attempt arrived=0
+    # Startup and image decoding are asynchronous. Reveal only after IPC + pixels.
+    for ((attempt = 0; attempt < 200; attempt++)); do
+        if quickshell ipc -p "$CONFIG_HOME/quickshell/shell.qml" call theme-transition arrive "$show_title" >/dev/null 2>&1; then arrived=1; break; fi
+        sleep 0.05
+    done
+    [[ "$arrived" == 1 ]] || die "new desktop shell did not start"
+    wait_for_scene "$CONFIG_HOME/quickshell/shell.qml" theme-transition ready || die "new title image did not become ready"
+    sleep 0.08
+    quickshell ipc -p "$CURTAIN" call theme-curtain release >/dev/null 2>&1
+    # Keep the new title below the overlay until the independent curtain is gone.
+    sleep 0.55
+    quickshell ipc -p "$CONFIG_HOME/quickshell/shell.qml" call theme-transition finish >/dev/null 2>&1
+    TRANSITION_ACTIVE=0
+}
+
 apply_theme() {
-    local name="$1"
+    local name="$1" show_title="${2:-false}"
     info "loading theme: $name"
     require_theme "$name"
-    info "rendering configs"
     mkdir -p "$STATE_DIR"
+    # One transition at a time, including the interval while the shell restarts.
+    exec 9>"$STATE_DIR/switch.lock"
+    flock -n 9 || die "another theme change is already running"
+    [[ "${EROGEDOTS_NO_RESTART:-0}" == 1 ]] || apply_system_appearance
+    if [[ "${EROGEDOTS_NO_RESTART:-0}" != 1 ]] && command -v quickshell >/dev/null; then cover_scene; fi
+    info "rendering configs"
     render_configs "$name"
     info "installing configs"
     [[ "${EROGEDOTS_NO_RESTART:-0}" == 1 ]] || stop_desktop_shell
@@ -236,6 +309,7 @@ apply_theme() {
     rm -f "${XDG_CACHE_HOME:-$HOME/.cache}"/fastfetch-*.out 2>/dev/null || true
     info "reloading desktop"
     [[ "${EROGEDOTS_NO_RESTART:-0}" == 1 ]] || reload_desktop
+    [[ "$TRANSITION_ACTIVE" != 1 ]] || reveal_scene "$show_title"
     printf "${GREEN}✓${NC} theme: %s\n" "$name"
     info "terminal colors update in newly opened terminals"
 }
@@ -258,17 +332,26 @@ case "${1:-help}" in
             cat "$STATE_DIR/style" 2>/dev/null || printf 'vn\n'
         else
             [[ "$2" == vn || "$2" == win98 ]] || die "style must be vn or win98"
-            EROGEDOTS_STYLE="$2" apply_theme "$(cat "$STATE_FILE" 2>/dev/null || printf harumi)"
-            if [[ "${3:-}" == --show-menu && "${EROGEDOTS_NO_RESTART:-0}" != 1 ]]; then
-                quickshell ipc -p "$CONFIG_HOME/quickshell/shell.qml" call quick-settings open
-            fi
+            show_title=false; [[ "${3:-}" != --show-menu ]] || show_title=true
+            EROGEDOTS_STYLE="$2" apply_theme "$(cat "$STATE_FILE" 2>/dev/null || printf harumi)" "$show_title"
         fi
         ;;
     preview) preview "${2:-}" ;;
+    appearance|system)
+        mode="$1"; file=appearance; [[ "$mode" != system ]] || file=system-appearance
+        if [[ -z "${2:-}" ]]; then
+            fallback=light; [[ "$mode" != system ]] || fallback=dark
+            cat "$STATE_DIR/$file" 2>/dev/null || printf '%s\n' "$fallback"
+        else
+            [[ "$2" == light || "$2" == dark ]] || die "$mode must be light or dark"
+            show_title=false; [[ "${3:-}" != --show-menu ]] || show_title=true
+            if [[ "$mode" == system ]]; then
+                EROGEDOTS_SYSTEM_APPEARANCE="$2" apply_theme "$(cat "$STATE_FILE" 2>/dev/null || printf harumi)" "$show_title"
+            else
+                EROGEDOTS_APPEARANCE="$2" apply_theme "$(cat "$STATE_FILE" 2>/dev/null || printf harumi)" "$show_title"
+            fi
+        fi
+        ;;
     help|-h|--help) usage ;;
-    *) apply_theme "$1" ;;
+    *) show_title=false; [[ "${2:-}" != --show-menu ]] || show_title=true; apply_theme "$1" "$show_title" ;;
 esac
-
-if [[ "${2:-}" == --show-menu && "${EROGEDOTS_NO_RESTART:-0}" != 1 ]]; then
-    quickshell ipc -p "$CONFIG_HOME/quickshell/shell.qml" call quick-settings page "${3:-characters}"
-fi

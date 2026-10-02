@@ -1,7 +1,11 @@
 import QtQuick
 import QtQuick.Controls
+import "Keyboard.js" as Keyboard
 
 TextField {
+    id: field
+    Keys.onTabPressed: event => { Keyboard.move(field, !(event.modifiers & Qt.ShiftModifier)); event.accepted = true; }
+    Keys.onBacktabPressed: event => { Keyboard.move(field, false); event.accepted = true; }
     color: Theme.ink
     placeholderTextColor: Theme.muted
     selectionColor: Theme.accent

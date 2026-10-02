@@ -7,9 +7,12 @@ qml_path="$(dirname "$(dirname "$(realpath "$runner")")")/lib/qt-6/qml"
 if [[ -d "$qml_path" ]]; then export QML_IMPORT_PATH="${QML_IMPORT_PATH:-$qml_path}"; fi
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
-cp "$root/themes/templates/quickshell/"{TitleChoice,VnButton,VnText,RetroBevel}.qml "$tmp/"
+cp "$root/themes/templates/quickshell/"{TitleChoice,VnButton,VnText,RetroBevel,VnFrame,Ornament,SessionChoice,SessionDialog,VnSlider,VnSpinBox,VnField,WorkspaceFlowchart,ActionIcon,VnAction}.qml "$tmp/"
+cp "$root/themes/templates/quickshell/Keyboard.js" "$tmp/"
 # Use the rendered singleton: no desktop processes or hardware state are started.
 cp "${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/Theme.qml" "$tmp/"
 printf 'singleton Theme 1.0 Theme.qml\n' > "$tmp/qmldir"
 cp "$root/tests/title-keys.qml" "$tmp/tst_title.qml"
+cp "$root/tests/session-keys.qml" "$tmp/tst_session.qml"
+cp "$root/tests/flowchart.qml" "$tmp/tst_flowchart.qml"
 QT_QPA_PLATFORM=offscreen "$runner" -input "$tmp" -platform offscreen

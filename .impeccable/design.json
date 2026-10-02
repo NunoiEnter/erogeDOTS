@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-01T12:09:44.703089+00:00",
+  "generatedAt": "2026-10-02T03:14:28.505623+00:00",
   "title": "Design System: erogeDOTS",
   "extensions": {
     "colorMeta": {
@@ -185,6 +185,26 @@
           "oklch(83.57% 0.000 0.00)",
           "oklch(95.00% 0.000 0.00)"
         ]
+      },
+      "dark-paper": {
+        "role": "neutral",
+        "displayName": "Night paper"
+      },
+      "dark-ink": {
+        "role": "neutral",
+        "displayName": "Warm night ink"
+      },
+      "dark-muted": {
+        "role": "neutral",
+        "displayName": "Muted night text"
+      },
+      "dark-tint": {
+        "role": "secondary",
+        "displayName": "Night hover tint"
+      },
+      "dark-line": {
+        "role": "neutral",
+        "displayName": "Night fine rule"
       }
     },
     "typographyMeta": {
@@ -400,11 +420,39 @@
       "description": "Serif tab with hover tint and an active fine rule.",
       "html": "<button class=\"ds-ribbon-tab\">Music Room</button>",
       "css": ".ds-ribbon-tab{position:relative;height:40px;padding:0 14px;border:0;background:transparent;color:#43394b;font:14px \"Noto Serif JP\",serif;cursor:pointer;transition:background 140ms}.ds-ribbon-tab:after{content:\"\";position:absolute;bottom:0;left:12px;right:12px;height:1px;background:#995b78;transform:scaleX(0);transition:transform 180ms ease-out}.ds-ribbon-tab:hover,.ds-ribbon-tab:focus-visible,.ds-ribbon-tab:active{background:rgba(243,220,228,.65);color:#995b78;outline:none}.ds-ribbon-tab:hover:after,.ds-ribbon-tab:focus-visible:after,.ds-ribbon-tab:active:after{transform:scaleX(1)}.ds-ribbon-tab:focus-visible:after{height:2px}"
+    },
+    {
+      "name": "Independent appearance choices",
+      "kind": "custom",
+      "description": "Load page has separate VN panel and system app preference controls. This visual translation shows dark panels with System apps set to Light, as in the reviewed appearance-dark capture. Windows 98 disables VN choices and retains their preference.",
+      "html": "<section class=\"ds-appearance\"><h3>Appearance</h3><p>Choose panel brightness and the preference sent to your apps separately.</p><div><span>VN panels</span><button>Light</button><button class=\"ds-current\" aria-pressed=\"true\">Dark</button></div><div><span>System apps</span><button class=\"ds-current\" aria-pressed=\"true\">Light</button><button>Dark</button></div></section>",
+      "css": ".ds-appearance{padding:12px;background:#211d29;color:#f7eef5;font:12px \"Noto Sans\",sans-serif;}.ds-appearance h3{margin:0;font:18px \"Noto Serif JP\",serif;color:#ffc4dd}.ds-appearance p{color:#c4b0c2}.ds-appearance div{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px}.ds-appearance span{width:110px}.ds-appearance button{height:38px;padding:0 12px;border:1px solid #76617a;border-radius:3px;background:#211d29;color:#f7eef5;font:12px \"Noto Sans\",sans-serif;cursor:pointer}.ds-appearance button:hover,.ds-appearance button:active{background:#393044}.ds-appearance button.ds-current{background:#ffc4dd;color:#211d29;font-weight:700}.ds-appearance button:focus-visible{outline:2px solid #ffc4dd;outline-offset:-2px}"
+    },
+    {
+      "name": "Theme studio palette choices",
+      "kind": "custom",
+      "description": "Graphical Add a theme form provides native image Browse and a cropped wallpaper preview, six starter palettes, a 15-color swatch strip and optional individual color fields. Create theme saves first; Apply theme appears after creation. This snippet represents its palette controls only.",
+      "html": "<section class=\"ds-palettes\"><h3>Palette</h3><div><button class=\"ds-new-action\">Sakura Pink</button><button class=\"ds-new-action\">Honey Gold</button><button class=\"ds-new-action\">Forest</button><button class=\"ds-new-action\">Lavender</button><button class=\"ds-new-action\">Crimson</button><button class=\"ds-new-action\">Ocean</button></div><button class=\"ds-new-action\">Edit individual colors</button></section>",
+      "css": ".ds-new-action{min-height:38px;padding:0 12px;border:1px solid #cbb4bf;border-radius:3px;background:#fff9f0;color:#43394b;font:12px \"Noto Sans\",sans-serif;cursor:pointer}.ds-new-action:hover,.ds-new-action:active{background:#f3dce4}.ds-new-action:focus-visible{outline:2px solid #995b78;outline-offset:-2px}.ds-palettes{background:#fff9f0;color:#43394b;padding:12px;font:12px \"Noto Sans\",sans-serif;}.ds-palettes h3{margin:0 0 12px;font:18px \"Noto Serif JP\",serif}.ds-palettes div{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}"
+    },
+    {
+      "name": "Locked Nixpkgs package result",
+      "kind": "custom",
+      "description": "Real locked-Nixpkgs search shows name/version, package attribute, wrapped description and Add/Added. Local app icons fall back to bundled official NixLogo.svg. Results scroll within 360px and show at most the first 60 with the total count. Add/Remove saves the extra list; Check and Apply NixOS remain separate terminal actions. The preview result is illustrative.",
+      "html": "<div class=\"ds-package\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"38\" height=\"38\" viewBox=\"0 0 501.56251 501.56249\" id=\"svg2\" version=\"1.1\" aria-hidden=\"true\">\n  <defs id=\"defs4\">\n    <linearGradient id=\"linearGradient5562\">\n      <stop style=\"stop-color:#699ad7;stop-opacity:1\" offset=\"0\" id=\"stop5564\" />\n      <stop id=\"stop5566\" offset=\"0.24345198\" style=\"stop-color:#7eb1dd;stop-opacity:1\" />\n      <stop style=\"stop-color:#7ebae4;stop-opacity:1\" offset=\"1\" id=\"stop5568\" />\n    </linearGradient>\n    <linearGradient id=\"linearGradient5053\">\n      <stop style=\"stop-color:#415e9a;stop-opacity:1\" offset=\"0\" id=\"stop5055\" />\n      <stop id=\"stop5057\" offset=\"0.23168644\" style=\"stop-color:#4a6baf;stop-opacity:1\" />\n      <stop style=\"stop-color:#5277c3;stop-opacity:1\" offset=\"1\" id=\"stop5059\" />\n    </linearGradient>\n    <linearGradient id=\"linearGradient4328\" gradientUnits=\"userSpaceOnUse\" gradientTransform=\"translate(70.650339,-1055.1511)\" x1=\"200.59668\" y1=\"351.41116\" x2=\"290.08701\" y2=\"506.18814\" href=\"#linearGradient5562\" />\n    <linearGradient id=\"linearGradient4330\" gradientUnits=\"userSpaceOnUse\" gradientTransform=\"translate(864.69589,-1491.3405)\" x1=\"-584.19934\" y1=\"782.33563\" x2=\"-496.29703\" y2=\"937.71399\" href=\"#linearGradient5053\" />\n  </defs>\n  <g id=\"layer3\" style=\"display:inline;opacity:1\" transform=\"translate(-156.41121,933.30685)\">\n    <g id=\"g2\" transform=\"matrix(0.99994059,0,0,0.99994059,-0.06321798,33.188377)\" style=\"stroke-width:1.00006\">\n      <path id=\"path3336-6\" d=\"m 309.54892,-710.38827 122.19683,211.67512 -56.15706,0.5268 -32.6236,-56.8692 -32.85645,56.5653 -27.90237,-0.011 -14.29086,-24.6896 46.81047,-80.4901 -33.22946,-57.8257 z\" style=\"opacity:1;fill:url(#linearGradient4328);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3.00018;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1\" />\n      <use height=\"100%\" width=\"100%\" transform=\"rotate(60,407.11155,-715.78724)\" id=\"use3439-6\" y=\"0\" x=\"0\" style=\"stroke-width:1.00006\" href=\"#path3336-6\" />\n      <use height=\"100%\" width=\"100%\" transform=\"rotate(-60,407.31177,-715.70016)\" id=\"use3445-0\" y=\"0\" x=\"0\" style=\"stroke-width:1.00006\" href=\"#path3336-6\" />\n      <use height=\"100%\" width=\"100%\" transform=\"rotate(180,407.41868,-715.7565)\" id=\"use3449-5\" y=\"0\" x=\"0\" style=\"stroke-width:1.00006\" href=\"#path3336-6\" />\n      <path style=\"color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:url(#linearGradient4330);fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3.00018;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate\" d=\"m 309.54892,-710.38827 122.19683,211.67512 -56.15706,0.5268 -32.6236,-56.8692 -32.85645,56.5653 -27.90237,-0.011 -14.29086,-24.6896 46.81047,-80.4901 -33.22946,-57.8256 z\" id=\"path4260-0\" />\n      <use height=\"100%\" width=\"100%\" transform=\"rotate(120,407.33916,-716.08356)\" id=\"use4354-5\" y=\"0\" x=\"0\" style=\"display:inline;stroke-width:1.00006\" href=\"#path4260-0\" />\n      <use height=\"100%\" width=\"100%\" transform=\"rotate(-120,407.28823,-715.86995)\" id=\"use4362-2\" y=\"0\" x=\"0\" style=\"display:inline;stroke-width:1.00006\" href=\"#path4260-0\" />\n    </g>\n  </g>\n</svg><div><strong>ripgrep</strong><small>ripgrep</small><p>A fast command-line search tool.</p></div><button class=\"ds-new-action\">Add</button></div>",
+      "css": ".ds-new-action{min-height:38px;padding:0 12px;border:1px solid #cbb4bf;border-radius:3px;background:#fff9f0;color:#43394b;font:12px \"Noto Sans\",sans-serif;cursor:pointer}.ds-new-action:hover,.ds-new-action:active{background:#f3dce4}.ds-new-action:focus-visible{outline:2px solid #995b78;outline-offset:-2px}.ds-package{display:flex;align-items:center;gap:12px;padding:12px;background:#fff9f0;color:#43394b;border-bottom:1px solid #cbb4bf;font:12px \"Noto Sans\",sans-serif;}.ds-package svg{flex:none}.ds-package div{flex:1;min-width:0}.ds-package small{display:block;margin-top:4px;color:#776477;font-size:10px}.ds-package p{margin:4px 0 0;color:#776477}"
+    },
+    {
+      "name": "Niri layout miniature",
+      "kind": "custom",
+      "description": "140px preview updates immediately from gap, focused-outline and default-width controls. Save layout persists settings; Apply Niri is separate. Advanced files offers NixOS/Home Manager/Niri editing with Save & validate, backup and Reload. This snippet is a fixed visual preview and does not control live windows.",
+      "html": "<section class=\"ds-layout\"><div class=\"ds-mini\"><div class=\"ds-focused\">50%</div><div></div></div><p>Layout preview · focused window on the left</p><button class=\"ds-new-action\">Save layout</button></section>",
+      "css": ".ds-new-action{min-height:38px;padding:0 12px;border:1px solid #cbb4bf;border-radius:3px;background:#fff9f0;color:#43394b;font:12px \"Noto Sans\",sans-serif;cursor:pointer}.ds-new-action:hover,.ds-new-action:active{background:#f3dce4}.ds-new-action:focus-visible{outline:2px solid #995b78;outline-offset:-2px}.ds-layout{padding:12px;background:#fff9f0;color:#43394b;font:12px \"Noto Sans\",sans-serif;}.ds-mini{height:140px;display:flex;gap:8px;padding:14px;box-sizing:border-box;background:#f3dce4;border-radius:3px;overflow:hidden}.ds-mini div{flex:1;background:#fff9f0;border:1px solid #cbb4bf;border-radius:3px}.ds-mini .ds-focused{display:flex;align-items:center;justify-content:center;border:3px solid #995b78;color:#995b78;font-size:18px}.ds-layout p{font-size:10px;color:#776477}"
     }
   ],
   "narrative": {
     "northStar": "Romance VN Title Screen & Stationery",
-    "overview": "A daily desktop inhabits an early-2000s romance visual novel title screen and its extras: existing character art, cream stationery, pastel character colors, floral corners and bilingual serif choices. The established character identities and wallpapers supply the imagery. A quiet serif ribbon leads into the same paper-framed pages as the title menu.\n\nCompact controls keep everyday actions readable and predictable. Windows 98 remains a second world of grey control panels, navy title bars and square bevels, with its richer status bar and framed settings menu. Character names, wallpapers and desktop actions remain available in both styles; the title screen and sliding drawer belong to Romance VN.\n\nThis document records the shipped Quickshell templates and theme renderer; Harumi is the concrete Romance VN reference palette in the frontmatter. Character palettes supply the Romance VN semantic roles; Windows 98 overrides the interface roles independently. Terminal palettes remain separately dark. Style is saved separately from the character in `~/.config/theme/style` (`vn` or `win98`, default `vn`), following the configured config directory.",
+    "overview": "A daily desktop inhabits an early-2000s romance visual novel title screen and its extras: existing character art, cream stationery, pastel character colors, floral corners and bilingual serif choices. The established character identities and wallpapers supply the imagery. A quiet serif ribbon leads into the same paper-framed pages as the title menu.\n\nCompact controls keep everyday actions readable and predictable. Windows 98 remains a second world of grey control panels, navy title bars and square bevels, with its richer status bar and framed settings menu. Character names, wallpapers and desktop actions remain available in both styles; the title screen and sliding drawer belong to Romance VN.\n\nThis document records the shipped Quickshell templates and theme renderer; Harumi is the concrete Romance VN reference palette in the frontmatter. Character palettes supply the Romance VN semantic roles; Windows 98 overrides the interface roles independently. Terminal palettes remain separately dark. Style is saved separately from the character in `~/.config/theme/style` (`vn` or `win98`, default `vn`), following the configured config directory.\n\nPanel brightness and the system app preference are independent of the character and desktop style. Load now includes separate Light/Dark choices for VN panels and System apps, followed by the character gallery and a graphical Add a theme form. The NixOS & Niri workshop combines real package search from the locked Nixpkgs source, a live miniature layout preview and an advanced source editor. All of these surfaces retain the existing stationery controls, serif headings and fine rules.",
     "keyCharacteristics": [
       "Full character imagery balanced by cream paper and fine rules.",
       "Pastel character accents and geometric floral ornaments.",
@@ -448,7 +496,10 @@
       "Do preserve desktop focus during hover previews and provide Escape for pinned drawers.",
       "Do explain visual-novel menu names with their real desktop actions.",
       "Do show live audio levels and honest idle or unavailable states.",
-      "Do keep configuration edits, validation and apply actions explicit, with terminal output for system checks and rebuilds."
+      "Do keep configuration edits, validation and apply actions explicit, with terminal output for system checks and rebuilds.",
+      "Do keep VN panel brightness and the system app preference independent, including dark panels with light system apps.",
+      "Do preview theme imagery and palette choices before creation, then keep Apply theme as a separate action.",
+      "Do use real locked-Nixpkgs results, local icons or the official Nix fallback, and visible search limits."
     ],
     "donts": [
       "Don't invent character artwork or quotations.",

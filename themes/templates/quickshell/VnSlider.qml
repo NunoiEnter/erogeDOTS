@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "Keyboard.js" as Keyboard
 
 ColumnLayout {
     id: root
@@ -15,6 +16,8 @@ ColumnLayout {
     }
     Slider {
         id: slider
+        Keys.onTabPressed: event => { Keyboard.move(slider, !(event.modifiers & Qt.ShiftModifier)); event.accepted = true; }
+        Keys.onBacktabPressed: event => { Keyboard.move(slider, false); event.accepted = true; }
         Layout.fillWidth: true
         from: 0
         to: 1

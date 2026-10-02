@@ -13,8 +13,8 @@ PanelWindow {
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.namespace: "eroge-vn-menu"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: state.shown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.layer: state.themeEntering ? WlrLayer.Top : WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: state.shown && !state.sessionShown ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     onVisibleChanged: if (visible) Qt.callLater(() => { closeButton.forceActiveFocus(); scroll.contentY = menu.state.menuSection === "music" ? Math.min(musicRoom.y, Math.max(0, scroll.contentHeight - scroll.height)) : 0; })
 
     // The entire visible backdrop accepts clicks; the card blocks them below.
@@ -65,6 +65,7 @@ PanelWindow {
                 }
             }
             ColumnLayout {
+                visible: !["characters", "themeStudio", "workshop"].includes(menu.state.menuSection)
                 anchors.fill: parent
                 anchors.margins: 24
                 anchors.topMargin: Theme.retro ? 44 : 30
@@ -229,7 +230,7 @@ PanelWindow {
                         Layout.fillWidth: true
                         text: card.width < 600 ? "Character" : "Character theme"
                         hint: "Choose a character palette and wallpaper"
-                        onClicked: menu.state.launch(["ghostty", "--title=theme-tools", "-e", "theme-switch", "picker"])
+                        onClicked: menu.state.menuSection = "characters"
                     }
                     VnButton {
                         Layout.fillWidth: true
@@ -249,6 +250,11 @@ PanelWindow {
                     VnText { text: "Esc to return"; color: Theme.muted; font.pixelSize: 11; visible: card.width > 620 }
                     VnButton { compact: true; text: "Session…"; onClicked: menu.state.session() }
                 }
+            }
+            Loader {
+                anchors.fill: parent; anchors.margins: 24; anchors.topMargin: 44
+                active: ["characters", "themeStudio", "workshop"].includes(menu.state.menuSection)
+                sourceComponent: Component { DesktopPages { state: menu.state; page: menu.state.menuSection; keyboardEnabled: true } }
             }
         }
     }

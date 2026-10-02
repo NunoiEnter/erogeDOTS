@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Local character voice overrides; original, quiet bell cues are the defaults.
+set -euo pipefail
+kind="${1:-greeting}"
+case "$kind" in title|greeting|confirm|cancel) ;; *) exit 2 ;; esac
+# Local, persistent opt-out; no repository edit or rebuild needed.
+[[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/erogedots/sounds/mute" ]] && exit 0
+sound_dir="${XDG_CONFIG_HOME:-$HOME/.config}/erogedots/sounds"
+for extension in ogg wav mp3 flac; do
+    if [[ -f "$sound_dir/$kind.$extension" ]]; then
+        exec mpv --no-video --really-quiet --volume=65 -- "$sound_dir/$kind.$extension"
+    fi
+done
+root="${EROGEDOTS_ROOT:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}"
+exec mpv --no-video --really-quiet --volume=45 -- "$root/assets/sounds/$kind.wav"

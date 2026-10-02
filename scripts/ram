@@ -17,92 +17,45 @@ for a in "$@"; do
     esac
 done
 
+pss_rows() {
+    ps -eo pid=,args= | awk '
+        {
+            pid=$1; $1=""; args=substr($0, 2); total=0
+            path="/proc/" pid "/smaps_rollup"
+            while ((getline line < path) > 0) {
+                if (line ~ /^Pss:/) { split(line, parts, /[[:space:]]+/); total += parts[2] }
+            }
+            close(path)
+            printf "%.0f %s %s\n", total, pid, args
+        }' 2>/dev/null
+}
+
 pss_table() {
-    # Prints: PSS_MB PID ARGS sorted desc. Root-owned procs read as 0.
-    python3 -c "
-import re, subprocess
-from signal import signal, SIGPIPE, SIG_DFL
-signal(SIGPIPE, SIG_DFL)
-def pss(pid):
-    try:
-        s = 0
-        with open(f'/proc/{pid}/smaps') as f:
-            for line in f:
-                if line.startswith('Pss:'):
-                    s += int(line.split()[1])
-        return s
-    except OSError:
-        return 0
-procs = subprocess.check_output(['ps', '-eo', 'pid,args']).decode().splitlines()[1:]
-rows = []
-for line in procs:
-    m = re.match(r'\s*(\d+)\s+(.*)', line)
-    if m:
-        rows.append((pss(m.group(1)), m.group(1), m.group(2)[:110]))
-try:
-    for p, pid, args in sorted(rows, reverse=True):
-        print(f'{p / 1024:6.0f} {pid:>7} {args}')
-except BrokenPipeError:
-    pass
-"
+    pss_rows | sort -nr | awk '{ printf "%6.0f %7s", $1 / 1024, $2; $1=""; $2=""; print substr($0, 1, 112) }'
 }
 
 cat_totals() {
-    # Category totals in MB from PSS scan.
-    python3 -c "
-import re, subprocess
-def pss(pid):
-    try:
-        s = 0
-        with open(f'/proc/{pid}/smaps') as f:
-            for line in f:
-                if line.startswith('Pss:'):
-                    s += int(line.split()[1])
-        return s
-    except OSError:
-        return 0
-cats = {'opencode': 0, 'browser': 0, 'codex': 0, 'desktop': 0, 'bg': 0, 'other': 0}
-pats = {
-    'opencode': re.compile(r'opencode|npm.*mcp|node.*\.bin/mcp|pg_computer', re.I),
-    'browser': re.compile(r'firefox|librewolf|chrome|Isolated|Web Content|Socket Process|RDD Process|Utility Process|Privileged Cont|Extensions', re.I),
-    'codex': re.compile(r'codex', re.I),
-    'desktop': re.compile(r'niri|quickshell|Xwayland|swaync|awww|mpd|fcitx5|mako|ghostty|kitty|alacritty|fuzzel|discordo', re.I),
-    'bg': re.compile(r'blueman|nm-applet|tailscaled|polkit|xdg-desktop-portal|pipewire|wireplumber|upower|gvfs|at-spi|gnome-keyring|playerctl|cliphist|wl-paste', re.I),
-}
-for line in subprocess.check_output(['ps', '-eo', 'pid,args']).decode().splitlines()[1:]:
-    m = re.match(r'\s*(\d+)\s+(.*)', line)
-    if not m:
-        continue
-    p, args = pss(m.group(1)), m.group(2)
-    hit = False
-    for name, pat in pats.items():
-        if pat.search(args):
-            cats[name] += p
-            hit = True
-            break
-    if not hit:
-        cats['other'] += p
-for k, v in cats.items():
-    print(f'{k:9s} {v / 1024:5.0f} MB')
-"
+    pss_rows | awk '
+        BEGIN { split("opencode browser codex desktop bg other", names, " ") }
+        {
+            memory=$1; $1=""; $2=""; args=tolower($0); group="other"
+            if (args ~ /opencode|npm.*mcp|node.*\.bin\/mcp|pg_computer/) group="opencode"
+            else if (args ~ /firefox|librewolf|chrome|isolated|web content|socket process|rdd process|utility process|privileged cont|extensions/) group="browser"
+            else if (args ~ /codex/) group="codex"
+            else if (args ~ /niri|quickshell|xwayland|swaync|awww|mpd|fcitx5|mako|ghostty|kitty|alacritty|fuzzel|discordo/) group="desktop"
+            else if (args ~ /blueman|nm-applet|tailscaled|polkit|xdg-desktop-portal|pipewire|wireplumber|upower|gvfs|at-spi|gnome-keyring|playerctl|cliphist|wl-paste/) group="bg"
+            totals[group] += memory
+        }
+        END { for (i=1;i<=6;i++) printf "%-9s %5.0f MB\n", names[i], totals[names[i]]/1024 }'
 }
 
 opencode_db() {
     local db="$HOME/.local/share/opencode/opencode-stable.db"
     [[ -f "$db" ]] || { echo "opencode DB: none"; return 0; }
     du -h "$db" | awk '{ print "opencode DB: " $1 " " $2 }'
-    python3 -c "
-import sqlite3, os
-db = os.path.expanduser('~/.local/share/opencode/opencode-stable.db')
-try:
-    con = sqlite3.connect(f'file:{db}?mode=ro', uri=True)
-    s = con.execute('SELECT COUNT(*) FROM session').fetchone()[0]
-    m = con.execute('SELECT COUNT(*) FROM message').fetchone()[0]
-    p = con.execute('SELECT COUNT(*) FROM part').fetchone()[0]
-    print(f'sessions: {s}  messages: {m}  parts: {p}')
-except Exception as e:
-    print(f'DB query skipped: {e}')
-"
+    if command -v sqlite3 >/dev/null; then
+        sqlite3 -readonly "$db" "SELECT 'sessions: ' || (SELECT COUNT(*) FROM session) || '  messages: ' || (SELECT COUNT(*) FROM message) || '  parts: ' || (SELECT COUNT(*) FROM part);" || echo "DB query skipped"
+    fi
 }
 
 cmd_show() {
@@ -111,9 +64,9 @@ cmd_show() {
     echo
     echo "== top PSS (MB PID CMD) =="
     if [[ "$SHORT" == 1 ]]; then
-        pss_table | head -n 12
+        pss_table | sed -n '1,12p'
     else
-        pss_table | head -n 20
+        pss_table | sed -n '1,20p'
     fi
     echo
     echo "== categories (PSS, root procs read 0, add ~150MB) =="

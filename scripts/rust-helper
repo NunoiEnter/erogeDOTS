@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+root="${EROGEDOTS_ROOT:-$HOME/erogeDOTS}"
+program="${1:?missing helper name}"
+shift
+source_hash="$(
+    while IFS= read -r -d '' file; do cat -- "$file"; done < <(
+        rg --files -0 -g '*.rs' -g 'Cargo.toml' -g 'Cargo.lock' "$root/picker-rs" | sort -z
+    ) | sha256sum
+)"
+cached="${XDG_CACHE_HOME:-$HOME/.cache}/erogedots/theme-picker/${source_hash%% *}/$program"
+if [[ -x "$cached" ]]; then exec "$cached" "$@"; fi
+managed="/etc/profiles/per-user/$(id -un)/bin/$program"
+if [[ -x "$managed" ]]; then exec "$managed" "$@"; fi
+printf 'Build the desktop tools with: nix build %s#theme-picker\n' "$root" >&2
+exit 1

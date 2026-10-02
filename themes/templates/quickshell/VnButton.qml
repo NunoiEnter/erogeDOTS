@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "Keyboard.js" as Keyboard
 
 Button {
     id: control
@@ -11,8 +12,14 @@ Button {
     signal secondaryClicked()
     hoverEnabled: true
     focusPolicy: Qt.StrongFocus
+    Keys.onTabPressed: event => { Keyboard.move(control, !(event.modifiers & Qt.ShiftModifier)); event.accepted = true; }
+    Keys.onBacktabPressed: event => { Keyboard.move(control, false); event.accepted = true; }
     Keys.onReturnPressed: event => { if (!event.isAutoRepeat) click(); event.accepted = true; }
     Keys.onEnterPressed: event => { if (!event.isAutoRepeat) click(); event.accepted = true; }
+    Keys.onUpPressed: event => { Keyboard.move(control, false); event.accepted = true; }
+    Keys.onDownPressed: event => { Keyboard.move(control, true); event.accepted = true; }
+    Keys.onLeftPressed: event => { Keyboard.move(control, false); event.accepted = true; }
+    Keys.onRightPressed: event => { Keyboard.move(control, true); event.accepted = true; }
     implicitHeight: compact ? 30 : 38
     implicitWidth: Math.max(compact ? 32 : 72, contentItem.implicitWidth + 24)
     leftPadding: compact ? 6 : 12

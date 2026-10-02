@@ -2,23 +2,41 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell
+import QtQuick.Window
+import "Keyboard.js" as Keyboard
 
 ColumnLayout {
     id: pages
     required property var state
     property string page: "dashboard"
+    property bool keyboardBoundary: true
+    property bool keyboardEnabled: false
     property var screen: null
     readonly property var chapters: state.niri.workspaces.filter(w => !pages.screen || w.output === pages.screen.name)
-    readonly property var titles: ({dashboard: "A little interlude", music: "Music Room", workspaces: "Flowchart", characters: "Load", connections: "System Config", workshop: "NixOS & Niri", extras: "Extra Mode"})
+    readonly property var titles: ({dashboard: "A little interlude", music: "Music Room", workspaces: "Flowchart", characters: "Load", themeStudio: "Add a theme", connections: "System Config", workshop: "NixOS & Niri", extras: "Extra Mode"})
     spacing: 16
-    function showPage(page) { if (state.shown) state.titlePage = page; else state.drawer.page = page; }
-    function windowsFor(id) { return Object.values(state.niri.windows).filter(window => window.workspace_id === id); }
+    function showPage(page) { if (state.shown) { state.titlePage = page; if (Theme.retro) state.menuSection = page; } else state.drawer.page = page; }
+    function focusFirst() { if (body.item) Keyboard.first(body.item); }
+    Keys.onTabPressed: event => { Keyboard.move(Window.window.activeFocusItem, !(event.modifiers & Qt.ShiftModifier)); event.accepted = true; }
+    Keys.onBacktabPressed: event => { Keyboard.move(Window.window.activeFocusItem, false); event.accepted = true; }
+    Connections {
+        target: pages.Window.window
+        function onActiveFocusItemChanged() {
+            const item = pages.Window.window.activeFocusItem;
+            if (!item || !body.item || !Keyboard.inside(item, body.item)) return;
+            const pos = item.mapToItem(scroll.contentItem, 0, 0);
+            if (pos.y < scroll.contentY) scroll.contentY = Math.max(0, pos.y - 8);
+            else if (pos.y + item.height > scroll.contentY + scroll.height)
+                scroll.contentY = Math.min(Math.max(0, scroll.contentHeight - scroll.height), pos.y + item.height - scroll.height + 8);
+        }
+    }
     RowLayout {
         Layout.fillWidth: true
         VnText { Layout.fillWidth: true; text: pages.titles[pages.page] || "System Config"; font.family: Theme.titleFont; font.pixelSize: 25; font.bold: true; color: Theme.accent }
         VnButton { compact: true; quiet: true; text: "Return"; onClicked: { if (pages.state.shown) pages.state.titlePage = ""; else pages.state.drawer.close(); } }
     }
     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.line }
+    VnText { Layout.fillWidth: true; text: "↑ ↓ choices · Tab next · ← → adjust · Esc return"; font.pixelSize: 10; color: Theme.muted }
     Flickable {
         id: scroll
         Layout.fillWidth: true; Layout.fillHeight: true
@@ -32,8 +50,9 @@ ColumnLayout {
         onVisibleChanged: contentY = 0
         Loader {
             id: body; width: scroll.width - 10
-            sourceComponent: pages.page === "characters" ? characters : pages.page === "workspaces" ? workspaces : pages.page === "music" ? music : pages.page === "connections" ? connections : pages.page === "workshop" ? workshop : pages.page === "extras" ? extras : dashboard
+            sourceComponent: pages.page === "themeStudio" ? themeStudio : pages.page === "characters" ? characters : pages.page === "workspaces" ? workspaces : pages.page === "music" ? music : pages.page === "connections" ? connections : pages.page === "workshop" ? workshop : pages.page === "extras" ? extras : dashboard
             onSourceComponentChanged: scroll.contentY = 0
+            onLoaded: if (pages.keyboardEnabled) Qt.callLater(pages.focusFirst)
         }
     }
     Component {
@@ -88,6 +107,7 @@ ColumnLayout {
         ColumnLayout {
             spacing: 16
             VnText { Layout.fillWidth: true; text: "Choose a character. Their wallpaper and palette follow you back to the desktop."; color: Theme.muted; wrapMode: Text.WordWrap; elide: Text.ElideNone }
+            AppearanceSettings { Layout.fillWidth: true; state: pages.state }
             GridLayout {
                 Layout.fillWidth: true; columns: width > 660 ? 3 : 2
                 columnSpacing: 12; rowSpacing: 12
@@ -113,36 +133,18 @@ ColumnLayout {
                 }
             }
             RowLayout {
-                VnButton { text: "Add a character"; onClicked: pages.state.launch(["ghostty", "--title=theme-tools", "-e", "theme-switch", "add"]) }
+                VnButton { text: "Add a character"; onClicked: pages.showPage("themeStudio") }
                 VnButton { text: "Open theme picker"; onClicked: pages.state.launch(["ghostty", "--title=theme-tools", "-e", "theme-switch", "picker"]) }
             }
         }
     }
     Component {
+        id: themeStudio
+        ThemeStudio { state: pages.state }
+    }
+    Component {
         id: workspaces
-        ColumnLayout {
-            spacing: 16
-            VnButton { text: "Open workspace overview"; onClicked: pages.state.launch(["niri", "msg", "action", "toggle-overview"]) }
-            Repeater {
-                model: pages.chapters
-                ColumnLayout {
-                    id: chapter
-                    required property var modelData
-                    Layout.fillWidth: true; spacing: 6
-                    VnButton { Layout.fillWidth: true; selected: chapter.modelData.is_active; text: "Chapter " + chapter.modelData.idx.toString().padStart(2, "0") + (chapter.modelData.name ? " · " + chapter.modelData.name : ""); onClicked: pages.state.focusWorkspace(chapter.modelData.idx) }
-                    Repeater {
-                        model: pages.windowsFor(chapter.modelData.id)
-                        VnButton {
-                            required property var modelData
-                            Layout.fillWidth: true; Layout.leftMargin: 16
-                            quiet: true; compact: true; text: modelData.title || modelData.app_id
-                            onClicked: pages.state.focusWindow(modelData.id)
-                        }
-                    }
-                    VnText { visible: pages.windowsFor(chapter.modelData.id).length === 0; text: "An empty chapter"; color: Theme.muted; Layout.leftMargin: 16 }
-                }
-            }
-        }
+        WorkspaceFlowchart { state: pages.state; chapters: pages.chapters }
     }
     Component {
         id: connections
@@ -150,21 +152,24 @@ ColumnLayout {
             spacing: 20
             RowLayout {
                 Layout.fillWidth: true
-                VnButton { Layout.fillWidth: true; text: pages.state.wifiEnabled ? "Wi-Fi · On" : "Wi-Fi · Off"; selected: pages.state.wifiEnabled; onClicked: pages.state.toggleWifi() }
-                VnButton { Layout.fillWidth: true; text: pages.state.bluetoothAvailable ? (pages.state.bluetoothEnabled ? "Bluetooth · On" : "Bluetooth · Off") : "Bluetooth · N/A"; enabled: pages.state.bluetoothAvailable; selected: pages.state.bluetoothEnabled; onClicked: pages.state.toggleBluetooth() }
+                VnAction { Layout.fillWidth: true; symbol: "wifi"; text: "Wi-Fi"; status: pages.state.wifiEnabled ? "On" : "Off"; external: false; selected: pages.state.wifiEnabled; onClicked: pages.state.toggleWifi() }
+                VnAction { Layout.fillWidth: true; symbol: "bluetooth"; text: "Bluetooth"; status: pages.state.bluetoothAvailable ? (pages.state.bluetoothEnabled ? "On" : "Off") : "Unavailable"; external: false; enabled: pages.state.bluetoothAvailable; selected: pages.state.bluetoothEnabled; onClicked: pages.state.toggleBluetooth() }
             }
             VnText { Layout.fillWidth: true; text: pages.state.wifiText; color: Theme.muted }
             VnSlider { Layout.fillWidth: true; label: "Volume"; enabled: !!pages.state.sink?.audio; value: pages.state.muted ? 0 : pages.state.volume; onMoved: value => pages.state.setVolume(value) }
             VnSlider { Layout.fillWidth: true; label: "Brightness"; enabled: pages.state.brightnessAvailable; value: pages.state.brightness; onMoved: value => pages.state.setBrightness(value) }
-            Flow {
-                Layout.fillWidth: true; spacing: 8
-                VnButton { text: "Network"; enabled: pages.state.hasApp("nm-connection-editor"); onClicked: pages.state.launch(["nm-connection-editor"]) }
-                VnButton { text: "Sound"; enabled: pages.state.hasApp("pavucontrol"); onClicked: pages.state.launch(["pavucontrol"]) }
-                VnButton { text: "Bluetooth"; enabled: pages.state.bluetoothAvailable && pages.state.hasApp("blueman-manager"); onClicked: pages.state.launch(["blueman-manager"]) }
-                VnButton { text: pages.state.dnd ? "DND · On" : "DND · Off"; selected: pages.state.dnd; onClicked: Quickshell.execDetached(["swaync-client", "--toggle-dnd"]) }
-                VnButton { text: "Character theme"; onClicked: pages.showPage("characters") }
-                VnButton { text: "Style: " + Theme.styleName; onClicked: pages.state.switchStyle() }
-                VnButton { text: "NixOS & Niri"; onClicked: pages.showPage("workshop") }
+            ColumnLayout {
+                Layout.fillWidth: true; spacing: 4
+                VnText { text: "Connections & sound"; font.family: Theme.titleFont; font.pixelSize: 18; color: Theme.accent; Layout.topMargin: 4; Layout.bottomMargin: 6 }
+                VnAction { Layout.fillWidth: true; symbol: "wifi"; text: "Network"; description: "Wi-Fi and VPN profiles. Passwords and keys stay on this device."; enabled: pages.state.hasApp("nm-connection-editor"); onClicked: pages.state.launch(["nm-connection-editor"]) }
+                VnAction { Layout.fillWidth: true; symbol: "sound"; text: "Sound"; description: "Choose your output, microphone and per-app volume."; enabled: pages.state.hasApp("pavucontrol"); onClicked: pages.state.launch(["pavucontrol"]) }
+                VnAction { Layout.fillWidth: true; symbol: "bluetooth"; text: "Bluetooth devices"; description: pages.state.bluetoothAvailable ? "Pair headphones, controllers and other devices." : "No Bluetooth adapter is available."; enabled: pages.state.bluetoothAvailable && pages.state.hasApp("blueman-manager"); onClicked: pages.state.launch(["blueman-manager"]) }
+                VnAction { Layout.fillWidth: true; symbol: "bell"; text: "Do Not Disturb"; description: "Pause notification pop-ups without clearing your history."; status: pages.state.dnd ? "On" : "Off"; external: false; selected: pages.state.dnd; onClicked: Quickshell.execDetached(["swaync-client", "--toggle-dnd"]) }
+                Rectangle { Layout.fillWidth: true; height: 1; color: Theme.line; Layout.topMargin: 12; Layout.bottomMargin: 12 }
+                VnText { text: "Your next scene"; font.family: Theme.titleFont; font.pixelSize: 18; color: Theme.accent; Layout.bottomMargin: 6 }
+                VnAction { Layout.fillWidth: true; symbol: "theme"; text: "Character theme"; description: "Choose a wallpaper and character palette."; external: false; onClicked: pages.showPage("characters") }
+                VnAction { Layout.fillWidth: true; symbol: "style"; text: "Desktop style"; description: "Switch the interface; keep your current character."; status: Theme.styleName; external: false; enabled: !pages.state.themeBusy; onClicked: pages.state.switchStyle() }
+                VnAction { Layout.fillWidth: true; symbol: "settings"; text: "NixOS & Niri"; description: "Packages, window layout and config files. Saving and applying stay separate."; external: false; onClicked: pages.showPage("workshop") }
             }
             VnText { Layout.fillWidth: true; visible: text !== ""; text: pages.state.error; color: Theme.accent; wrapMode: Text.WordWrap; elide: Text.ElideNone }
         }
@@ -176,18 +181,18 @@ ColumnLayout {
     Component {
         id: extras
         ColumnLayout {
-            spacing: 14
-            VnText { text: "A few things for your next scene."; color: Theme.muted }
+            spacing: 4
+            VnText { Layout.fillWidth: true; text: "Small tools for the chapter you are in."; color: Theme.muted; wrapMode: Text.WordWrap; elide: Text.ElideNone; Layout.bottomMargin: 12 }
             Repeater {
                 model: [
-                    {name: "Notification log", command: ["swaync-client", "-t", "-sw"]},
-                    {name: "Clipboard history", command: ["cliphist-pick"]},
-                    {name: "Open terminal", command: ["title-terminal"]},
-                    {name: "Dropdown terminal", command: ["dropterm"]},
-                    {name: "Four-panel terminal wall", command: ["larp"]},
-                    {name: "Lock screen", command: ["qylock-lock"]}
+                    {name: "Notification log", symbol: "bell", description: "Read earlier notifications and manage the notification center.", command: ["swaync-client", "-t", "-sw"]},
+                    {name: "Clipboard history", symbol: "clipboard", description: "Find something you copied and put it back on the clipboard.", command: ["cliphist-pick"]},
+                    {name: "Open terminal", symbol: "terminal", description: "A floating terminal over your character scene.", command: ["title-terminal"]},
+                    {name: "Dropdown terminal", symbol: "dropdown", description: "Show or hide your pull-down command line.", command: ["dropterm"]},
+                    {name: "Four-panel terminal wall", symbol: "grid", description: "Open your four-terminal workspace.", command: ["larp"]},
+                    {name: "Lock screen", symbol: "lock", description: "Keep your session running. Ask for confirmation before locking.", command: ["qylock-lock"]}
                 ]
-                VnButton { required property var modelData; Layout.fillWidth: true; text: modelData.name; onClicked: { if (modelData.command[0] === "title-terminal") pages.state.openTitleTerminal(); else pages.state.launch(modelData.command); } }
+                VnAction { required property var modelData; Layout.fillWidth: true; text: modelData.name; symbol: modelData.symbol; description: modelData.description; external: modelData.command[0] !== "qylock-lock"; onClicked: { if (modelData.command[0] === "title-terminal") pages.state.openTitleTerminal(); else if (modelData.command[0] === "qylock-lock") pages.state.session("lock"); else pages.state.launch(modelData.command); } }
             }
         }
     }

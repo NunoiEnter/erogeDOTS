@@ -9,6 +9,12 @@ import Quickshell.Services.UPower
 Scope {
     id: state
     property bool shown: false
+    property bool sessionShown: false
+    property string sessionAction: ""
+    property bool themeBusy: false
+    property bool themeEntering: false
+    property bool themeSceneReady: false
+    property string themeError: ""
     property var menuScreen: null
     property string menuSection: "connections"
     property string titlePage: ""
@@ -46,7 +52,7 @@ Scope {
     readonly property string dateText: Qt.formatDateTime(clock.date, "ddd, d MMM")
 
     NiriState { id: niriState }
-    DrawerState { id: drawerState; allowed: !Theme.retro && !state.shown && !state.calendarShown }
+    DrawerState { id: drawerState; allowed: !Theme.retro && !state.shown && !state.calendarShown && !state.sessionShown }
     SystemClock { id: clock; precision: SystemClock.Minutes }
     PwObjectTracker { objects: [state.sink].filter(o => o) }
     onShownChanged: {
@@ -66,19 +72,37 @@ Scope {
         calendarShown = false; menuScreen = screen; menuSection = section; titlePage = section; shown = true;
     }
     function changeCharacter(id) {
-        if (!Theme.characters.some(character => character.id === id) || id === Theme.characterId) return;
+        if (themeBusy || !Theme.characters.some(character => character.id === id) || id === Theme.characterId) return;
         drawer.close();
-        Quickshell.execDetached(["theme-switch", id, "--show-menu", "characters"]);
-        shown = false;
+        themeBusy = true; themeError = "";
+        Quickshell.execDetached(["theme-switch", id, "--show-menu"]);
     }
     function focusWorkspace(index) { drawer.close(); shown = false; Quickshell.execDetached(["niri", "msg", "action", "focus-workspace", "--", index.toString()]); }
     function focusWindow(id) { drawer.close(); shown = false; Quickshell.execDetached(["niri", "msg", "action", "focus-window", "--id", id.toString()]); }
     function toggleCalendar(screen) { shown = false; calendarScreen = screen; calendarShown = !calendarShown; }
     function switchStyle() {
+        if (themeBusy) return;
+        themeBusy = true; themeError = "";
         Quickshell.execDetached(["theme-switch", "style", Theme.retro ? "vn" : "win98", "--show-menu"]);
-        shown = false;
     }
-    function session() { launch(["env", "GDK_BACKEND=wayland", "wlogout", "--protocol", "layer-shell", "--buttons-per-row", "5", "--margin-top", "280", "--margin-bottom", "280"]); }
+    function setAppearance(kind, value) {
+        if (themeBusy || !["appearance", "system"].includes(kind) || !["light", "dark"].includes(value)) return;
+        themeBusy = true; themeError = "";
+        Quickshell.execDetached(["theme-switch", kind, value, "--show-menu"]);
+    }
+    function session(action) {
+        drawer.close(); calendarShown = false;
+        menuScreen = Quickshell.screens.find(screen => screen.name === niri.output) || Quickshell.screens[0];
+        sessionAction = ["sleep", "lock", "restart", "shutdown"].includes(action) ? action : "";
+        sessionShown = true;
+    }
+    function playSessionSound(kind) { Quickshell.execDetached(["vn-sound", kind]); }
+    function performSession(action) {
+        const commands = {sleep: ["systemctl", "suspend"], lock: ["qylock-lock"], restart: ["systemctl", "reboot"], shutdown: ["systemctl", "poweroff"]};
+        if (!commands[action]) return;
+        sessionShown = false;
+        launch(commands[action]);
+    }
     function toggleMute() { if (sink?.audio) sink.audio.muted = !sink.audio.muted; }
     function scrollWorkspace(screen, delta) {
         const workspaces = niri.workspaces.filter(w => w.output === screen.name);

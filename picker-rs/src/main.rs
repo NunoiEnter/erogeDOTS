@@ -1,3 +1,6 @@
+mod installer;
+mod theme_json;
+
 use std::collections::HashSet;
 use std::fs;
 use std::io::{self};
@@ -13,7 +16,7 @@ use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, List, ListItem, ListState, Paragraph};
+use ratatui::widgets::{Block, BorderType, Borders, List, ListItem, ListState, Paragraph};
 use ratatui::Terminal;
 use ratatui_image::picker::Picker;
 use ratatui_image::protocol::Protocol;
@@ -335,21 +338,46 @@ fn current_theme() -> String {
         .into()
 }
 
+fn vn_style() -> Style {
+    Style::default()
+        .bg(Color::Rgb(255, 249, 240))
+        .fg(Color::Rgb(65, 48, 63))
+}
+
+fn vn_paper(frame: &mut ratatui::Frame) -> Rect {
+    let outer = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Double)
+        .border_style(Style::default().fg(Color::Rgb(137, 75, 110)))
+        .style(vn_style());
+    let inner = outer.inner(frame.area());
+    frame.render_widget(outer, frame.area());
+    inner.inner(ratatui::layout::Margin::new(2, 1))
+}
+
 fn terminal<T>(run: impl FnOnce(&mut Term) -> io::Result<T>) -> io::Result<T> {
     enable_raw_mode()?;
+    struct Restore;
+    impl Drop for Restore {
+        fn drop(&mut self) {
+            let _ = disable_raw_mode();
+            let _ = execute!(io::stdout(), LeaveAlternateScreen, crossterm::cursor::Show);
+        }
+    }
+    let _restore = Restore;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout))?;
-    let result = run(&mut terminal);
-    disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-    terminal.show_cursor()?;
-    result
+    run(&mut terminal)
 }
 
 fn key() -> io::Result<KeyCode> {
     loop {
-        if let Event::Key(k) = event::read()? {
+        let event = event::read()?;
+        if matches!(event, Event::Resize(_, _)) {
+            return Ok(KeyCode::Null);
+        }
+        if let Event::Key(k) = event {
             if k.kind != KeyEventKind::Press {
                 continue;
             }
@@ -368,6 +396,7 @@ fn select(term: &mut Term, title: &str, help: &str, rows: &[String]) -> io::Resu
     let mut cursor = 0;
     loop {
         term.draw(|f| {
+            let canvas = vn_paper(f);
             let areas = Layout::default()
                 .direction(Direction::Vertical)
                 .constraints([
@@ -375,11 +404,11 @@ fn select(term: &mut Term, title: &str, help: &str, rows: &[String]) -> io::Resu
                     Constraint::Min(4),
                     Constraint::Length(2),
                 ])
-                .split(f.area());
+                .split(canvas);
             f.render_widget(
                 Paragraph::new(title).style(
                     Style::default()
-                        .fg(Color::Magenta)
+                        .fg(Color::Rgb(137, 75, 110))
                         .add_modifier(Modifier::BOLD),
                 ),
                 areas[0],
@@ -392,12 +421,12 @@ fn select(term: &mut Term, title: &str, help: &str, rows: &[String]) -> io::Resu
                 .highlight_style(
                     Style::default()
                         .fg(Color::Black)
-                        .bg(Color::LightMagenta)
+                        .bg(Color::Rgb(239, 221, 233))
                         .add_modifier(Modifier::BOLD),
                 );
             f.render_stateful_widget(list, areas[1], &mut state);
             f.render_widget(
-                Paragraph::new(help).style(Style::default().fg(Color::DarkGray)),
+                Paragraph::new(help).style(Style::default().fg(Color::Rgb(109, 83, 104))),
                 areas[2],
             );
         })?;
@@ -415,16 +444,17 @@ fn input(term: &mut Term, title: &str, hint: &str) -> io::Result<Option<String>>
     let mut value = String::new();
     loop {
         term.draw(|f| {
-            let area = centered(f.area(), 70, 7);
+            let canvas = vn_paper(f);
+            let area = centered(canvas, 70, 7);
             let block = Block::default()
                 .title(title)
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Magenta));
+                .border_style(Style::default().fg(Color::Rgb(137, 75, 110)));
             let inner = block.inner(area);
             f.render_widget(block, area);
             f.render_widget(
                 Paragraph::new(format!("{value}▌\n{hint}"))
-                    .style(Style::default().fg(Color::White)),
+                    .style(Style::default().fg(Color::Rgb(65, 48, 63))),
                 inner,
             );
         })?;
@@ -528,16 +558,17 @@ fn select_image(term: &mut Term, images: &[PathBuf]) -> io::Result<Option<usize>
     let mut preview = load_preview_image(&images[cursor], &mut picker);
     loop {
         term.draw(|frame| {
+            let canvas = vn_paper(frame);
             let page = Layout::vertical([
                 Constraint::Length(2),
                 Constraint::Min(10),
                 Constraint::Length(2),
             ])
-            .split(frame.area());
+            .split(canvas);
             frame.render_widget(
                 Paragraph::new("6/9 Choose wallpaper · live preview").style(
                     Style::default()
-                        .fg(Color::Magenta)
+                        .fg(Color::Rgb(137, 75, 110))
                         .add_modifier(Modifier::BOLD),
                 ),
                 page[0],
@@ -553,12 +584,16 @@ fn select_image(term: &mut Term, images: &[PathBuf]) -> io::Result<Option<usize>
                 List::new(rows)
                     .block(Block::default().title("Images").borders(Borders::ALL))
                     .highlight_symbol("› ")
-                    .highlight_style(Style::default().fg(Color::Black).bg(Color::LightMagenta)),
+                    .highlight_style(
+                        Style::default()
+                            .fg(Color::Black)
+                            .bg(Color::Rgb(239, 221, 233)),
+                    ),
                 body[0],
                 &mut state,
             );
             let block = Block::default()
-                .title("Wallpaper preview")
+                .title(" Your next scene ")
                 .borders(Borders::ALL);
             let inner = block.inner(body[1]);
             frame.render_widget(block, body[1]);
@@ -573,13 +608,13 @@ fn select_image(term: &mut Term, images: &[PathBuf]) -> io::Result<Option<usize>
             } else {
                 frame.render_widget(
                     Paragraph::new("Image could not be loaded")
-                        .style(Style::default().fg(Color::DarkGray)),
+                        .style(Style::default().fg(Color::Rgb(109, 83, 104))),
                     detail[1],
                 );
             }
             frame.render_widget(
                 Paragraph::new("[↑↓/jk] preview another image  [Enter] choose  [Esc] cancel")
-                    .style(Style::default().fg(Color::DarkGray)),
+                    .style(Style::default().fg(Color::Rgb(109, 83, 104))),
                 page[2],
             );
         })?;
@@ -601,16 +636,17 @@ fn select_palette(term: &mut Term) -> io::Result<Option<usize>> {
     let mut cursor = 0;
     loop {
         term.draw(|frame| {
+            let canvas = vn_paper(frame);
             let page = Layout::vertical([
                 Constraint::Length(2),
                 Constraint::Min(10),
                 Constraint::Length(2),
             ])
-            .split(frame.area());
+            .split(canvas);
             frame.render_widget(
                 Paragraph::new("7/9 Choose starting color scheme").style(
                     Style::default()
-                        .fg(Color::Magenta)
+                        .fg(Color::Rgb(137, 75, 110))
                         .add_modifier(Modifier::BOLD),
                 ),
                 page[0],
@@ -626,7 +662,11 @@ fn select_palette(term: &mut Term) -> io::Result<Option<usize>> {
                 List::new(rows)
                     .block(Block::default().title("Schemes").borders(Borders::ALL))
                     .highlight_symbol("› ")
-                    .highlight_style(Style::default().fg(Color::Black).bg(Color::LightMagenta)),
+                    .highlight_style(
+                        Style::default()
+                            .fg(Color::Black)
+                            .bg(Color::Rgb(239, 221, 233)),
+                    ),
                 body[0],
                 &mut state,
             );
@@ -644,7 +684,7 @@ fn select_palette(term: &mut Term) -> io::Result<Option<usize>> {
             frame.render_widget(Paragraph::new(lines), inner);
             frame.render_widget(
                 Paragraph::new("[↑↓/jk] preview scheme  [Enter] choose  [Esc] cancel")
-                    .style(Style::default().fg(Color::DarkGray)),
+                    .style(Style::default().fg(Color::Rgb(109, 83, 104))),
                 page[2],
             );
         })?;
@@ -709,15 +749,16 @@ fn pick_color(
     loop {
         let hex = color_hex(value, alpha);
         term.draw(|frame| {
+            let canvas = vn_paper(frame);
             let page = Layout::vertical([
                 Constraint::Length(2),
                 Constraint::Min(10),
                 Constraint::Length(3),
             ])
-            .split(frame.area());
+            .split(canvas);
             frame.render_widget(
                 Paragraph::new(format!("Choose {label} · {hex}"))
-                    .style(Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD)),
+                    .style(Style::default().fg(Color::Rgb(137, 75, 110)).add_modifier(Modifier::BOLD)),
                 page[0],
             );
             let body = Layout::horizontal([Constraint::Percentage(48), Constraint::Percentage(52)])
@@ -731,7 +772,7 @@ fn pick_color(
                 List::new(rows)
                     .block(Block::default().title("Color palette").borders(Borders::ALL))
                     .highlight_symbol("› ")
-                    .highlight_style(Style::default().fg(Color::Black).bg(Color::LightMagenta)),
+                    .highlight_style(Style::default().fg(Color::Black).bg(Color::Rgb(239, 221, 233))),
                 body[0],
                 &mut state,
             );
@@ -755,7 +796,7 @@ fn pick_color(
                     Span::styled(
                         format!(" {} {:03} ", channels[i], value[i]),
                         if i == channel {
-                            Style::default().fg(Color::Black).bg(Color::LightMagenta)
+                            Style::default().fg(Color::Black).bg(Color::Rgb(239, 221, 233))
                         } else {
                             Style::default()
                         },
@@ -769,7 +810,7 @@ fn pick_color(
                 "[↑↓/jk] swatch  [Tab] R/G/B  [←→] ±1  [ and ] ±16\n[Enter] use exact hex  [Esc] keep previous color"
             };
             frame.render_widget(
-                Paragraph::new(help).style(Style::default().fg(Color::DarkGray)),
+                Paragraph::new(help).style(Style::default().fg(Color::Rgb(109, 83, 104))),
                 page[2],
             );
         })?;
@@ -798,16 +839,17 @@ fn edit_colors(term: &mut Term, mut colors: ThemeColors) -> io::Result<Option<Th
     let mut cursor = 0;
     loop {
         term.draw(|frame| {
+            let canvas = vn_paper(frame);
             let page = Layout::vertical([
                 Constraint::Length(2),
                 Constraint::Min(10),
                 Constraint::Length(2),
             ])
-            .split(frame.area());
+            .split(canvas);
             frame.render_widget(
                 Paragraph::new("8/9 Fine-tune every theme color").style(
                     Style::default()
-                        .fg(Color::Magenta)
+                        .fg(Color::Rgb(137, 75, 110))
                         .add_modifier(Modifier::BOLD),
                 ),
                 page[0],
@@ -828,7 +870,11 @@ fn edit_colors(term: &mut Term, mut colors: ThemeColors) -> io::Result<Option<Th
                             .borders(Borders::ALL),
                     )
                     .highlight_symbol("› ")
-                    .highlight_style(Style::default().fg(Color::Black).bg(Color::LightMagenta)),
+                    .highlight_style(
+                        Style::default()
+                            .fg(Color::Black)
+                            .bg(Color::Rgb(239, 221, 233)),
+                    ),
                 body[0],
                 &mut state,
             );
@@ -848,7 +894,7 @@ fn edit_colors(term: &mut Term, mut colors: ThemeColors) -> io::Result<Option<Th
             );
             frame.render_widget(
                 Paragraph::new("[↑↓/jk] role  [Enter] choose/edit color  [s] next  [Esc] cancel")
-                    .style(Style::default().fg(Color::DarkGray)),
+                    .style(Style::default().fg(Color::Rgb(109, 83, 104))),
                 page[2],
             );
         })?;
@@ -1035,7 +1081,7 @@ fn create_theme(new: &NewTheme) -> io::Result<()> {
             "theme or wallpaper already exists",
         ));
     }
-    fs::create_dir_all(&target_theme)?;
+    fs::create_dir(&target_theme)?;
     if fs::copy(&new.image, &target_image).is_err() {
         let _ = fs::remove_dir(&target_theme);
         return Err(io::Error::other("could not copy wallpaper"));
@@ -1048,8 +1094,6 @@ fn create_theme(new: &NewTheme) -> io::Result<()> {
         let _ = fs::remove_dir(&target_theme);
         return Err(err);
     }
-    println!("Created theme: {}", new.slug);
-    println!("Apply it with: theme-switch {}", new.slug);
     Ok(())
 }
 
@@ -1062,10 +1106,16 @@ struct ThemeChooser {
 
 impl ThemeChooser {
     fn new() -> Self {
+        let values = themes();
+        let current = current_theme();
+        let cursor = values
+            .iter()
+            .position(|theme| theme.name == current)
+            .unwrap_or(0);
         Self {
-            values: themes(),
-            current: current_theme(),
-            cursor: 0,
+            values,
+            current,
+            cursor,
             image: None,
         }
     }
@@ -1081,16 +1131,17 @@ impl ThemeChooser {
 }
 
 fn render_theme_chooser(frame: &mut ratatui::Frame, app: &ThemeChooser) {
+    let canvas = vn_paper(frame);
     let page = Layout::vertical([
         Constraint::Length(2),
         Constraint::Min(12),
         Constraint::Length(2),
     ])
-    .split(frame.area());
+    .split(canvas);
     frame.render_widget(
-        Paragraph::new("erogeDOTS · Theme").style(
+        Paragraph::new("erogeDOTS  /  Load a character").style(
             Style::default()
-                .fg(Color::Magenta)
+                .fg(Color::Rgb(137, 75, 110))
                 .add_modifier(Modifier::BOLD),
         ),
         page[0],
@@ -1113,12 +1164,16 @@ fn render_theme_chooser(frame: &mut ratatui::Frame, app: &ThemeChooser) {
     let mut state = ListState::default().with_selected(Some(app.cursor));
     frame.render_stateful_widget(
         List::new(rows)
-            .block(Block::default().title("Themes").borders(Borders::ALL))
+            .block(
+                Block::default()
+                    .title(" Character routes ")
+                    .borders(Borders::ALL),
+            )
             .highlight_symbol("› ")
             .highlight_style(
                 Style::default()
                     .fg(Color::Black)
-                    .bg(Color::LightMagenta)
+                    .bg(Color::Rgb(239, 221, 233))
                     .add_modifier(Modifier::BOLD),
             ),
         body[0],
@@ -1126,7 +1181,7 @@ fn render_theme_chooser(frame: &mut ratatui::Frame, app: &ThemeChooser) {
     );
 
     let preview = Block::default()
-        .title("Wallpaper preview")
+        .title(" Your next scene ")
         .borders(Borders::ALL);
     let inner = preview.inner(body[1]);
     frame.render_widget(preview, body[1]);
@@ -1152,7 +1207,7 @@ fn render_theme_chooser(frame: &mut ratatui::Frame, app: &ThemeChooser) {
         } else {
             frame.render_widget(
                 Paragraph::new("Wallpaper could not be loaded")
-                    .style(Style::default().fg(Color::DarkGray)),
+                    .style(Style::default().fg(Color::Rgb(109, 83, 104))),
                 parts[1],
             );
         }
@@ -1160,7 +1215,7 @@ fn render_theme_chooser(frame: &mut ratatui::Frame, app: &ThemeChooser) {
 
     frame.render_widget(
         Paragraph::new("[↑↓/jk] move  [Enter] apply  [q/Esc] cancel")
-            .style(Style::default().fg(Color::DarkGray)),
+            .style(Style::default().fg(Color::Rgb(109, 83, 104))),
         page[2],
     );
 }
@@ -1206,7 +1261,7 @@ fn choose_dev(term: &mut Term) -> io::Result<Option<String>> {
 }
 
 fn usage() {
-    println!("theme-picker [themes|add|dev]\n\n  themes  choose and apply a theme (default)\n  add     create a theme with guided choices\n  dev     choose and enter a Nix development shell");
+    println!("theme-picker [themes|add|dev|install]\n\n  install open the VN installation guide (install --preview is read-only)\n  themes  choose and apply a theme (default)\n  add     create a theme with guided choices\n  dev     choose and enter a Nix development shell");
 }
 
 fn main() -> io::Result<()> {
@@ -1221,8 +1276,13 @@ fn main() -> io::Result<()> {
         Some("add") => {
             if let Some(new) = terminal(add_flow)? {
                 create_theme(&new)?;
+                println!(
+                    "Created theme: {}\nApply it with: theme-switch {}",
+                    new.slug, new.slug
+                );
             }
         }
+        Some("theme-json") => theme_json::run()?,
         Some("dev") => {
             if let Some(shell) = terminal(choose_dev)? {
                 Command::new("nix")
@@ -1233,6 +1293,7 @@ fn main() -> io::Result<()> {
                     .status()?;
             }
         }
+        Some("install") => installer::run(std::env::args().nth(2).as_deref() == Some("--preview"))?,
         Some("help" | "-h" | "--help") => usage(),
         Some(other) => {
             eprintln!("unknown command: {other}");

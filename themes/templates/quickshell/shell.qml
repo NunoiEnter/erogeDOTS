@@ -1,8 +1,8 @@
 // THESIS: A daily desktop framed like an early-2000s romance visual novel.
 // OWN-WORLD: Cream stationery, pastel character colors, floral corners, serif names.
-// STORY: Move between workspaces; open Menu for connections, sound, music and session.
+// STORY: Navigate every page by keyboard; choose a session action, then confirm it.
 // FIRST VIEWPORT: A 40px ribbon reveals animated top drawers; Super+S opens
-// a VN title screen with bilingual choices and a character-load gallery.
+// a VN title screen with bilingual choices, a character gallery and session dialogue.
 // FORM: User-pinned romance VN; seed 4a141650 yields to the confirmed brief.
 // FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 import QtQuick
@@ -23,6 +23,31 @@ ShellRoot {
     CalendarPopup { state: desktopState }
     VnTitleMenu { state: desktopState }
     VnTopDrawer { state: desktopState }
+    VnSession { state: desktopState }
+    IpcHandler {
+        target: "theme-transition"
+        function arrive(showTitle: bool): void {
+            desktopState.themeEntering = true;
+            desktopState.themeBusy = true;
+            desktopState.menuScreen = Quickshell.screens.find(s => s.name === desktopState.niri.output) || Quickshell.screens[0];
+            desktopState.titlePage = "";
+            desktopState.shown = showTitle;
+        }
+        function ready(): bool { return !desktopState.shown || Theme.retro || desktopState.themeSceneReady; }
+        function finish(): void {
+            const entering = desktopState.themeEntering;
+            desktopState.themeEntering = false;
+            desktopState.themeBusy = false;
+            if (entering && desktopState.shown && !Theme.retro) desktopState.playSessionSound("title");
+        }
+        function failed(): void { desktopState.themeEntering = false; desktopState.themeBusy = false; desktopState.themeError = "Theme change failed. Try again from a terminal to see the error."; }
+    }
+    IpcHandler {
+        target: "session"
+        function open(): void { desktopState.session(); }
+        function confirm(action: string): void { desktopState.session(action); }
+        function close(): void { desktopState.sessionShown = false; }
+    }
     IpcHandler {
         target: "calendar"
         function toggle(): void {

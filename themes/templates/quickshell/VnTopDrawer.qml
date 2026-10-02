@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import QtQuick.Window
 
 PanelWindow {
     id: window
@@ -21,8 +22,9 @@ PanelWindow {
     WlrLayershell.keyboardFocus: drawer.pinned ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     mask: Region { x: card.x; y: 0; width: card.width; height: Math.max(0, card.height * window.progress) }
     Behavior on progress { NumberAnimation { duration: 360; easing.type: Easing.OutExpo } }
-    onVisibleChanged: if (visible && drawer.pinned) Qt.callLater(() => focusScope.forceActiveFocus())
-    Connections { target: window.drawer; function onPinnedChanged() { if (window.drawer.pinned) Qt.callLater(() => focusScope.forceActiveFocus()); } }
+    onVisibleChanged: if (visible && drawer.pinned) Qt.callLater(() => content.focusFirst())
+    Connections { target: window.drawer; function onPinnedChanged() { if (window.drawer.pinned) Qt.callLater(() => content.focusFirst()); } }
+    Connections { target: window.contentItem.Window.window; function onActiveChanged() { if (window.drawer.pinned && window.contentItem.Window.window.active) Qt.callLater(content.focusFirst); } }
     Item {
         anchors.fill: parent; clip: true
         FocusScope {
@@ -39,8 +41,10 @@ PanelWindow {
                 Behavior on x { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
                 HoverHandler { onHoveredChanged: { if (hovered) window.drawer.hold(); else window.drawer.leave(); } }
                 DesktopPages {
+                    id: content
                     anchors.fill: parent; anchors.margins: 24
                     state: window.state; page: window.drawer.page; screen: window.screen
+                    keyboardEnabled: window.drawer.pinned
                 }
             }
         }

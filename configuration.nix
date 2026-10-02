@@ -126,6 +126,11 @@ in
       xdg-desktop-portal-gnome
       xdg-desktop-portal-gtk
     ];
+    config.niri = {
+      default = [ "gnome" "gtk" ];
+      "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
+      "org.freedesktop.impl.portal.Settings" = [ "gtk" ];
+    };
   };
   services.sunshine = {
     enable = true;

@@ -5,6 +5,9 @@ QtObject {
     function translucent(color, alpha) { return Qt.rgba(color.r, color.g, color.b, alpha); }
     readonly property string style: "{{UI_STYLE}}"
     readonly property bool retro: style === "win98"
+    readonly property string appearance: "{{UI_APPEARANCE}}"
+    readonly property string systemAppearance: "{{SYSTEM_APPEARANCE}}"
+    readonly property bool dark: !retro && appearance === "dark"
     readonly property string styleName: retro ? "Windows 98" : "Romance VN"
     readonly property color paper: "{{VN_PAPER}}"
     readonly property color ink: "{{VN_INK}}"
