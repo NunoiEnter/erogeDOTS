@@ -2,7 +2,7 @@
 
 [Thai version](README.th.md)
 
-Personal NixOS configuration for `moni`, built around Niri with GNOME kept as a fallback desktop. Kitty, Alacritty, Ghostty, Discord, Vesktop, Discordo, and the OpenCode CLI remain installed. The old custom Discord–OpenCode bridge is gone.
+Personal NixOS configuration for `moni`, built around Niri with XFCE kept as a fallback desktop. Kitty, Alacritty, Ghostty, Discord, Vesktop, Discordo, and the OpenCode CLI remain installed. The old custom Discord–OpenCode bridge is gone.
 
 This repository is public so it is easy to clone onto my own machines. It is not a general-purpose NixOS distribution and it is not licensed for reuse.
 
@@ -100,6 +100,7 @@ Home Manager owns user applications, aliases, MIME defaults, and desktop files. 
 | `Super+Alt+L` | Lock screen |
 | `Mod+O` | Toggle overview |
 | `Mod+Q` | Close focused window |
+| `Mod+Shift+Q` | Force kill focused window and its child processes |
 | `Mod+Arrow` or `Mod+H/J/K/L` | Move focus |
 | `Mod+Ctrl+Arrow` or `Mod+Ctrl+H/J/K/L` | Move a window |
 | `Mod+1` … `Mod+9` | Focus workspace |
@@ -172,7 +173,6 @@ This is a map of the main source areas, not a complete inventory. Supporting com
 - `picker-rs/src/main.rs` — theme picker, guided theme creator, install screens, dev-shell picker, and unit tests.
 - `picker-rs/src/bin/` — Rust helpers for the NixOS/Niri workshop and title-screen terminal.
 - `picker-rs/src/installer.rs` and `picker-rs/src/theme_json.rs` — installer workflow and theme-data support.
-- `pkgs/chatgpt/default.nix` — wraps the upstream ChatGPT desktop AppImage as a Nix package.
 
 ### Scripts
 
@@ -196,11 +196,13 @@ This is a map of the main source areas, not a complete inventory. Supporting com
 - `themes/natsume/theme.conf` — Natsume palette and character metadata.
 - `themes/nene/theme.conf` — Nene palette and character metadata.
 - `themes/sana/theme.conf` — Sana palette and character metadata.
+- `themes/shizuku/theme.conf` — Shizuku palette and character metadata.
 - `wallpapers/harumi.jpg` — Harumi wallpaper.
 - `wallpapers/nanami.jpg` — Nanami wallpaper.
 - `wallpapers/natsume.jpg` — Natsume wallpaper.
 - `wallpapers/nene.jpg` — Nene wallpaper.
 - `wallpapers/sana.jpg` — Sana wallpaper.
+- `wallpapers/shizuku.png` — Shizuku wallpaper.
 
 ### Generated-config templates
 
@@ -256,7 +258,7 @@ The **Style** button beside **Character theme** switches between Romance VN and 
 
 The VN ribbon includes tray icons, sound, the notification log and a clock. Scroll over **Chapters** to switch workspaces or **Sound** to adjust volume; right-click **Sound** to mute. The dashboard and **System Config** expose network, battery, brightness and audio controls. Bluetooth controls are unavailable without an enabled adapter. Windows 98 retains its framed system menu and richer status bar, including music and brightness controls. In either style, right-click notifications to toggle Do Not Disturb or tray icons for their menus. Click the clock for the calendar; Escape or clicking outside closes it.
 
-The five themes share `vn_paper`, `vn_ink`, and `vn_muted`, with individual `vn_accent`, `vn_tint`, and `vn_line` colors. Older themes and themes made by the picker inherit the rose interface defaults; add those six keys to customize them. Terminal backgrounds remain dark at 92% opacity. Existing terminal windows may need reopening.
+The six themes share `vn_paper`, `vn_ink`, and `vn_muted`, with individual `vn_accent`, `vn_tint`, and `vn_line` colors. Older themes and themes made by the picker inherit the rose interface defaults; add those six keys to customize them. Terminal backgrounds remain dark at 92% opacity. Existing terminal windows may need reopening.
 
 Run `theme-switch <name>` to apply changes. It renders every flat file in the template folders, including QML components and `qmldir`, and safely restarts only this desktop shell. Edit source templates in this repository, not generated files under `~/.config`.
 

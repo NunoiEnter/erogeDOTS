@@ -1,5 +1,10 @@
 {
-  description = "erogeDOTS ALPHA 2.0 - visual novel NixOS desktop";
+  description = "erogeDOTS ALPHA 2.1 - visual novel NixOS desktop";
+
+  nixConfig = {
+    extra-substituters = [ "https://cache.numtide.com" ];
+    extra-trusted-public-keys = [ "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g=" ];
+  };
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -12,6 +17,7 @@
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    llm-agents.url = "github:numtide/llm-agents.nix";
   };
 
   outputs = { self, nixpkgs, home-manager, qylock, rust-overlay, ... }@inputs:
@@ -23,7 +29,8 @@
       overlays = [ rust-overlay.overlays.default ];
       config.allowUnfree = true;
     };
-    chatgpt = pkgs.callPackage ./pkgs/chatgpt/default.nix {};
+    llmAgents = inputs.llm-agents.packages.${system};
+    antigravity-cli = llmAgents.antigravity-cli;
     theme-picker = pkgs.rustPlatform.buildRustPackage {
       pname = "theme-picker";
       version = "0.2.0";
@@ -60,7 +67,7 @@
           home-manager.useUserPackages = true;
           home-manager.backupFileExtension = "hm-backup";
           home-manager.extraSpecialArgs = {
-            inherit chatgpt theme-picker;
+            inherit theme-picker antigravity-cli llmAgents;
           };
           home-manager.users.moni = import ./home/moni.nix;
         }
@@ -69,7 +76,7 @@
   in
   {
     packages.${system} = {
-      inherit chatgpt theme-picker;
+      inherit theme-picker antigravity-cli;
     };
 
     nixosConfigurations = lib.genAttrs hostNames mkHost;

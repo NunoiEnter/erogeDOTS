@@ -78,7 +78,7 @@ fn render(frame: &mut ratatui::Frame, progress: &Progress) {
                 title,
                 Style::default().fg(accent).add_modifier(Modifier::BOLD),
             ),
-            Line::from("Alpha 2.0 · NixOS + Niri · Romance VN desktop"),
+            Line::from("Alpha 2.1 · NixOS + Niri · Romance VN desktop"),
         ]),
         page[0],
     );

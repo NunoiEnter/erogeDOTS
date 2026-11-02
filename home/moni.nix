@@ -1,4 +1,4 @@
-{ config, lib, pkgs, chatgpt, theme-picker, ... }:
+{ config, lib, pkgs, theme-picker, antigravity-cli, llmAgents, ... }:
 
 let
   repo = "${config.home.homeDirectory}/erogeDOTS";
@@ -8,7 +8,7 @@ let
     text = ''
       [Desktop Entry]
       Name=Neovim (Terminal)
-      Exec=${pkgs.ghostty}/bin/ghostty -e ${pkgs.neovim}/bin/nvim %F
+      Exec=${pkgs.kitty}/bin/kitty -e ${pkgs.neovim}/bin/nvim %F
       Type=Application
       Terminal=false
       MimeType=text/plain;text/x-python;text/x-csrc;text/x-chdr;text/x-java;text/html;text/css;text/javascript;text/x-shellscript;application/json;application/xml;application/x-nix;
@@ -62,6 +62,20 @@ let
     };
   };
 
+  # Cosmetic fake uptime: reads 77d 21h 20m at boot and keeps counting from there,
+  # so a reboot resets to 77d 21h 20m instead of starting from zero.
+  ffUptime = {
+    type = "command";
+    key = "Uptime";
+    text = ''
+      t=$(cut -d" " -f1 /proc/uptime); t=''${t%%.*}; t=$((t + 77*86400 + 21*3600 + 20*60))
+      d=$((t/86400)); h=$((t%86400/3600)); m=$((t%3600/60))
+      p() { if [ "$1" -eq 1 ]; then echo "$1 $2"; else echo "$1 ''${2}s"; fi; }
+      printf "%s, %s, %s" "$(p $d day)" "$(p $h hour)" "$(p $m min)"
+    '';
+    format = "{result}";
+  };
+
   ffModules = [
     "title"
     "separator"
@@ -75,7 +89,7 @@ let
       type = "kernel";
       format = "{release}";
     }
-    "uptime"
+    ffUptime
     {
       type = "packages";
       combined = true;
@@ -85,7 +99,10 @@ let
       type = "wm";
       key = "WM";
     }
-    "terminal"
+    {
+      type = "terminal";
+      format = "kitty";
+    }
     {
       type = "cpu";
       format = "{name}";
@@ -112,6 +129,83 @@ let
     }
   ];
 
+  # Narrow info set: the big logo with shortened values, one value per line.
+  # Budget: logo 44 cols + 1 padding leaves 17 cols for the value. Must fit
+  # 62 cols (ghostty tiles open at 62x28) so nothing wraps.
+  ffNarrowUptime = {
+    type = "command";
+    key = "Uptime";
+    text = ''
+      t=$(cut -d" " -f1 /proc/uptime); t=''${t%%.*}; t=$((t + 77*86400 + 21*3600 + 20*60))
+      d=$((t/86400)); h=$((t%86400/3600))
+      printf "%sd %sh" "$d" "$h"
+    '';
+    format = "{result}";
+  };
+
+  ffNarrowModules = [
+    "title"
+    "separator"
+    {
+      type = "os";
+      format = "{name} {version-id}";
+    }
+    {
+      type = "command";
+      key = "Device";
+      text = ''sed 's/^ThinkPad //' /sys/class/dmi/id/product_family'';
+      format = "{result}";
+    }
+    {
+      type = "kernel";
+      format = "{release}";
+    }
+    ffNarrowUptime
+    {
+      type = "packages";
+      key = "Packages";
+      format = "{all}";
+    }
+    "shell"
+    {
+      type = "wm";
+      key = "WM";
+      format = "{pretty-name} {version}";
+    }
+    {
+      type = "terminal";
+      format = "kitty";
+    }
+    {
+      type = "command";
+      key = "CPU";
+      text = ''sed -n 's/^model name[[:space:]]*: //p' /proc/cpuinfo | head -1 | sed 's/ with.*//; s/^AMD //; s/^Ryzen /R/; s/PRO //' | cut -c1-12'';
+      format = "{result}";
+    }
+    {
+      type = "command";
+      key = "RAM";
+      text = ''awk '/^MemTotal/{t=$2}/^MemAvailable/{a=$2}END{printf "%.0f/%.0f GiB",(t-a)/1048576,t/1048576}' /proc/meminfo'';
+      format = "{result}";
+    }
+    {
+      type = "command";
+      key = "Disk";
+      text = ''df -h --output=used,size / | tail -1 | awk '{s=$1;t=$2;sub("G$","",s);sub("G$","",t);printf "%s/%sG",s,t}' '';
+      format = "{result}";
+    }
+    {
+      type = "battery";
+      key = "Battery";
+      format = "{capacity}";
+    }
+    "break"
+    {
+      type = "colors";
+      symbol = "circle";
+    }
+  ];
+
   # Compact info set: fits 61 cols, 9 rows. Full set used with big logo only.
   ffMiniModules = [
     "title"
@@ -121,7 +215,7 @@ let
       type = "kernel";
       format = "{release}";
     }
-    "uptime"
+    ffUptime
     "shell"
     {
       type = "memory";
@@ -140,10 +234,16 @@ in
     homeDirectory = "/home/moni";
     stateVersion = "26.05";
     sessionPath = [
+      "$HOME/.local/bin"
       "$HOME/.npm-global/bin"
       "$HOME/erogeDOTS/scripts"
     ];
-    sessionVariables.EROGEDOTS_ROOT = repo;
+    sessionVariables = {
+      TERMINAL = "kitty";
+      EROGEDOTS_ROOT = repo;
+      MOZ_ENABLE_WAYLAND = "1";
+      NIXOS_OZONE_WL = "1";
+    };
 
     packages = (with pkgs; [
       # Terminals and shell tools
@@ -152,20 +252,29 @@ in
       # Desktop
       quickshell fuzzel awww swaynotificationcenter libnotify
       xwayland-satellite upower brightnessctl playerctl wl-clipboard cliphist
-      grim slurp swappy wlogout wlsunset swaylock
+      grim slurp swappy wlogout wlsunset swaylock kdePackages.kdenlive
 
       # Applications
       librewolf google-chrome vesktop kdePackages.dolphin kdePackages.ark
       obs-studio qimgv vlc mpv yt-dlp ytui-music qbittorrent p7zip unrar
       foliate figma-linux zed-editor arduino-ide arduino-cli tree discord
-      discordo rustdesk chatgpt
+      discordo
+
+      # AI agents: llm-agents.nix builds (daily), not nixpkgs / local FHS
+      llmAgents.chatgpt
+      llmAgents.claude-desktop
+      llmAgents.codex
+      llmAgents.claude-code
+      llmAgents.opencode
 
       # Development
-      neovim vscodium go cargo rustc bun gh opencode claude-code codex gcc gdb
+      neovim vscodium go cargo rustc bun gh gcc gdb
       ripgrep fd jq htop btop tree-sitter sqlite
+antigravity-cli
+      pkgs.antigravity-ide
 
       # Gaming and media
-      wine steam steam-run heroic rmpc
+      wine steam steam-run heroic rmpc ani-cli
 
       # Terminal toys
       cava cmatrix hollywood pipes-rs tty-clock asciiquarium oneko cbonsai
@@ -197,7 +306,11 @@ in
       settings = {
         "gfx.webrender.all" = true;
         "gfx.webrender.enabled" = true;
-        "gfx.webrender.compositor.force-enabled" = true;
+        # Wayland subsurface compositor causes fractional scale overflow with wp_viewport;
+        # disabling it keeps WebRender acceleration while using the main Wayland surface.
+        "gfx.webrender.compositor" = false;
+        "gfx.webrender.compositor.force-enabled" = false;
+        "apz.allow_zooming" = true;
         "layers.acceleration.force-enabled" = true;
         "media.hardware-video-decoding.force-enabled" = true;
         "widget.wayland-dmabuf-vaapi.enabled" = true;
@@ -250,6 +363,7 @@ in
     };
     initContent = ''
       setopt PROMPT_SUBST
+      setopt COMBINING_CHARS
       PROMPT='%F{magenta}%m%f %F{white}%~%%f '
       [[ -f "$HOME/.config/theme/env" ]] && source "$HOME/.config/theme/env"
       # ts wrapper: switch theme, then reload theme vars in THIS shell.
@@ -257,10 +371,19 @@ in
       ts() {
         theme-switch "$@" && source "$HOME/.config/theme/env"
       }
+      autoload -Uz add-zsh-hook compinit
+      # Title lock: Electron apps (Claude desktop/cowork) push their whole argv
+      # into OSC 0, and VS Code then shows that junk as the terminal name.
+      # Re-assert ours before every command and at every prompt so nothing
+      # survives. OSC 0 sets icon name + window title in kitty, ghostty, foot
+      # and VS Code alike.
+      _eroge_title() { printf '\e]0;%s\a' "''${TERMINAL:-kitty}"; }
+      add-zsh-hook preexec _eroge_title
+      add-zsh-hook precmd _eroge_title
+      _eroge_title
       # Deferred shell init: runs on first prompt (after fetch paints),
       # so window animation + fetch appear together. Split hooks: slow compinit
       # can never cancel the fast plugins, even with Ctrl-C.
-      autoload -Uz add-zsh-hook compinit
       _eroge_plugins() {
         add-zsh-hook -d precmd _eroge_plugins
         ZSH_AUTOSUGGEST_STRATEGY=(history)
@@ -280,41 +403,26 @@ in
       }
       add-zsh-hook precmd _eroge_plugins
       add-zsh-hook precmd _eroge_compinit
-      # Instant theme-matched fetch: cat cache now (~5ms), refresh in background.
-      # Cache keyed by theme primary so theme switches never show stale colors.
+      # Live theme-matched fetch. Runs fastfetch every time so uptime/memory/disk
+      # are current; the old output cache made every new shell show stale stats.
       _eroge_fetch() {
-        local cfg="$1" tag tkey cache tmp k tg l1 l2 l3
+        local cfg="$1" k tg l1 l2 l3
         local -a flags
-        tkey="''${THEME_PRIMARY:-#ff8fb1}"; tkey="''${tkey//[#]/}"
-        tag="$2-$tkey"
-        cache="$HOME/.cache/fastfetch-$tag.out"
-        _FF_LAST="$cache"
         k="''${THEME_PRIMARY:-#ff8fb1}"; tg="''${THEME_FG:-#c0caf5}"
         l1="''${THEME_PRIMARY_DARK:-#5277c3}"; l2="''${THEME_PRIMARY:-#7ebae4}"; l3="''${THEME_PRIMARY_LIGHT:-#df90af}"
-        flags=(--pipe false --color-keys "$k" --color-title "$tg" --logo-color-1 "$l1" --logo-color-2 "$l2" --logo-color-3 "$l3")
+        flags=(--pipe false --color-keys "$k" --color-title "$tg" --logo-color-1 "$l1" --logo-color-2 "$l2" --logo-color-3 "$l3" --logo-color-4 "$l1" --logo-color-5 "$l3")
         if [[ -n "$cfg" ]]; then flags+=(-c "$cfg"); fi
-        if [[ -s "$cache" ]]; then
-          cat "$cache"
-          tmp="$cache.$$"
-          (fastfetch "''${flags[@]}" > "$tmp" 2>/dev/null && mv -f "$tmp" "$cache") &!
-        else
-          fastfetch "''${flags[@]}" | tee "$cache"
-        fi
+        fastfetch "''${flags[@]}"
       }
       clear() {
         command clear "$@"
-        [[ -n "''${_FF_LAST:-}" && -f "$_FF_LAST" ]] && cat "$_FF_LAST"
+        [[ "''${EROGEDOTS_NO_FASTFETCH:-0}" != 1 ]] && _eroge_fetch "" half
       }
-      # Responsive: full NixOwOS logo needs 80x19,
-      # else compact mini logo (fits 61 cols, 10 rows), skip when tiny.
+      # Always the half-scale NixOwOS logo. No size gate: the compact/narrow tiers
+      # only ever made large windows show the small art, and any gate at all
+      # meant a small window showed nothing instead of the real logo.
       if [[ "''${EROGEDOTS_NO_FASTFETCH:-0}" != 1 ]]; then
-        _ff_c="''${COLUMNS:-80}" _ff_l="''${LINES:-24}"
-        if (( _ff_c >= 80 )) && (( _ff_l >= 19 )) && [[ -z "''${MINI:-}" ]]; then
-          _eroge_fetch "" full
-        elif (( _ff_l >= 10 )); then
-          _eroge_fetch "$HOME/.config/fastfetch/compact.jsonc" compact
-        fi
-        unset _ff_c _ff_l
+        _eroge_fetch "" half
       fi
     '';
   };
@@ -323,19 +431,22 @@ in
     text = mimeapps;
     force = true;
   };
-  # NixOwOS branding: full uwu logo for big windows, mini uwu logo + trimmed info otherwise
-  # (ascii by u/ant-arctica via yunfachi/NixOwOS, CC-BY-4.0; mini variant own code).
+# NixOwOS branding: uwu logo (ascii by u/ant-arctica via yunfachi/NixOwOS,
+  # CC-BY-4.0). The startup logo is the half-scale nixowos-half.txt, a 2x
+  # downsample of nixowos.txt: block glyphs carry 2x2 sub-pixels, so sampling
+  # every other cell keeps the drawing at half width and height.
   # File logos, no fastfetch overlay rebuild. Drops noisy Unknown modules
   # (de/wmtheme/theme/icons/font/terminalfont/swap/localip/poweradapter), compact display + circle colors.
   xdg.configFile."fastfetch/nixowos.txt".source = ../config/fastfetch/nixowos.txt;
+  xdg.configFile."fastfetch/nixowos-half.txt".source = ../config/fastfetch/nixowos-half.txt;
   xdg.configFile."fastfetch/nixowos-mini.txt".source = ../config/fastfetch/nixowos-mini.txt;
   xdg.configFile."fastfetch/config.jsonc".text = builtins.toJSON {
     "$schema" = "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json";
     logo = {
       type = "file";
-      source = "${config.home.homeDirectory}/.config/fastfetch/nixowos.txt";
+      source = "${config.home.homeDirectory}/.config/fastfetch/nixowos-half.txt";
       padding = {
-        left = 1;
+        left = 0;
         right = 1;
         top = 0;
       };
@@ -363,7 +474,27 @@ in
     display = ffDisplay;
     modules = ffMiniModules;
   };
-  xdg.dataFile."applications/mimeapps.list".text = mimeapps;
+  # Narrow: big uwu logo + short values on the right, fits 62 cols x 21 rows
+  # (ghostty's default tiled windows are 62x28). Same logo as the full config.
+  xdg.configFile."fastfetch/narrow.jsonc".text = builtins.toJSON {
+    "$schema" = "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json";
+    logo = {
+      type = "file";
+      source = "${config.home.homeDirectory}/.config/fastfetch/nixowos.txt";
+      padding = {
+        left = 0;
+        right = 1;
+        top = 0;
+      };
+    };
+    display = ffDisplay;
+    modules = ffNarrowModules;
+  };
+  # GLib always searches ~/.local/share/glib-2.0/schemas, and a NixOS system
+  # profile cannot merge the share/gsettings-schemas package layout. Link the
+  # compiled GNOME schemas so gsettings works for every process of this user.
+  xdg.dataFile."glib-2.0/schemas".source =
+    "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}/glib-2.0/schemas";
   xdg.dataFile."applications/claude-webapp.desktop".text = ''
     [Desktop Entry]
     Name=Claude

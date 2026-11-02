@@ -22,6 +22,7 @@ ShellRoot {
     SettingsMenu { state: desktopState }
     CalendarPopup { state: desktopState }
     VnTitleMenu { state: desktopState }
+    VnKeyGuide { state: desktopState }
     VnTopDrawer { state: desktopState }
     VnSession { state: desktopState }
     IpcHandler {
@@ -75,10 +76,20 @@ ShellRoot {
         function close(): void { desktopState.shown = false; }
     }
     IpcHandler {
+        target: "key-guide"
+        function toggle(): void {
+            desktopState.toggleKeyGuide(Quickshell.screens.find(s => s.name === desktopState.niri.output) || Quickshell.screens[0]);
+        }
+        function open(): void {
+            desktopState.openKeyGuide(Quickshell.screens.find(s => s.name === desktopState.niri.output) || Quickshell.screens[0]);
+        }
+        function close(): void { desktopState.closeKeyGuide(); }
+    }
+    IpcHandler {
         target: "terminal"
         function open(): void {
             if (desktopState.shown && !Theme.retro) desktopState.openTitleTerminal();
-            else desktopState.launch(["ghostty"]);
+            else desktopState.launch(["kitty"]);
         }
     }
     IpcHandler {

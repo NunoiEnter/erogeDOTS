@@ -8,6 +8,17 @@ source_hash="$(
         rg --files -0 -g '*.rs' -g 'Cargo.toml' -g 'Cargo.lock' "$root/picker-rs" | sort -z
     ) | sha256sum
 )"
+local_build="$root/picker-rs/target/release/$program"
+if [[ -x "$local_build" ]]; then
+    newest_source="$(
+        while IFS= read -r -d '' file; do stat -c %Y -- "$file"; done < <(
+            rg --files -0 -g '*.rs' -g 'Cargo.toml' -g 'Cargo.lock' "$root/picker-rs" | sort -z
+        ) | sort -nr | head -n1
+    )"
+    if (( $(stat -c %Y -- "$local_build") >= ${newest_source:-0} )); then
+        exec "$local_build" "$@"
+    fi
+fi
 cached="${XDG_CACHE_HOME:-$HOME/.cache}/erogedots/theme-picker/${source_hash%% *}/$program"
 if [[ -x "$cached" ]]; then exec "$cached" "$@"; fi
 managed="/etc/profiles/per-user/$(id -un)/bin/$program"

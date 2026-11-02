@@ -20,6 +20,7 @@ PanelWindow {
     property string lastPage: ""
     function focusSelection() {
         state.titleTerminalInput = false;
+        if (state.titlePage === "music") { lastPage = "music"; musicRoom.focusFirst(); return; }
         if (state.titlePage !== "") { lastPage = state.titlePage; pageContent.focusFirst(); return; }
         const choices = {characters: characterChoice, workspaces: workspaceChoice, music: musicChoice, extras: extraChoice, connections: configChoice, workshop: configChoice};
         (choices[lastPage] || firstChoice).forceActiveFocus(Qt.TabFocusReason);
@@ -60,6 +61,8 @@ PanelWindow {
     }
     FocusScope {
         anchors.fill: parent; focus: true
+        // The Music Room owns the whole screen while it is open.
+        visible: title.state.titlePage !== "music"
         enabled: !title.state.themeBusy
         Keys.onEscapePressed: { if (title.state.titlePage !== "") title.state.titlePage = ""; else title.state.shown = false; }
         RowLayout {
@@ -105,7 +108,7 @@ PanelWindow {
                 VnFrame {
                     anchors.fill: parent
                     anchors.topMargin: 54; anchors.bottomMargin: 26
-                    visible: title.state.titlePage !== ""
+                    visible: title.state.titlePage !== "" && title.state.titlePage !== "music"
                     opacity: visible ? 1 : 0
                     DesktopPages { id: pageContent; anchors.fill: parent; anchors.margins: 24; state: title.state; page: title.state.titlePage; screen: title.screen; keyboardEnabled: title.visible && !title.state.titleTerminalInput && !title.state.sessionShown }
                 }
@@ -123,5 +126,14 @@ PanelWindow {
             }
         }
     }
+    }
+    MusicRoom {
+        id: musicRoom
+        anchors.fill: parent
+        visible: title.state.titlePage === "music"
+        opacity: visible ? 1 : 0
+        enabled: visible
+        state: title.state
+        Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
     }
 }

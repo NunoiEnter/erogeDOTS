@@ -8,7 +8,7 @@ PARK_WS=5
 win=$(niri msg -j windows | jq -r '.[] | select(.title == "dropdown") | .id' | head -1)
 
 if [[ -z "$win" ]]; then
-    exec ghostty --title=dropdown -e zsh
+    exec kitty --title=dropdown -e zsh
 fi
 
 focused=$(niri msg -j windows | jq -r --arg w "$win" '.[] | select(.id == ($w|tonumber)) | .is_focused' | head -1)

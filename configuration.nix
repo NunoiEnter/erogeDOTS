@@ -25,26 +25,27 @@ in
   nix.settings = {
     experimental-features = [ "nix-command" "flakes" ];
     substituters = lib.mkForce [
+      "https://cache.numtide.com"
+      "https://mirror.sjtu.edu.cn/nix-channels/store"
       "https://cache.nixos.org/"
-      "https://nix-community.cachix.org"
-      "https://cachix.cachix.org"
     ];
     trusted-substituters = [
+      "https://cache.numtide.com"
+      "https://mirror.sjtu.edu.cn/nix-channels/store"
       "https://cache.nixos.org/"
-      "https://nix-community.cachix.org"
-      "https://cachix.cachix.org"
     ];
     trusted-public-keys = [
       "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
       "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
       "cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWg4T3M2wMCcO6n4T0L2TNA="
+      "niks3.numtide.com-1:DTx8wZduET09hRmMtKdQDxNNthLQETkc/yaX7M4qK0g="
     ];
     fallback = true;
-    connect-timeout = 15;
-    stalled-download-timeout = 30;
-    download-attempts = 3;
-    http-connections = 8;
-    max-substitution-jobs = 4;
+    connect-timeout = 10;
+    stalled-download-timeout = 10;
+    download-attempts = 1;
+    http-connections = 16;
+    max-substitution-jobs = 8;
     max-jobs = "auto";
     cores = 0;
     min-free = "5G";
@@ -65,6 +66,20 @@ in
   };
   programs.zsh.enable = true;
 
+  # Antigravity CLI (agy) is provided by llm-agents.nix
+  # (llmAgents.antigravity-cli) and added to home.packages in home/moni.nix.
+  # nix-ld lets other unpatched prebuilt dynamic binaries run natively;
+  # steam-run remains available as a fallback runner.
+  programs.nix-ld = {
+    enable = true;
+    libraries = with pkgs; [
+      stdenv.cc.cc.lib
+      glibc
+      openssl
+      libsecret
+    ];
+  };
+
   # Network and remote access. Credentials stay outside this repository.
   networking.networkmanager.enable = true;
   networking.networkmanager.plugins = [ pkgs.networkmanager-openvpn ];
@@ -81,31 +96,21 @@ in
       PermitRootLogin = "no";
     };
   };
-  services.xrdp = {
-    enable = lib.mkDefault false;
-    openFirewall = true;
-    defaultWindowManager = ''
-      unset DBUS_SESSION_BUS_ADDRESS WAYLAND_DISPLAY
-      export XDG_SESSION_TYPE=x11
-      export XDG_CURRENT_DESKTOP=XFCE
-      export XDG_SESSION_DESKTOP=xfce
-      exec ${pkgs.dbus}/bin/dbus-run-session -- ${pkgs.xfce4-session}/bin/xfce4-session
-    '';
-  };
-  security.pam.services.xrdp-sesman.allowNullPassword = lib.mkForce false;
   boot.kernelModules = [ "uinput" ];
   services.udev.extraRules = ''
     KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
   '';
 
-  # Desktop. Niri is primary; GNOME and XFCE remain available as fallbacks.
+  # Desktop. Niri is primary; XFCE remains available as the fallback session.
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
   };
-  programs.niri.enable = true;
+  programs.niri = {
+    enable = true;
+    useNautilus = false;
+  };
   services.xserver.desktopManager.xfce.enable = true;
-  services.desktopManager.gnome.enable = true;
   services.flatpak.enable = true;
   services.displayManager.sddm = {
     enable = true;
@@ -116,20 +121,50 @@ in
     theme = "nothing";
     quickshell.enable = false;
   };
-  environment.systemPackages = [ qylockQs ];
+  programs.dconf.enable = true;
+  # LocalSend: send files to the phone over Wi-Fi (opens TCP/UDP 53317 so the phone can find this PC).
+  programs.localsend = {
+    enable = true;
+    openFirewall = true;
+  };
+  environment.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+    MOZ_ENABLE_WAYLAND = "1";
+  };
+  environment.systemPackages = with pkgs; [
+    qylockQs
+    gsettings-desktop-schemas
+  ];
 
-  # Remote desktop / screen share. Niri needs GNOME portal for PipeWire share.
+  # Remote desktop / screen share. The GNOME portal is the only backend here
+  # that implements ScreenCast on Niri (it uses zwlr-screencopy as a fallback
+  # outside GNOME). Neither xdg-desktop-portal-gtk 1.15 nor the KDE build in
+  # this closure export impl.portal.ScreenCast, so Discord/Meet screen share
+  # failed with "No such interface org.freedesktop.impl.portal.ScreenCast".
   # Sunshine uses KMS capture, bypasses portal, best for iPad Moonlight mirror.
+  # gnome-keyring is the headless Secret Service backend for browser and Steam
+  # password storage; it was previously pulled in by the GNOME desktop module.
+  services.gnome.gnome-keyring.enable = true;
   xdg.portal = {
     enable = true;
-    extraPortals = with pkgs; [
+    extraPortals = lib.mkForce (with pkgs; [
       xdg-desktop-portal-gnome
       xdg-desktop-portal-gtk
-    ];
+      kdePackages.xdg-desktop-portal-kde
+    ]);
     config.niri = {
-      default = [ "gnome" "gtk" ];
-      "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
-      "org.freedesktop.impl.portal.Settings" = [ "gtk" ];
+      default = lib.mkForce [
+        "gnome"
+        "gtk"
+        "kde"
+      ];
+      # Qt6 dialog for file/folder pickers: modern look and it can actually
+      # select folders, which the GTK3 portal backend cannot.
+      "org.freedesktop.impl.portal.FileChooser" = lib.mkForce [ "kde" ];
+      "org.freedesktop.impl.portal.Settings" = lib.mkForce [ "gtk" ];
+      "org.freedesktop.impl.portal.ScreenCast" = lib.mkForce [ "gnome" ];
+      "org.freedesktop.impl.portal.Screenshot" = lib.mkForce [ "gnome" ];
+      "org.freedesktop.impl.portal.RemoteDesktop" = lib.mkForce [ "gnome" ];
     };
   };
   services.sunshine = {
@@ -149,12 +184,17 @@ in
       pipewire."10-allowed-rates"."context.properties"."default.clock.allowed-rates" = [ 44100 48000 ];
       pipewire-pulse."10-resample-quality"."stream.properties"."resample.quality" = 4;
     };
+    wireplumber.extraConfig = {
+      "10-default-targets"."wireplumber.settings" = {
+        "node.restore-default-targets" = false;
+      };
+    };
   };
   hardware.bluetooth = {
-    enable = false;
-    powerOnBoot = false;
+    enable = true;
+    powerOnBoot = true;
   };
-  services.blueman.enable = false;
+  services.blueman.enable = true;
   services.upower.enable = true;
   services.power-profiles-daemon.enable = false;
   powerManagement.enable = true;
@@ -162,8 +202,6 @@ in
     enable = true;
     pd.enable = true;
     settings = {
-      START_CHARGE_THRESH_BAT0 = 0;
-      STOP_CHARGE_THRESH_BAT0 = 100;
       TLP_AUTO_SWITCH = 1;
       TLP_PROFILE_AC = "PRF";
       TLP_PROFILE_BAT = "SAV";
@@ -240,12 +278,14 @@ in
       device = "nodev";
       useOSProber = true;
       configurationLimit = 10;
+      timeoutStyle = "menu";
+      splashImage = null;
     };
     efi = {
       canTouchEfiVariables = true;
       efiSysMountPoint = "/efi";
     };
-    timeout = 0;
+    timeout = 10;
   } else {
     systemd-boot.enable = true;
     efi.canTouchEfiVariables = true;
@@ -254,8 +294,15 @@ in
 
   # Quiet boot defaults; filesystems remain hardware-specific.
   boot.consoleLogLevel = 3;
-  boot.initrd.verbose = false;
-  boot.kernelParams = [ "quiet" "rd.udev.log_level=3" "rd.systemd.show_status=auto" ];
+  boot.kernelParams = [
+    "quiet"
+    "rd.udev.log_level=3"
+    "rd.systemd.show_status=auto"
+    "psmouse.synaptics_intertouch=1"
+  ];
+  boot.extraModprobeConfig = ''
+    options psmouse synaptics_intertouch=1
+  '';
 
   # Distro branding (NixOwOS-style): shown in /etc/os-release, hostnamectl, fastfetch OS line.
   # ID_LIKE=nixos keeps scripts that check for NixOS working.

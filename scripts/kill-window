@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# kill-window: SIGKILL the focused window's process tree.
+# Mod+Q only asks politely (XDG close), so Electron apps can ignore it or leave
+# helper processes behind. This kills deepest children first, then the root pid.
+set -euo pipefail
+
+pid=$(niri msg --json focused-window 2>/dev/null | jq -r '.pid // empty') || true
+if [[ -z "$pid" ]]; then
+    notify-send "kill-window" "No focused window" 2>/dev/null || true
+    exit 0
+fi
+
+app_id=$(niri msg --json focused-window 2>/dev/null | jq -r '.app_id // "window"') || true
+
+# Collect the tree bottom-up while the ppid links still exist.
+tree=()
+frontier=("$pid")
+while ((${#frontier[@]})); do
+    next=()
+    for p in "${frontier[@]}"; do
+        kids=$(ps -o pid= --ppid "$p" 2>/dev/null | tr -d ' ' || true)
+        for k in $kids; do
+            next+=("$k")
+            tree+=("$k")
+        done
+    done
+    frontier=("${next[@]}")
+done
+
+for p in "${tree[@]:-}"; do
+    [[ -n "$p" ]] && kill -9 "$p" 2>/dev/null || true
+done
+kill -9 "$pid" 2>/dev/null || true
+
+notify-send "kill-window" "Killed $app_id (pid $pid, ${#tree[@]} children)" 2>/dev/null || true

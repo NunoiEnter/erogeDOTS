@@ -134,7 +134,7 @@ ColumnLayout {
             }
             RowLayout {
                 VnButton { text: "Add a character"; onClicked: pages.showPage("themeStudio") }
-                VnButton { text: "Open theme picker"; onClicked: pages.state.launch(["ghostty", "--title=theme-tools", "-e", "theme-switch", "picker"]) }
+                VnButton { text: "Open theme picker"; onClicked: pages.state.launch(["kitty", "--title=theme-tools", "-e", "theme-switch", "picker"]) }
             }
         }
     }

@@ -2,7 +2,7 @@
 
 [คู่มือภาษาอังกฤษ](README.md)
 
-ชุดตั้งค่า NixOS ส่วนตัวของผู้ใช้ `moni` ใช้ Niri เป็นหน้าเดสก์ท็อปหลักและยังเก็บ GNOME ไว้เป็นตัวสำรอง โปรแกรม Kitty, Alacritty, Ghostty, Discord, Vesktop, Discordo และ OpenCode CLI ยังอยู่ครบ ส่วน bridge ที่เคยเชื่อม Discord กับ OpenCode ถูกลบหมดแล้ว
+ชุดตั้งค่า NixOS ส่วนตัวของผู้ใช้ `moni` ใช้ Niri เป็นหน้าเดสก์ท็อปหลักและยังเก็บ XFCE ไว้เป็นตัวสำรอง โปรแกรม Kitty, Alacritty, Ghostty, Discord, Vesktop, Discordo และ OpenCode CLI ยังอยู่ครบ ส่วน bridge ที่เคยเชื่อม Discord กับ OpenCode ถูกลบหมดแล้ว
 
 repo นี้เปิดเป็นสาธารณะเพื่อให้ผม clone ไปใช้กับเครื่องของตัวเองได้ง่าย ไม่ใช่ดิสโทร NixOS สำหรับคนทั่วไป และไม่ได้ให้สิทธินำไปใช้ต่อ
 
@@ -70,6 +70,7 @@ Home Manager ดูแลโปรแกรมของผู้ใช้ alias 
 | `Super+Alt+L` | ล็อกหน้าจอ |
 | `Mod+O` | เปิดหรือปิด overview |
 | `Mod+Q` | ปิดหน้าต่างที่เลือก |
+| `Mod+Shift+Q` | ฆ่าหน้าต่างที่เลือกพร้อมโปรเซสลูกทั้งหมด |
 | `Mod+ลูกศร` หรือ `Mod+H/J/K/L` | ย้ายจุดโฟกัส |
 | `Mod+Ctrl+ลูกศร` หรือ `Mod+Ctrl+H/J/K/L` | ย้ายหน้าต่าง |
 | `Mod+1` ถึง `Mod+9` | ไป workspace |
@@ -167,11 +168,13 @@ theme-switch style vn
 - `themes/natsume/theme.conf` — ชุดสีและข้อมูลตัวละคร Natsume
 - `themes/nene/theme.conf` — ชุดสีและข้อมูลตัวละคร Nene
 - `themes/sana/theme.conf` — ชุดสีและข้อมูลตัวละคร Sana
+- `themes/shizuku/theme.conf` — ชุดสีและข้อมูลตัวละคร Shizuku
 - `wallpapers/harumi.jpg` — wallpaper ของ Harumi
 - `wallpapers/nanami.jpg` — wallpaper ของ Nanami
 - `wallpapers/natsume.jpg` — wallpaper ของ Natsume
 - `wallpapers/nene.jpg` — wallpaper ของ Nene
 - `wallpapers/sana.jpg` — wallpaper ของ Sana
+- `wallpapers/shizuku.png` — wallpaper ของ Shizuku
 
 ### Template ที่ใช้สร้าง config
 

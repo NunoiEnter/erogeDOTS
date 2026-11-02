@@ -4,4 +4,4 @@ config="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/shell.qml"
 if quickshell ipc -p "$config" call terminal open >/dev/null 2>&1; then
     exit 0
 fi
-exec ghostty
+exec kitty

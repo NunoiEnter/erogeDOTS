@@ -17,10 +17,15 @@ TrayItems 1.0 TrayItems.qml
 DrawerState 1.0 DrawerState.qml
 TitleChoice 1.0 TitleChoice.qml
 VnTitleMenu 1.0 VnTitleMenu.qml
+VnKeyGuide 1.0 VnKeyGuide.qml
+KeyGuideRow 1.0 KeyGuideRow.qml
 MusicControls 1.0 MusicControls.qml
+MusicRoom 1.0 MusicRoom.qml
+MusicButton 1.0 MusicButton.qml
 DesktopPages 1.0 DesktopPages.qml
 WorkspaceFlowchart 1.0 WorkspaceFlowchart.qml
 RibbonTab 1.0 RibbonTab.qml
+RibbonMusic 1.0 RibbonMusic.qml
 VnRibbon 1.0 VnRibbon.qml
 VnTopDrawer 1.0 VnTopDrawer.qml
 AudioSpectrum 1.0 AudioSpectrum.qml

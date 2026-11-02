@@ -212,6 +212,8 @@ export THEME_BG="${THEME[BG]}"
 export THEME_FG="${THEME[FG]}"
 export CAVA_COLOR="${THEME[CAVA_COLORS]:-${THEME[PRIMARY]}}"
 export CMATRIX_COLOR="${THEME[CMATRIX_COLOR]:-cyan}"
+export TERMINAL="kitty"
+setopt COMBINING_CHARS 2>/dev/null || true
 EOF
     printf '%s\n' "$name" > "$STATE_FILE"
     printf '%s\n' "${THEME[UI_STYLE]}" > "$STATE_DIR/style"
@@ -220,8 +222,30 @@ EOF
 }
 
 apply_system_appearance() {
-    command -v gsettings >/dev/null || die "gsettings is needed to set the system appearance"
-    gsettings set org.gnome.desktop.interface color-scheme "prefer-${THEME[SYSTEM_APPEARANCE]}" || die "could not set the system appearance"
+    local value="prefer-${THEME[SYSTEM_APPEARANCE]}"
+    if ! command -v gsettings >/dev/null; then
+        warn "gsettings is not installed; keeping the current system app preference"
+        return 0
+    fi
+    if gsettings set org.gnome.desktop.interface color-scheme "$value" 2>/dev/null; then
+        return 0
+    fi
+    # A NixOS system profile cannot merge the share/gsettings-schemas layout,
+    # so the schemas of the running system are only reachable in the closure.
+    local schema_dir="" package_dir="" candidate
+    if command -v nix-store >/dev/null && [[ -e /run/current-system ]]; then
+        package_dir="$(nix-store -qR /run/current-system 2>/dev/null | grep -m1 -- '-gsettings-desktop-schemas-[0-9]' || true)"
+    fi
+    if [[ -n "$package_dir" ]]; then
+        for candidate in "$package_dir"/share/gsettings-schemas/*/glib-2.0/schemas; do
+            [[ -f "$candidate/gschemas.compiled" ]] || continue
+            schema_dir="$candidate"; break
+        done
+    fi
+    if [[ -n "$schema_dir" ]] && GSETTINGS_SCHEMA_DIR="$schema_dir" gsettings set org.gnome.desktop.interface color-scheme "$value" 2>/dev/null; then
+        return 0
+    fi
+    warn "could not set the system app preference; continuing without it"
 }
 
 stop_desktop_shell() {
@@ -323,8 +347,8 @@ preview() {
 }
 
 case "${1:-help}" in
-    picker) exec theme-picker themes ;;
-    add) exec theme-picker add ;;
+    picker) exec "$DOTFILES/scripts/theme-picker" themes ;;
+    add) exec "$DOTFILES/scripts/theme-picker" add ;;
     list) list_themes ;;
     current) cat "$STATE_FILE" 2>/dev/null || printf 'none\n' ;;
     style)

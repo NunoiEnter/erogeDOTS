@@ -4,16 +4,19 @@
 
 item="$(cliphist list | fuzzel --dmenu)" || exit 1
 
-case "$item" in
-    *"png"*)   mime="image/png" ;;
-    *"jpg"*)   mime="image/jpeg" ;;
-    *"jpeg"*)  mime="image/jpeg" ;;
-    *"webp"*)  mime="image/webp" ;;
-    *"gif"*)   mime="image/gif" ;;
-esac
+# Only binary entries (cliphist marks them "[[ binary data ... ]]") carry an image type.
+mime=""
+if [[ "$item" == *"[[ binary data"* ]]; then
+    case "$item" in
+        *" png "*)          mime="image/png" ;;
+        *" jpg "*|*" jpeg "*) mime="image/jpeg" ;;
+        *" webp "*)         mime="image/webp" ;;
+        *" gif "*)          mime="image/gif" ;;
+    esac
+fi
 
 if [[ -n "$mime" ]]; then
-    echo "$item" | cliphist decode | wl-copy --type "$mime"
+    printf '%s\n' "$item" | cliphist decode | wl-copy --type "$mime"
 else
-    echo "$item" | cliphist decode | wl-copy
+    printf '%s\n' "$item" | cliphist decode | wl-copy
 fi

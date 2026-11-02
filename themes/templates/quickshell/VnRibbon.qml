@@ -22,6 +22,7 @@ Rectangle {
         RibbonTab { state: ribbon.state; barWindow: ribbon.barWindow; text: "Chapters"; page: "workspaces"; onScrolled: delta => ribbon.state.scrollWorkspace(ribbon.barWindow.screen, delta) }
         RibbonTab { state: ribbon.state; barWindow: ribbon.barWindow; text: ribbon.width > 960 ? "Characters" : "Cast"; page: "characters" }
         Item { Layout.fillWidth: true }
+        RibbonMusic { state: ribbon.state; barWindow: ribbon.barWindow; visible: ribbon.width > 1240 }
         TrayItems { barWindow: ribbon.barWindow; visible: ribbon.width > 1180 }
         RibbonTab {
             state: ribbon.state; barWindow: ribbon.barWindow; page: "connections"

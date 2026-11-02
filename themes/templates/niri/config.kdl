@@ -11,7 +11,36 @@ input {
 
     touchpad {
         tap
+        dwt
         natural-scroll
+        accel-speed 0.15
+        accel-profile "adaptive"
+        scroll-factor 0.8
+        tap-button-map "left-right-middle"
+        click-method "clickfinger"
+        drag true
+        drag-lock
+        // gestures {
+        //     swipe-trigger-distance 16.0
+        //     pinch-trigger-scale 0.15
+        // }
+    }
+    touch {
+        map-to-output "eDP-1"
+        // Borrowed from PR #3771 (julianjc84:feat/configurable-touch-gestures):
+        // focus-on-touch "touch-up"
+        // gestures {
+        //     swipe-trigger-distance 100.0
+        //     edge-start-distance 30.0
+        //     pinch-trigger-distance 100.0
+        //     pinch-dominance-ratio 1.0
+        //     pinch-sensitivity 1.0
+        //     swipe-multi-finger-scale 1.2
+        //     rotation-trigger-angle 20.0
+        //     rotation-dominance-ratio 0.5
+        //     flick-to-monitor true
+        //     flick-velocity-threshold 800.0
+        // }
     }
     mouse { }
     trackpoint { }
@@ -63,7 +92,36 @@ hotkey-overlay {
 
 screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
 
-animations { }
+animations {
+    workspace-switch {
+        spring damping-ratio=1.0 stiffness=1000 epsilon=0.0001
+    }
+    horizontal-view-movement {
+        spring damping-ratio=1.0 stiffness=800 epsilon=0.0001
+    }
+    window-movement {
+        spring damping-ratio=1.0 stiffness=800 epsilon=0.0001
+    }
+    window-resize {
+        spring damping-ratio=1.0 stiffness=800 epsilon=0.0001
+    }
+    overview-open-close {
+        spring damping-ratio=1.0 stiffness=800 epsilon=0.0001
+    }
+}
+
+gestures {
+    dnd-edge-view-scroll {
+        trigger-width 40
+        delay-ms 100
+        max-speed 2000
+    }
+    dnd-edge-workspace-switch {
+        trigger-height 50
+        delay-ms 100
+        max-speed 2000
+    }
+}
 
 debug {
     keep-laptop-panel-on-when-lid-is-closed
@@ -101,7 +159,7 @@ window-rule {
 }
 
 window-rule {
-    match app-id=r#"^com\.mitchellh\.ghostty$"# title="^mini$"
+    match app-id=r#"^(com\.mitchellh\.ghostty|kitty)$"# title="^mini$"
     open-floating true
     default-floating-position x=64 y=64 relative-to="bottom-left"
     default-column-width { fixed 600; }
@@ -112,7 +170,7 @@ window-rule {
 
 // Dropdown terminal — Mod+grave toggles quake-style terminal under the bar
 window-rule {
-    match app-id=r#"^com\.mitchellh\.ghostty$"# title="^dropdown$"
+    match app-id=r#"^(com\.mitchellh\.ghostty|kitty)$"# title="^dropdown$"
     open-floating true
     default-floating-position x=0 y=64 relative-to="top"
     default-column-width { fixed 900; }
@@ -123,7 +181,7 @@ window-rule {
 
 // Small tool windows opened by the documented hotkeys.
 window-rule {
-    match app-id=r#"^com\.mitchellh\.ghostty$"# title=r#"^(theme-tools|dev-shell|ram-watch)$"#
+    match app-id=r#"^(com\.mitchellh\.ghostty|kitty)$"# title=r#"^(theme-tools|dev-shell|ram-watch)$"#
     open-floating true
     default-column-width { fixed 900; }
     default-window-height { fixed 620; }
@@ -133,7 +191,7 @@ window-rule {
 
 // System monitor — Mod+Alt+B opens floating btm
 window-rule {
-    match app-id=r#"^com\.mitchellh\.ghostty$"# title="^btm-monitor$"
+    match app-id=r#"^(com\.mitchellh\.ghostty|kitty)$"# title="^btm-monitor$"
     open-floating true
     default-column-width { fixed 1000; }
     default-window-height { fixed 660; }
@@ -145,7 +203,7 @@ window-rule {
 // TL+BL in left column, TR+BR in right column. Placement script-driven:
 // both columns move to workspace 5 (created if missing), then focus it.
 window-rule {
-    match app-id=r#"^com\.mitchellh\.ghostty$"# title=r#"^larp-(tl|tr|bl|br)$"#
+    match app-id=r#"^(com\.mitchellh\.ghostty|kitty)$"# title=r#"^larp-(tl|tr|bl|br)$"#
     open-focused false
     default-column-width { proportion 0.5; }
     geometry-corner-radius {{UI_RADIUS}}
@@ -153,16 +211,17 @@ window-rule {
 }
 
 binds {
-    Mod+Shift+Slash { show-hotkey-overlay; }
+    Mod+Shift+Slash hotkey-overlay-title="Key Guide" { spawn-sh "quickshell ipc -p ~/.config/quickshell/shell.qml call key-guide toggle"; }
+    Mod+Ctrl+Slash hotkey-overlay-title="Niri Hotkey Overlay" { show-hotkey-overlay; }
     Mod+Return hotkey-overlay-title="Open a Terminal" { spawn "open-terminal"; }
-    Mod+Shift+Return hotkey-overlay-title="Mini Terminal" { spawn "sh" "-c" "ghostty --title=mini -e sh -c 'fetch --frames 60; EROGEDOTS_NO_FASTFETCH=1 exec zsh'"; }
+    Mod+Shift+Return hotkey-overlay-title="Mini Terminal" { spawn "sh" "-c" "kitty --title=mini -e sh -c 'fetch --frames 60; EROGEDOTS_NO_FASTFETCH=1 exec zsh'"; }
     Mod+grave hotkey-overlay-title="Dropdown Terminal" { spawn-sh "dropterm"; }
     Mod+G hotkey-overlay-title="Larp Wall" { spawn-sh "larp"; }
-    Mod+T hotkey-overlay-title="Theme Picker" { spawn "ghostty" "--title=theme-tools" "-e" "theme-switch" "picker"; }
-    Mod+Shift+T hotkey-overlay-title="Add Theme" { spawn "ghostty" "--title=theme-tools" "-e" "theme-switch" "add"; }
-    Mod+Ctrl+D hotkey-overlay-title="Development Shell" { spawn "ghostty" "--title=dev-shell" "-e" "theme-picker" "dev"; }
-    Mod+Alt+R hotkey-overlay-title="RAM Monitor" { spawn "ghostty" "--title=ram-watch" "-e" "ram" "watch"; }
-    Mod+Alt+B hotkey-overlay-title="System Monitor" { spawn "ghostty" "--title=btm-monitor" "-e" "btm"; }
+    Mod+T hotkey-overlay-title="Theme Picker" { spawn "kitty" "--title=theme-tools" "-e" "theme-switch" "picker"; }
+    Mod+Shift+T hotkey-overlay-title="Add Theme" { spawn "kitty" "--title=theme-tools" "-e" "theme-switch" "add"; }
+    Mod+Ctrl+D hotkey-overlay-title="Development Shell" { spawn "kitty" "--title=dev-shell" "-e" "theme-picker" "dev"; }
+    Mod+Alt+R hotkey-overlay-title="RAM Monitor" { spawn "kitty" "--title=ram-watch" "-e" "ram" "watch"; }
+    Mod+Alt+B hotkey-overlay-title="System Monitor" { spawn "kitty" "--title=btm-monitor" "-e" "btm"; }
     Mod+Alt+Z hotkey-overlay-title="Toggle Stay Awake" { spawn "unzzz" "toggle"; }
     Mod+S hotkey-overlay-title="Quick Settings" { spawn-sh "quickshell ipc -p ~/.config/quickshell/shell.qml call quick-settings toggle"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
@@ -189,6 +248,7 @@ binds {
 
     Mod+O repeat=false hotkey-overlay-title="Overview" { toggle-overview; }
     Mod+Q repeat=false hotkey-overlay-title="Close Window" { close-window; }
+    Mod+Shift+Q repeat=false hotkey-overlay-title="Force Kill Window" { spawn-sh "kill-window"; }
 
     Mod+Left hotkey-overlay-title="Focus Left" { focus-column-left; }
     Mod+Down hotkey-overlay-title="Focus Down" { focus-window-down; }
@@ -307,4 +367,33 @@ binds {
     Mod+Shift+E hotkey-overlay-title="Quit niri" { quit; }
     Ctrl+Alt+Delete hotkey-overlay-title="Quit niri" { quit; }
     Mod+Shift+P hotkey-overlay-title="Power Off Monitors" { power-off-monitors; }
+
+    // --- Gesture Binds (borrowed from PR #3771: julianjc84/niri:feat/configurable-touch-gestures) ---
+    // Requires niri built from julianjc84/niri PR #3771 branch.
+    // Touchpad:
+    // TouchpadSwipe fingers=3 direction="up"    { focus-workspace-up; }
+    // TouchpadSwipe fingers=3 direction="down"  { focus-workspace-down; }
+    // TouchpadSwipe fingers=3 direction="left"  { focus-column-right; }
+    // TouchpadSwipe fingers=3 direction="right" { focus-column-left; }
+    // TouchpadSwipe fingers=4 direction="up"    { open-overview; }
+    // TouchpadSwipe fingers=4 direction="down"  { close-overview; }
+    // TouchpadPinch fingers=2 direction="in"    { open-overview; }
+    // TouchpadPinch fingers=2 direction="out"   { close-overview; }
+    // TouchpadTapHold fingers=3                 { show-hotkey-overlay; }
+    // TouchpadTapHold fingers=4                 { toggle-overview; }
+    // Touchscreen:
+    // TouchSwipe fingers=3 direction="up"       { focus-workspace-up; }
+    // TouchSwipe fingers=3 direction="down"     { focus-workspace-down; }
+    // TouchSwipe fingers=3 direction="left"     { focus-column-right; }
+    // TouchSwipe fingers=3 direction="right"    { focus-column-left; }
+    // TouchSwipe fingers=4 direction="up"       { open-overview; }
+    // TouchSwipe fingers=4 direction="down"     { close-overview; }
+    // TouchPinch fingers=3 direction="in"       { open-overview; }
+    // TouchPinch fingers=3 direction="out"      { close-overview; }
+    // TouchRotate fingers=4 direction="cw"      { focus-column-right; }
+    // TouchRotate fingers=4 direction="ccw"     { focus-column-left; }
+    // TouchEdge edge="left"                     { focus-column-right; }
+    // TouchEdge edge="right"                    { focus-column-left; }
+    // TouchEdge edge="top"                      { focus-workspace-up; }
+    // TouchEdge edge="bottom"                   { focus-workspace-down; }
 }

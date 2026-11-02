@@ -2,8 +2,10 @@
 # Template: themes/templates/ghostty/config
 
 # Font
-font-family = monospace
-font-size = 11
+font-family = "SFMono Nerd Font"
+font-family = "Tlwg Typo"
+font-size = 14
+adjust-cell-height = 20%
 
 # Cursor
 cursor-style = block

@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# niri-hotkeys: read titled binds from the niri config and print JSON for Quickshell.
+# The VN key guide renders whatever this prints, so the guide never drifts from
+# the real bindings. Usage: niri-hotkeys [--config path]
+set -euo pipefail
+
+config="${XDG_CONFIG_HOME:-$HOME/.config}/niri/config.kdl"
+if [[ "${1:-}" == --config ]]; then
+    config="${2:?--config needs a path}"
+elif [[ -n "${1:-}" ]]; then
+    config="$1"
+fi
+
+[[ -f "$config" ]] || { printf '[]\n'; exit 0; }
+
+python3 - "$config" <<'PY'
+import json
+import re
+import sys
+
+path = sys.argv[1]
+try:
+    with open(path, encoding="utf-8") as handle:
+        lines = handle.read().splitlines()
+except OSError:
+    print("[]")
+    raise SystemExit(0)
+
+binds = re.compile(r"^\s*binds\s*\{")
+comment = re.compile(r"^\s*//")
+
+def depth_delta(text):
+    # Braces inside a bind only appear in the action body, so counting every
+    # brace is enough to know where one bind ends and the next begins.
+    return text.count("{") - text.count("}")
+
+entries = []
+inside = False
+depth = 0
+pending = []
+
+def flush(parts):
+    text = " ".join(" ".join(parts).split())
+    match = re.match(r"^(\S+)\s*(.*?)\{(.*)$", text)
+    if not match:
+        return
+    combo, props = match.group(1), match.group(2)
+    if combo.startswith("XF86") or "Mouse" in combo:
+        return
+    title = re.search(r'hotkey-overlay-title\s*=\s*"([^"]*)"', props)
+    if not title:
+        return
+    entries.append({"keys": combo.replace("Mod+", "Super+"), "title": title.group(1)})
+
+for line in lines:
+    if not inside:
+        if binds.match(line):
+            # The opening `binds {` is already consumed, so binds start at depth 0
+            # and every following line is measured against its own braces.
+            inside = True
+            depth = 0
+        continue
+    if comment.match(line):
+        continue
+    # A single-line bind balances its own braces, so a completed bind is any
+    # point where the running depth returns to zero.
+    pending.append(line)
+    depth += depth_delta(line)
+    if depth <= 0:
+        flush(pending)
+        pending = []
+        depth = 0
+
+print(json.dumps(entries))
+PY

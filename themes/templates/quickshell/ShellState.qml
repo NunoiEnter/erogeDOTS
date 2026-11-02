@@ -28,6 +28,10 @@ Scope {
     readonly property var drawer: drawerState
     property bool calendarShown: false
     property var calendarScreen: null
+    property bool keyGuideShown: false
+    property var keyGuideScreen: null
+    property var keyGuideBinds: []
+    property string keyGuideError: ""
     property bool dnd: false
     property int notificationCount: 0
     property bool wifiEnabled: false
@@ -50,9 +54,10 @@ Scope {
     readonly property string wifiText: wifiEnabled ? (wifiSsid || "Not connected") : "Wi-Fi off"
     readonly property string timeText: Qt.formatDateTime(clock.date, "HH:mm")
     readonly property string dateText: Qt.formatDateTime(clock.date, "ddd, d MMM")
+    readonly property string longDateText: Qt.formatDateTime(clock.date, "dddd, d MMMM")
 
     NiriState { id: niriState }
-    DrawerState { id: drawerState; allowed: !Theme.retro && !state.shown && !state.calendarShown && !state.sessionShown }
+    DrawerState { id: drawerState; allowed: !Theme.retro && !state.shown && !state.calendarShown && !state.sessionShown && !state.keyGuideShown }
     SystemClock { id: clock; precision: SystemClock.Minutes }
     PwObjectTracker { objects: [state.sink].filter(o => o) }
     onShownChanged: {
@@ -80,6 +85,24 @@ Scope {
     function focusWorkspace(index) { drawer.close(); shown = false; Quickshell.execDetached(["niri", "msg", "action", "focus-workspace", "--", index.toString()]); }
     function focusWindow(id) { drawer.close(); shown = false; Quickshell.execDetached(["niri", "msg", "action", "focus-window", "--id", id.toString()]); }
     function toggleCalendar(screen) { shown = false; calendarScreen = screen; calendarShown = !calendarShown; }
+    function toggleKeyGuide(screen) {
+        if (keyGuideShown) { closeKeyGuide(); return; }
+        keyGuideError = "";
+        keyGuideScreen = screen;
+        readKeyBinds();
+        keyGuideShown = true;
+    }
+    function openKeyGuide(screen) {
+        keyGuideError = "";
+        keyGuideScreen = screen;
+        readKeyBinds();
+        keyGuideShown = true;
+    }
+    function closeKeyGuide() { keyGuideShown = false; }
+    function readKeyBinds() {
+        keyGuideReader.running = false;
+        keyGuideReader.running = true;
+    }
     function switchStyle() {
         if (themeBusy) return;
         themeBusy = true; themeError = "";
@@ -184,6 +207,26 @@ Scope {
         onExited: code => { state.titleTerminalInput = false; state.titleTerminalOrigin = null; if (code !== 0 && terminalLog.text.trim()) state.error = terminalLog.text.trim().slice(-300); }
     }
 
+    Process {
+        id: keyGuideReader
+        command: ["niri-hotkeys"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const parsed = JSON.parse(text.trim());
+                    state.keyGuideBinds = Array.isArray(parsed) ? parsed : [];
+                    state.keyGuideError = "";
+                } catch (_) {
+                    state.keyGuideBinds = [];
+                    state.keyGuideError = "The key guide could not read the niri bindings.";
+                }
+            }
+        }
+        stderr: StdioCollector {
+            onStreamFinished: { if (text.trim()) state.keyGuideError = text.trim().slice(-200); }
+        }
+        onExited: (code, status) => { if (code !== 0 && !state.keyGuideError) state.keyGuideError = "niri-hotkeys exited with code " + code; }
+    }
     Process {
         id: notifications
         running: true

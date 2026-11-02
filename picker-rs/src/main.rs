@@ -6,6 +6,7 @@ use std::fs;
 use std::io::{self};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::OnceLock;
 
 use crossterm::event::{self, Event, KeyCode, KeyEventKind, KeyModifiers};
 use crossterm::execute;
@@ -13,14 +14,14 @@ use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
 use ratatui::backend::CrosstermBackend;
-use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::layout::{Constraint, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, BorderType, Borders, List, ListItem, ListState, Paragraph};
+use ratatui::widgets::{Block, BorderType, Borders, List, ListItem, ListState, Paragraph, Wrap};
 use ratatui::Terminal;
 use ratatui_image::picker::Picker;
-use ratatui_image::protocol::Protocol;
-use ratatui_image::Image;
+use ratatui_image::protocol::StatefulProtocol;
+use ratatui_image::{Resize, StatefulImage};
 
 type Term = Terminal<CrosstermBackend<io::Stdout>>;
 
@@ -33,8 +34,10 @@ struct Theme {
     bg: String,
     fg: String,
     wallpaper: String,
+    japanese: String,
     character: String,
     game: String,
+    quote: String,
 }
 
 #[derive(Clone, Copy)]
@@ -266,15 +269,9 @@ fn color_line(label: &str, value: &str) -> Line<'static> {
     ])
 }
 
-fn load_preview_image(path: &Path, picker: &mut Picker) -> Option<Protocol> {
+fn load_preview_image(path: &Path, picker: &Picker) -> Option<StatefulProtocol> {
     let image = image::ImageReader::open(path).ok()?.decode().ok()?;
-    picker
-        .new_protocol(
-            image,
-            ratatui::layout::Size::new(48, 16),
-            ratatui_image::Resize::Fit(None),
-        )
-        .ok()
+    Some(picker.new_resize_protocol(image))
 }
 
 fn parse_theme(path: &Path) -> Theme {
@@ -291,8 +288,10 @@ fn parse_theme(path: &Path) -> Theme {
         bg: String::new(),
         fg: String::new(),
         wallpaper: String::new(),
+        japanese: String::new(),
         character: String::new(),
         game: String::new(),
+        quote: String::new(),
     };
     if let Ok(text) = fs::read_to_string(path) {
         for line in text.lines().map(str::trim) {
@@ -307,8 +306,10 @@ fn parse_theme(path: &Path) -> Theme {
                 "bg" => theme.bg = value,
                 "fg" => theme.fg = value,
                 "wallpaper" => theme.wallpaper = value,
+                "char_name" => theme.japanese = value,
                 "char_full" => theme.character = value,
                 "char_game" => theme.game = value,
+                "char_quote" => theme.quote = value,
                 _ => {}
             }
         }
@@ -338,21 +339,126 @@ fn current_theme() -> String {
         .into()
 }
 
+fn vn_dark() -> bool {
+    static DARK: OnceLock<bool> = OnceLock::new();
+    *DARK.get_or_init(|| {
+        std::env::var("EROGEDOTS_APPEARANCE")
+            .ok()
+            .or_else(|| {
+                dirs::home_dir()
+                    .and_then(|home| fs::read_to_string(home.join(".config/theme/appearance")).ok())
+            })
+            .is_some_and(|value| value.trim() == "dark")
+    })
+}
+
 fn vn_style() -> Style {
-    Style::default()
-        .bg(Color::Rgb(255, 249, 240))
-        .fg(Color::Rgb(65, 48, 63))
+    if vn_dark() {
+        Style::default()
+            .bg(Color::Rgb(23, 19, 34))
+            .fg(Color::Rgb(238, 231, 243))
+    } else {
+        Style::default()
+            .bg(Color::Rgb(255, 249, 240))
+            .fg(Color::Rgb(65, 48, 63))
+    }
+}
+
+fn vn_bg_rgba() -> image::Rgba<u8> {
+    if vn_dark() {
+        image::Rgba([23, 19, 34, 255])
+    } else {
+        image::Rgba([255, 249, 240, 255])
+    }
 }
 
 fn vn_paper(frame: &mut ratatui::Frame) -> Rect {
     let outer = Block::default()
         .borders(Borders::ALL)
         .border_type(BorderType::Double)
-        .border_style(Style::default().fg(Color::Rgb(137, 75, 110)))
+        .border_style(Style::default().fg(vn_accent()))
         .style(vn_style());
     let inner = outer.inner(frame.area());
     frame.render_widget(outer, frame.area());
     inner.inner(ratatui::layout::Margin::new(2, 1))
+}
+
+fn vn_accent() -> Color {
+    if vn_dark() {
+        Color::Rgb(195, 166, 221)
+    } else {
+        Color::Rgb(137, 75, 110)
+    }
+}
+
+fn vn_ink() -> Color {
+    if vn_dark() {
+        Color::Rgb(238, 231, 243)
+    } else {
+        Color::Rgb(65, 48, 63)
+    }
+}
+
+fn vn_muted() -> Color {
+    if vn_dark() {
+        Color::Rgb(184, 170, 198)
+    } else {
+        Color::Rgb(109, 83, 104)
+    }
+}
+
+fn vn_tint() -> Color {
+    if vn_dark() {
+        Color::Rgb(33, 26, 46)
+    } else {
+        Color::Rgb(247, 231, 239)
+    }
+}
+
+fn vn_line() -> Color {
+    if vn_dark() {
+        Color::Rgb(74, 61, 92)
+    } else {
+        Color::Rgb(221, 198, 213)
+    }
+}
+
+fn centered_image(area: Rect, width: u16, height: u16) -> Rect {
+    let width = width.min(area.width);
+    let height = height.min(area.height);
+    Rect {
+        x: area.x + area.width.saturating_sub(width) / 2,
+        y: area.y + area.height.saturating_sub(height) / 2,
+        width,
+        height,
+    }
+}
+
+fn vn_panel(title: &'static str, accent: Color) -> Block<'static> {
+    Block::default()
+        .title(Span::styled(
+            format!(" {title} "),
+            Style::default().fg(accent).add_modifier(Modifier::BOLD),
+        ))
+        .borders(Borders::ALL)
+        .border_type(BorderType::Double)
+        .border_style(Style::default().fg(accent))
+}
+
+fn vn_header(step: impl Into<String>, accent: Color) -> Paragraph<'static> {
+    Paragraph::new(Line::from(vec![
+        Span::styled(
+            "❀ ",
+            Style::default().fg(accent).add_modifier(Modifier::BOLD),
+        ),
+        Span::styled(
+            "erogeDOTS",
+            Style::default().fg(accent).add_modifier(Modifier::BOLD),
+        ),
+        Span::raw("  ·  "),
+        Span::styled(step.into(), Style::default().fg(vn_ink())),
+    ]))
+    .style(Style::default().bg(vn_tint()))
 }
 
 fn terminal<T>(run: impl FnOnce(&mut Term) -> io::Result<T>) -> io::Result<T> {
@@ -394,40 +500,62 @@ fn select(term: &mut Term, title: &str, help: &str, rows: &[String]) -> io::Resu
         return Ok(None);
     }
     let mut cursor = 0;
+    let accent = vn_accent();
     loop {
         term.draw(|f| {
             let canvas = vn_paper(f);
-            let areas = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([
-                    Constraint::Length(3),
-                    Constraint::Min(4),
-                    Constraint::Length(2),
-                ])
-                .split(canvas);
+            let areas = Layout::vertical([
+                Constraint::Length(2),
+                Constraint::Min(4),
+                Constraint::Length(5),
+            ])
+            .split(canvas);
+            f.render_widget(vn_header(title, accent), areas[0]);
             f.render_widget(
-                Paragraph::new(title).style(
-                    Style::default()
-                        .fg(Color::Rgb(137, 75, 110))
-                        .add_modifier(Modifier::BOLD),
-                ),
-                areas[0],
+                Paragraph::new(Line::from(Span::styled(
+                    "─".repeat(areas[0].width as usize),
+                    Style::default().fg(vn_line()),
+                ))),
+                Rect {
+                    y: areas[0].y + 1,
+                    height: 1,
+                    ..areas[0]
+                },
             );
             let items: Vec<ListItem> = rows.iter().map(|row| ListItem::new(row.as_str())).collect();
             let mut state = ListState::default().with_selected(Some(cursor));
             let list = List::new(items)
-                .block(Block::default().borders(Borders::ALL))
+                .block(
+                    Block::default()
+                        .title(Span::styled(
+                            format!(" {title} "),
+                            Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                        ))
+                        .borders(Borders::ALL)
+                        .border_type(BorderType::Double)
+                        .border_style(Style::default().fg(accent)),
+                )
                 .highlight_symbol("› ")
                 .highlight_style(
                     Style::default()
                         .fg(Color::Black)
-                        .bg(Color::Rgb(239, 221, 233))
+                        .bg(accent)
                         .add_modifier(Modifier::BOLD),
                 );
             f.render_stateful_widget(list, areas[1], &mut state);
+            let dialogue = vn_panel("Message", accent).style(Style::default().bg(vn_tint()));
+            let inner = dialogue.inner(areas[2]);
+            f.render_widget(dialogue, areas[2]);
             f.render_widget(
-                Paragraph::new(help).style(Style::default().fg(Color::Rgb(109, 83, 104))),
-                areas[2],
+                Paragraph::new(vec![
+                    Line::from(vec![
+                        Span::styled("❀ ", Style::default().fg(accent)),
+                        Span::styled("Make your choice.", Style::default().fg(vn_ink())),
+                    ]),
+                    Line::from(Span::styled(help, Style::default().fg(vn_muted()))),
+                ])
+                .wrap(Wrap { trim: true }),
+                inner,
             );
         })?;
         match key()? {
@@ -445,16 +573,28 @@ fn input(term: &mut Term, title: &str, hint: &str) -> io::Result<Option<String>>
     loop {
         term.draw(|f| {
             let canvas = vn_paper(f);
-            let area = centered(canvas, 70, 7);
+            let area = centered(canvas, 70, 8);
+            let accent = vn_accent();
             let block = Block::default()
-                .title(title)
+                .title(Span::styled(
+                    format!(" {title} "),
+                    Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                ))
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::Rgb(137, 75, 110)));
+                .border_type(BorderType::Double)
+                .border_style(Style::default().fg(accent))
+                .style(Style::default().bg(vn_tint()));
             let inner = block.inner(area);
             f.render_widget(block, area);
             f.render_widget(
-                Paragraph::new(format!("{value}▌\n{hint}"))
-                    .style(Style::default().fg(Color::Rgb(65, 48, 63))),
+                Paragraph::new(vec![
+                    Line::from(Span::styled(
+                        format!("{value}▌"),
+                        Style::default().fg(vn_ink()).add_modifier(Modifier::BOLD),
+                    )),
+                    Line::from(Span::styled(hint, Style::default().fg(vn_muted()))),
+                ])
+                .wrap(Wrap { trim: true }),
                 inner,
             );
         })?;
@@ -554,80 +694,156 @@ fn select_image(term: &mut Term, images: &[PathBuf]) -> io::Result<Option<usize>
         return Ok(None);
     }
     let mut picker = Picker::from_query_stdio().unwrap_or_else(|_| Picker::halfblocks());
+    picker.set_background_color(Some(vn_bg_rgba()));
     let mut cursor = 0;
-    let mut preview = load_preview_image(&images[cursor], &mut picker);
+    let mut preview = load_preview_image(&images[cursor], &picker);
     loop {
+        let accent = vn_accent();
         term.draw(|frame| {
             let canvas = vn_paper(frame);
             let page = Layout::vertical([
                 Constraint::Length(2),
                 Constraint::Min(10),
-                Constraint::Length(2),
+                Constraint::Length(5),
             ])
             .split(canvas);
+            frame.render_widget(vn_header("Scene selection · 6/9", accent), page[0]);
             frame.render_widget(
-                Paragraph::new("6/9 Choose wallpaper · live preview").style(
-                    Style::default()
-                        .fg(Color::Rgb(137, 75, 110))
-                        .add_modifier(Modifier::BOLD),
-                ),
-                page[0],
+                Paragraph::new(Line::from(Span::styled(
+                    "─".repeat(page[0].width as usize),
+                    Style::default().fg(vn_line()),
+                ))),
+                Rect {
+                    y: page[0].y + 1,
+                    height: 1,
+                    ..page[0]
+                },
             );
-            let body = Layout::horizontal([Constraint::Percentage(40), Constraint::Percentage(60)])
+            let body = Layout::horizontal([Constraint::Percentage(38), Constraint::Percentage(62)])
                 .split(page[1]);
             let rows: Vec<ListItem> = images
                 .iter()
-                .map(|path| ListItem::new(path.file_name().unwrap_or_default().to_string_lossy()))
+                .map(|path| {
+                    let name = path
+                        .file_name()
+                        .unwrap_or_default()
+                        .to_string_lossy()
+                        .into_owned();
+                    let parent = path
+                        .parent()
+                        .and_then(Path::file_name)
+                        .unwrap_or_default()
+                        .to_string_lossy()
+                        .into_owned();
+                    ListItem::new(vec![
+                        Line::from(Span::styled(
+                            name,
+                            Style::default().fg(vn_ink()).add_modifier(Modifier::BOLD),
+                        )),
+                        Line::from(Span::styled(
+                            format!("   {parent}"),
+                            Style::default().fg(vn_muted()),
+                        )),
+                    ])
+                })
                 .collect();
             let mut state = ListState::default().with_selected(Some(cursor));
             frame.render_stateful_widget(
                 List::new(rows)
-                    .block(Block::default().title("Images").borders(Borders::ALL))
+                    .block(vn_panel("Wallpapers", accent))
                     .highlight_symbol("› ")
                     .highlight_style(
                         Style::default()
                             .fg(Color::Black)
-                            .bg(Color::Rgb(239, 221, 233)),
+                            .bg(accent)
+                            .add_modifier(Modifier::BOLD),
                     ),
                 body[0],
                 &mut state,
             );
-            let block = Block::default()
-                .title(" Your next scene ")
-                .borders(Borders::ALL);
+            let block = vn_panel("Scene preview", accent);
             let inner = block.inner(body[1]);
             frame.render_widget(block, body[1]);
-            let detail = Layout::vertical([Constraint::Length(2), Constraint::Min(1)]).split(inner);
-            frame.render_widget(
-                Paragraph::new(images[cursor].display().to_string())
-                    .style(Style::default().fg(Color::Gray)),
-                detail[0],
-            );
-            if let Some(protocol) = &preview {
-                frame.render_widget(Image::new(protocol), detail[1]);
+            let detail = Layout::vertical([Constraint::Min(5), Constraint::Length(3)]).split(inner);
+            if let Some(protocol) = preview.as_mut() {
+                let fit = protocol.size_for(Resize::Fit(None), detail[0].as_size());
+                let image_area = centered_image(detail[0], fit.width, fit.height);
+                frame.render_stateful_widget(
+                    StatefulImage::default().resize(Resize::Fit(None)),
+                    image_area,
+                    protocol,
+                );
             } else {
                 frame.render_widget(
                     Paragraph::new("Image could not be loaded")
-                        .style(Style::default().fg(Color::Rgb(109, 83, 104))),
-                    detail[1],
+                        .style(Style::default().fg(vn_muted())),
+                    detail[0],
                 );
             }
+            let nameplate = Block::default()
+                .borders(Borders::TOP)
+                .border_style(Style::default().fg(accent))
+                .style(Style::default().bg(vn_tint()));
+            let name_inner = nameplate.inner(detail[1]);
+            frame.render_widget(nameplate, detail[1]);
             frame.render_widget(
-                Paragraph::new("[↑↓/jk] preview another image  [Enter] choose  [Esc] cancel")
-                    .style(Style::default().fg(Color::Rgb(109, 83, 104))),
-                page[2],
+                Paragraph::new(vec![
+                    Line::from(Span::styled(
+                        images[cursor]
+                            .file_name()
+                            .unwrap_or_default()
+                            .to_string_lossy()
+                            .into_owned(),
+                        Style::default().fg(vn_ink()).add_modifier(Modifier::BOLD),
+                    )),
+                    Line::from(Span::styled(
+                        images[cursor].display().to_string(),
+                        Style::default().fg(vn_muted()),
+                    )),
+                ]),
+                name_inner,
+            );
+            let dialogue = vn_panel("Message", accent).style(Style::default().bg(vn_tint()));
+            let inner = dialogue.inner(page[2]);
+            frame.render_widget(dialogue, page[2]);
+            frame.render_widget(
+                Paragraph::new(vec![
+                    Line::from(Span::styled(
+                        "Choose the scene that will sit behind the character.",
+                        Style::default().fg(vn_ink()),
+                    )),
+                    Line::from(vec![
+                        Span::styled(
+                            "Enter",
+                            Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                        ),
+                        Span::raw(" choose   "),
+                        Span::styled(
+                            "↑↓/jk",
+                            Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                        ),
+                        Span::raw(" preview   "),
+                        Span::styled(
+                            "q/Esc",
+                            Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                        ),
+                        Span::raw(" back"),
+                    ]),
+                ])
+                .wrap(Wrap { trim: true }),
+                inner,
             );
         })?;
         let next = match key()? {
             KeyCode::Up | KeyCode::Char('k') => cursor.saturating_sub(1),
             KeyCode::Down | KeyCode::Char('j') => (cursor + 1).min(images.len() - 1),
             KeyCode::Enter if preview.is_some() => return Ok(Some(cursor)),
-            KeyCode::Esc => return Ok(None),
+            KeyCode::Esc | KeyCode::Char('q') => return Ok(None),
             _ => cursor,
         };
         if next != cursor {
             cursor = next;
-            preview = load_preview_image(&images[cursor], &mut picker);
+            preview = load_preview_image(&images[cursor], &picker);
         }
     }
 }
@@ -635,64 +851,110 @@ fn select_image(term: &mut Term, images: &[PathBuf]) -> io::Result<Option<usize>
 fn select_palette(term: &mut Term) -> io::Result<Option<usize>> {
     let mut cursor = 0;
     loop {
+        let accent = hex_color(if vn_dark() {
+            PALETTES[cursor].light
+        } else {
+            PALETTES[cursor].primary
+        });
         term.draw(|frame| {
             let canvas = vn_paper(frame);
             let page = Layout::vertical([
                 Constraint::Length(2),
                 Constraint::Min(10),
-                Constraint::Length(2),
+                Constraint::Length(5),
             ])
             .split(canvas);
+            frame.render_widget(vn_header("Color route · 7/9", accent), page[0]);
             frame.render_widget(
-                Paragraph::new("7/9 Choose starting color scheme").style(
-                    Style::default()
-                        .fg(Color::Rgb(137, 75, 110))
-                        .add_modifier(Modifier::BOLD),
-                ),
-                page[0],
+                Paragraph::new(Line::from(Span::styled(
+                    "─".repeat(page[0].width as usize),
+                    Style::default().fg(vn_line()),
+                ))),
+                Rect {
+                    y: page[0].y + 1,
+                    height: 1,
+                    ..page[0]
+                },
             );
             let body = Layout::horizontal([Constraint::Percentage(36), Constraint::Percentage(64)])
                 .split(page[1]);
             let rows: Vec<ListItem> = PALETTES
                 .iter()
-                .map(|p| ListItem::new(color_line(p.name, p.primary)))
+                .map(|palette| {
+                    ListItem::new(vec![
+                        color_line(palette.name, palette.primary),
+                        Line::from(Span::styled(
+                            format!("      {}", palette.icon),
+                            Style::default().fg(vn_muted()),
+                        )),
+                    ])
+                })
                 .collect();
             let mut state = ListState::default().with_selected(Some(cursor));
             frame.render_stateful_widget(
                 List::new(rows)
-                    .block(Block::default().title("Schemes").borders(Borders::ALL))
+                    .block(vn_panel("Schemes", accent))
                     .highlight_symbol("› ")
                     .highlight_style(
                         Style::default()
                             .fg(Color::Black)
-                            .bg(Color::Rgb(239, 221, 233)),
+                            .bg(accent)
+                            .add_modifier(Modifier::BOLD),
                     ),
                 body[0],
                 &mut state,
             );
-            let block = Block::default()
-                .title("Exact scheme colors")
-                .borders(Borders::ALL);
+            let block = vn_panel("Palette preview", accent);
             let inner = block.inner(body[1]);
             frame.render_widget(block, body[1]);
             let colors = colors_from_palette(PALETTES[cursor]);
+            let detail = Layout::vertical([Constraint::Length(3), Constraint::Min(1)]).split(inner);
+            frame.render_widget(
+                Block::default().style(Style::default().bg(hex_color(&colors[0]))),
+                detail[0],
+            );
             let lines: Vec<Line> = COLOR_ROLES[..8]
                 .iter()
                 .enumerate()
                 .map(|(i, (_, label))| color_line(label, &colors[i]))
                 .collect();
-            frame.render_widget(Paragraph::new(lines), inner);
+            frame.render_widget(Paragraph::new(lines), detail[1]);
+            let dialogue = vn_panel("Message", accent).style(Style::default().bg(vn_tint()));
+            let inner = dialogue.inner(page[2]);
+            frame.render_widget(dialogue, page[2]);
             frame.render_widget(
-                Paragraph::new("[↑↓/jk] preview scheme  [Enter] choose  [Esc] cancel")
-                    .style(Style::default().fg(Color::Rgb(109, 83, 104))),
-                page[2],
+                Paragraph::new(vec![
+                    Line::from(Span::styled(
+                        format!("{} sets the mood of the route.", PALETTES[cursor].name),
+                        Style::default().fg(vn_ink()),
+                    )),
+                    Line::from(vec![
+                        Span::styled(
+                            "Enter",
+                            Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                        ),
+                        Span::raw(" choose   "),
+                        Span::styled(
+                            "↑↓/jk",
+                            Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                        ),
+                        Span::raw(" preview   "),
+                        Span::styled(
+                            "q/Esc",
+                            Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                        ),
+                        Span::raw(" back"),
+                    ]),
+                ])
+                .wrap(Wrap { trim: true }),
+                inner,
             );
         })?;
         match key()? {
             KeyCode::Up | KeyCode::Char('k') => cursor = cursor.saturating_sub(1),
             KeyCode::Down | KeyCode::Char('j') => cursor = (cursor + 1).min(PALETTES.len() - 1),
             KeyCode::Enter => return Ok(Some(cursor)),
-            KeyCode::Esc => return Ok(None),
+            KeyCode::Esc | KeyCode::Char('q') => return Ok(None),
             _ => {}
         }
     }
@@ -748,18 +1010,26 @@ fn pick_color(
     let channel_count = if alpha { 4 } else { 3 };
     loop {
         let hex = color_hex(value, alpha);
+        let accent = vn_accent();
         term.draw(|frame| {
             let canvas = vn_paper(frame);
             let page = Layout::vertical([
                 Constraint::Length(2),
                 Constraint::Min(10),
-                Constraint::Length(3),
+                Constraint::Length(5),
             ])
             .split(canvas);
+            frame.render_widget(vn_header("Color palette", accent), page[0]);
             frame.render_widget(
-                Paragraph::new(format!("Choose {label} · {hex}"))
-                    .style(Style::default().fg(Color::Rgb(137, 75, 110)).add_modifier(Modifier::BOLD)),
-                page[0],
+                Paragraph::new(Line::from(Span::styled(
+                    "─".repeat(page[0].width as usize),
+                    Style::default().fg(vn_line()),
+                ))),
+                Rect {
+                    y: page[0].y + 1,
+                    height: 1,
+                    ..page[0]
+                },
             );
             let body = Layout::horizontal([Constraint::Percentage(48), Constraint::Percentage(52)])
                 .split(page[1]);
@@ -770,22 +1040,36 @@ fn pick_color(
             let mut state = ListState::default().with_selected(Some(cursor));
             frame.render_stateful_widget(
                 List::new(rows)
-                    .block(Block::default().title("Color palette").borders(Borders::ALL))
+                    .block(vn_panel("Swatches", accent))
                     .highlight_symbol("› ")
-                    .highlight_style(Style::default().fg(Color::Black).bg(Color::Rgb(239, 221, 233))),
+                    .highlight_style(
+                        Style::default()
+                            .fg(Color::Black)
+                            .bg(accent)
+                            .add_modifier(Modifier::BOLD),
+                    ),
                 body[0],
                 &mut state,
             );
-            let block = Block::default().title("Exact color").borders(Borders::ALL);
+            let block = vn_panel("Exact color", accent);
             let inner = block.inner(body[1]);
             frame.render_widget(block, body[1]);
             let detail = Layout::vertical([
-                Constraint::Length(2),
+                Constraint::Length(3),
                 Constraint::Min(3),
                 Constraint::Length(2),
             ])
             .split(inner);
-            frame.render_widget(Paragraph::new(format!("{label}\n{hex}")), detail[0]);
+            frame.render_widget(
+                Paragraph::new(vec![
+                    Line::from(Span::styled(
+                        label.to_string(),
+                        Style::default().fg(vn_ink()).add_modifier(Modifier::BOLD),
+                    )),
+                    Line::from(Span::styled(hex.clone(), Style::default().fg(vn_muted()))),
+                ]),
+                detail[0],
+            );
             frame.render_widget(
                 Block::default().style(Style::default().bg(hex_color(&hex))),
                 detail[1],
@@ -796,22 +1080,35 @@ fn pick_color(
                     Span::styled(
                         format!(" {} {:03} ", channels[i], value[i]),
                         if i == channel {
-                            Style::default().fg(Color::Black).bg(Color::Rgb(239, 221, 233))
-                        } else {
                             Style::default()
+                                .fg(Color::Black)
+                                .bg(accent)
+                                .add_modifier(Modifier::BOLD)
+                        } else {
+                            Style::default().fg(vn_ink())
                         },
                     )
                 })
                 .collect();
             frame.render_widget(Paragraph::new(Line::from(values)), detail[2]);
             let help = if alpha {
-                "[↑↓/jk] swatch  [Tab] R/G/B/A  [←→] ±1  [ and ] ±16\n[Enter] use hex  [Esc] back · shadow shown on dark gray"
+                "[↑↓/jk] swatch  [Tab] R/G/B/A  [←→] ±1  [ and ] ±16  [Enter] use hex  [Esc] back"
             } else {
-                "[↑↓/jk] swatch  [Tab] R/G/B  [←→] ±1  [ and ] ±16\n[Enter] use exact hex  [Esc] keep previous color"
+                "[↑↓/jk] swatch  [Tab] R/G/B  [←→] ±1  [ and ] ±16  [Enter] use hex  [Esc] keep"
             };
+            let dialogue = vn_panel("Message", accent).style(Style::default().bg(vn_tint()));
+            let inner = dialogue.inner(page[2]);
+            frame.render_widget(dialogue, page[2]);
             frame.render_widget(
-                Paragraph::new(help).style(Style::default().fg(Color::Rgb(109, 83, 104))),
-                page[2],
+                Paragraph::new(vec![
+                    Line::from(Span::styled(
+                        format!("Choose {label} · {hex}"),
+                        Style::default().fg(vn_ink()),
+                    )),
+                    Line::from(Span::styled(help, Style::default().fg(vn_muted()))),
+                ])
+                .wrap(Wrap { trim: true }),
+                inner,
             );
         })?;
         match key()? {
@@ -838,21 +1135,26 @@ fn pick_color(
 fn edit_colors(term: &mut Term, mut colors: ThemeColors) -> io::Result<Option<ThemeColors>> {
     let mut cursor = 0;
     loop {
+        let accent = vn_accent();
         term.draw(|frame| {
             let canvas = vn_paper(frame);
             let page = Layout::vertical([
                 Constraint::Length(2),
                 Constraint::Min(10),
-                Constraint::Length(2),
+                Constraint::Length(5),
             ])
             .split(canvas);
+            frame.render_widget(vn_header("Color tuning · 8/9", accent), page[0]);
             frame.render_widget(
-                Paragraph::new("8/9 Fine-tune every theme color").style(
-                    Style::default()
-                        .fg(Color::Rgb(137, 75, 110))
-                        .add_modifier(Modifier::BOLD),
-                ),
-                page[0],
+                Paragraph::new(Line::from(Span::styled(
+                    "─".repeat(page[0].width as usize),
+                    Style::default().fg(vn_line()),
+                ))),
+                Rect {
+                    y: page[0].y + 1,
+                    height: 1,
+                    ..page[0]
+                },
             );
             let body = Layout::horizontal([Constraint::Percentage(62), Constraint::Percentage(38)])
                 .split(page[1]);
@@ -864,38 +1166,72 @@ fn edit_colors(term: &mut Term, mut colors: ThemeColors) -> io::Result<Option<Th
             let mut state = ListState::default().with_selected(Some(cursor));
             frame.render_stateful_widget(
                 List::new(rows)
-                    .block(
-                        Block::default()
-                            .title("All color roles")
-                            .borders(Borders::ALL),
-                    )
+                    .block(vn_panel("Color roles", accent))
                     .highlight_symbol("› ")
                     .highlight_style(
                         Style::default()
                             .fg(Color::Black)
-                            .bg(Color::Rgb(239, 221, 233)),
+                            .bg(accent)
+                            .add_modifier(Modifier::BOLD),
                     ),
                 body[0],
                 &mut state,
             );
-            let block = Block::default()
-                .title("Selected color")
-                .borders(Borders::ALL);
+            let block = vn_panel("Selected color", accent);
             let inner = block.inner(body[1]);
             frame.render_widget(block, body[1]);
             let detail = Layout::vertical([Constraint::Length(3), Constraint::Min(1)]).split(inner);
             frame.render_widget(
-                Paragraph::new(format!("{}\n{}", COLOR_ROLES[cursor].1, colors[cursor])),
+                Paragraph::new(vec![
+                    Line::from(Span::styled(
+                        COLOR_ROLES[cursor].1,
+                        Style::default().fg(vn_ink()).add_modifier(Modifier::BOLD),
+                    )),
+                    Line::from(Span::styled(
+                        colors[cursor].clone(),
+                        Style::default().fg(vn_muted()),
+                    )),
+                ]),
                 detail[0],
             );
             frame.render_widget(
                 Block::default().style(Style::default().bg(hex_color(&colors[cursor]))),
                 detail[1],
             );
+            let dialogue = vn_panel("Message", accent).style(Style::default().bg(vn_tint()));
+            let inner = dialogue.inner(page[2]);
+            frame.render_widget(dialogue, page[2]);
             frame.render_widget(
-                Paragraph::new("[↑↓/jk] role  [Enter] choose/edit color  [s] next  [Esc] cancel")
-                    .style(Style::default().fg(Color::Rgb(109, 83, 104))),
-                page[2],
+                Paragraph::new(vec![
+                    Line::from(Span::styled(
+                        "Fine-tune the route until the scene feels right.",
+                        Style::default().fg(vn_ink()),
+                    )),
+                    Line::from(vec![
+                        Span::styled(
+                            "Enter",
+                            Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                        ),
+                        Span::raw(" edit   "),
+                        Span::styled(
+                            "↑↓/jk",
+                            Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                        ),
+                        Span::raw(" role   "),
+                        Span::styled(
+                            "s",
+                            Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                        ),
+                        Span::raw(" next   "),
+                        Span::styled(
+                            "q/Esc",
+                            Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                        ),
+                        Span::raw(" back"),
+                    ]),
+                ])
+                .wrap(Wrap { trim: true }),
+                inner,
             );
         })?;
         match key()? {
@@ -912,7 +1248,7 @@ fn edit_colors(term: &mut Term, mut colors: ThemeColors) -> io::Result<Option<Th
                 }
             }
             KeyCode::Char('s') => return Ok(Some(colors)),
-            KeyCode::Esc => return Ok(None),
+            KeyCode::Esc | KeyCode::Char('q') => return Ok(None),
             _ => {}
         }
     }
@@ -1101,7 +1437,7 @@ struct ThemeChooser {
     values: Vec<Theme>,
     current: String,
     cursor: usize,
-    image: Option<Protocol>,
+    image: Option<StatefulProtocol>,
 }
 
 impl ThemeChooser {
@@ -1120,7 +1456,7 @@ impl ThemeChooser {
         }
     }
 
-    fn load_image(&mut self, picker: &mut Picker) {
+    fn load_image(&mut self, picker: &Picker) {
         let Some(theme) = self.values.get(self.cursor) else {
             self.image = None;
             return;
@@ -1130,25 +1466,41 @@ impl ThemeChooser {
     }
 }
 
-fn render_theme_chooser(frame: &mut ratatui::Frame, app: &ThemeChooser) {
+fn render_theme_chooser(frame: &mut ratatui::Frame, app: &mut ThemeChooser) {
     let canvas = vn_paper(frame);
+    let theme = app.values.get(app.cursor).cloned();
+    let accent = theme
+        .as_ref()
+        .map(|theme| {
+            hex_color(if vn_dark() {
+                &theme.primary_light
+            } else {
+                &theme.primary
+            })
+        })
+        .unwrap_or_else(vn_accent);
     let page = Layout::vertical([
         Constraint::Length(2),
-        Constraint::Min(12),
-        Constraint::Length(2),
+        Constraint::Min(10),
+        Constraint::Length(5),
     ])
     .split(canvas);
+
+    frame.render_widget(vn_header("Character route", accent), page[0]);
     frame.render_widget(
-        Paragraph::new("erogeDOTS  /  Load a character").style(
-            Style::default()
-                .fg(Color::Rgb(137, 75, 110))
-                .add_modifier(Modifier::BOLD),
-        ),
-        page[0],
+        Paragraph::new(Line::from(Span::styled(
+            "─".repeat(page[0].width as usize),
+            Style::default().fg(vn_line()),
+        ))),
+        Rect {
+            y: page[0].y + 1,
+            height: 1,
+            ..page[0]
+        },
     );
 
     let body =
-        Layout::horizontal([Constraint::Percentage(32), Constraint::Percentage(68)]).split(page[1]);
+        Layout::horizontal([Constraint::Percentage(33), Constraint::Percentage(67)]).split(page[1]);
     let rows: Vec<ListItem> = app
         .values
         .iter()
@@ -1158,65 +1510,130 @@ fn render_theme_chooser(frame: &mut ratatui::Frame, app: &ThemeChooser) {
             } else {
                 "○"
             };
-            ListItem::new(format!("{mark} {}", theme.name))
+            ListItem::new(vec![
+                Line::from(vec![
+                    Span::styled(
+                        format!("{mark} "),
+                        Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                    ),
+                    Span::styled(
+                        theme.name.clone(),
+                        Style::default().fg(vn_ink()).add_modifier(Modifier::BOLD),
+                    ),
+                ]),
+                Line::from(Span::styled(
+                    format!("   {}", theme.character),
+                    Style::default().fg(vn_muted()),
+                )),
+            ])
         })
         .collect();
     let mut state = ListState::default().with_selected(Some(app.cursor));
     frame.render_stateful_widget(
         List::new(rows)
-            .block(
-                Block::default()
-                    .title(" Character routes ")
-                    .borders(Borders::ALL),
-            )
+            .block(vn_panel("Routes", accent))
             .highlight_symbol("› ")
             .highlight_style(
                 Style::default()
                     .fg(Color::Black)
-                    .bg(Color::Rgb(239, 221, 233))
+                    .bg(accent)
                     .add_modifier(Modifier::BOLD),
             ),
         body[0],
         &mut state,
     );
 
-    let preview = Block::default()
-        .title(" Your next scene ")
-        .borders(Borders::ALL);
+    let preview = vn_panel("Scene preview", accent);
     let inner = preview.inner(body[1]);
     frame.render_widget(preview, body[1]);
-    if let Some(theme) = app.values.get(app.cursor) {
-        let swatch = "      ";
-        let details = vec![
-            ratatui::text::Line::from(vec![
-                ratatui::text::Span::styled(
-                    swatch,
-                    Style::default()
-                        .fg(hex_color(&theme.primary))
-                        .bg(hex_color(&theme.primary)),
-                ),
-                ratatui::text::Span::raw(format!("  {}", theme.name)),
-            ]),
-            ratatui::text::Line::from(format!("{} · {}", theme.character, theme.game)),
-            ratatui::text::Line::from(theme.wallpaper.as_str()),
-        ];
-        let parts = Layout::vertical([Constraint::Length(4), Constraint::Min(1)]).split(inner);
-        frame.render_widget(Paragraph::new(details), parts[0]);
-        if let Some(protocol) = &app.image {
-            frame.render_widget(Image::new(protocol), parts[1]);
-        } else {
-            frame.render_widget(
-                Paragraph::new("Wallpaper could not be loaded")
-                    .style(Style::default().fg(Color::Rgb(109, 83, 104))),
-                parts[1],
-            );
-        }
+    let parts = Layout::vertical([Constraint::Min(5), Constraint::Length(4)]).split(inner);
+    if let Some(protocol) = app.image.as_mut() {
+        let fit = protocol.size_for(Resize::Fit(None), parts[0].as_size());
+        let image_area = centered_image(parts[0], fit.width, fit.height);
+        frame.render_stateful_widget(
+            StatefulImage::default().resize(Resize::Fit(None)),
+            image_area,
+            protocol,
+        );
+    } else {
+        frame.render_widget(
+            Paragraph::new("Wallpaper unavailable\npick another route or add an image")
+                .style(Style::default().fg(vn_muted())),
+            parts[0],
+        );
     }
 
+    if let Some(theme) = &theme {
+        let nameplate = Block::default()
+            .borders(Borders::TOP)
+            .border_style(Style::default().fg(accent))
+            .style(Style::default().bg(vn_tint()));
+        let inner = nameplate.inner(parts[1]);
+        frame.render_widget(nameplate, parts[1]);
+        let swatch = |hex: &str| Span::styled("   ", Style::default().bg(hex_color(hex)));
+        let lines = vec![
+            Line::from(vec![
+                Span::styled(
+                    theme.japanese.clone(),
+                    Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                ),
+                Span::raw("  ·  "),
+                Span::styled(theme.character.clone(), Style::default().fg(vn_ink())),
+            ]),
+            Line::from(Span::styled(
+                theme.game.clone(),
+                Style::default().fg(vn_muted()),
+            )),
+            Line::from(vec![
+                swatch(&theme.primary),
+                Span::raw(" "),
+                swatch(&theme.primary_light),
+                Span::raw(" "),
+                swatch(&theme.primary_dark),
+                Span::raw("  "),
+                Span::styled(theme.wallpaper.clone(), Style::default().fg(vn_muted())),
+            ]),
+        ];
+        frame.render_widget(Paragraph::new(lines), inner);
+    }
+
+    let dialogue = vn_panel("Message", accent).style(Style::default().bg(vn_tint()));
+    let inner = dialogue.inner(page[2]);
+    frame.render_widget(dialogue, page[2]);
+    let quote = theme
+        .as_ref()
+        .map(|theme| theme.quote.as_str())
+        .filter(|quote| !quote.is_empty())
+        .unwrap_or("Choose a route. The next scene is waiting.");
     frame.render_widget(
-        Paragraph::new("[↑↓/jk] move  [Enter] apply  [q/Esc] cancel")
-            .style(Style::default().fg(Color::Rgb(109, 83, 104))),
-        page[2],
+        Paragraph::new(vec![
+            Line::from(vec![
+                Span::styled("❀ ", Style::default().fg(accent)),
+                Span::styled(
+                    format!("“{quote}”"),
+                    Style::default().fg(vn_ink()).add_modifier(Modifier::ITALIC),
+                ),
+            ]),
+            Line::from(vec![
+                Span::styled(
+                    "Enter",
+                    Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" load   "),
+                Span::styled(
+                    "↑↓/jk",
+                    Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" browse   "),
+                Span::styled(
+                    "q/Esc",
+                    Style::default().fg(accent).add_modifier(Modifier::BOLD),
+                ),
+                Span::raw(" return"),
+            ]),
+        ])
+        .wrap(Wrap { trim: true }),
+        inner,
     );
 }
 
@@ -1226,18 +1643,19 @@ fn choose_theme(term: &mut Term) -> io::Result<Option<String>> {
         return Ok(None);
     }
     let mut picker = Picker::from_query_stdio().unwrap_or_else(|_| Picker::halfblocks());
-    app.load_image(&mut picker);
+    picker.set_background_color(Some(vn_bg_rgba()));
+    app.load_image(&picker);
 
     loop {
-        term.draw(|frame| render_theme_chooser(frame, &app))?;
+        term.draw(|frame| render_theme_chooser(frame, &mut app))?;
         match key()? {
             KeyCode::Up | KeyCode::Char('k') => {
                 app.cursor = app.cursor.saturating_sub(1);
-                app.load_image(&mut picker);
+                app.load_image(&picker);
             }
             KeyCode::Down | KeyCode::Char('j') => {
                 app.cursor = (app.cursor + 1).min(app.values.len() - 1);
-                app.load_image(&mut picker);
+                app.load_image(&picker);
             }
             KeyCode::Enter => return Ok(Some(app.values[app.cursor].name.clone())),
             KeyCode::Esc | KeyCode::Char('q') => return Ok(None),
@@ -1321,6 +1739,26 @@ mod tests {
         assert!(image_file(Path::new("wallpaper.PNG")));
         assert!(image_file(Path::new("wallpaper.webp")));
         assert!(!image_file(Path::new("secret.txt")));
+    }
+
+    #[test]
+    fn theme_chooser_renders_at_small_and_wide_terminal_sizes() {
+        let mut app = ThemeChooser::new();
+        for (width, height) in [(80, 24), (120, 40), (50, 16)] {
+            let backend = ratatui::backend::TestBackend::new(width, height);
+            let mut term = Terminal::new(backend).unwrap();
+            term.draw(|frame| render_theme_chooser(frame, &mut app))
+                .unwrap();
+            let text: String = term
+                .backend()
+                .buffer()
+                .content()
+                .iter()
+                .map(|cell| cell.symbol())
+                .collect();
+            assert!(text.contains("erogeDOTS"));
+            assert!(text.contains("Character route"));
+        }
     }
 
     #[test]

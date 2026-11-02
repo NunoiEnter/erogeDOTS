@@ -1,7 +1,9 @@
 import QtQuick
-import QtQuick.Shapes
 
 // Small authored line icons: one stroke family, no font or raster dependency.
+// Painted with a Canvas (Context2D): QtQuick.Shapes renders nothing on this
+// stack, and this keeps the stroke weight identical across themes. The SVG
+// path data is walked by hand because the QML JS engine has no Path2D.
 Item {
     id: icon
     property string symbol: "settings"
@@ -23,18 +25,53 @@ Item {
         launch: "M13 3 H21 V11 M21 3 L10 14 M9 5 H3 V21 H19 V15",
         key: "M10 14 C3 17 0 10 4 6 C8 2 15 5 12 12 L21 21 M16 16 L19 13 M19 19 L22 16"
     })
-    Item {
+    Canvas {
+        id: paint
         width: 24; height: 24
         anchors.centerIn: parent
         scale: Math.min(icon.width, icon.height) / 24
-        Shape {
-            anchors.fill: parent
-            ShapePath {
-                strokeColor: icon.color; strokeWidth: 1.7
-                fillColor: "transparent"
-                capStyle: ShapePath.RoundCap; joinStyle: ShapePath.RoundJoin
-                PathSvg { path: icon.paths[icon.symbol] || icon.paths.settings }
+        antialiasing: true
+        renderStrategy: Canvas.Immediate
+        contextType: "2d"
+        onPaint: {
+            const ctx = getContext("2d")
+            if (!ctx) return
+            ctx.reset()
+            ctx.strokeStyle = icon.color
+            ctx.lineWidth = 1.7
+            ctx.lineCap = "round"
+            ctx.lineJoin = "round"
+            const data = icon.paths[icon.symbol] || icon.paths.settings
+            let x = 0, y = 0
+            let ptr = 0
+            const tokens = []
+            const re = /([MLHVCSQZAmlhvcsqza])|([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)/g
+            let hit
+            while ((hit = re.exec(data)) !== null) {
+                if (hit[1]) tokens.push({ cmd: hit[1] })
+                else tokens.push({ n: parseFloat(hit[2]) })
             }
+            ctx.beginPath()
+            const arg = index => tokens[ptr + index].n
+            while (ptr < tokens.length && tokens[ptr].cmd) {
+                const cmd = tokens[ptr++].cmd
+                switch (cmd) {
+                case "M": x = arg(0); y = arg(1); ptr += 2; ctx.moveTo(x, y); break
+                case "m": x += arg(0); y += arg(1); ptr += 2; ctx.moveTo(x, y); break
+                case "L": x = arg(0); y = arg(1); ptr += 2; ctx.lineTo(x, y); break
+                case "l": x += arg(0); y += arg(1); ptr += 2; ctx.lineTo(x, y); break
+                case "H": x = arg(0); ptr += 1; ctx.lineTo(x, y); break
+                case "h": x += arg(0); ptr += 1; ctx.lineTo(x, y); break
+                case "V": y = arg(0); ptr += 1; ctx.lineTo(x, y); break
+                case "v": y += arg(0); ptr += 1; ctx.lineTo(x, y); break
+                case "C": ctx.bezierCurveTo(arg(0), arg(1), arg(2), arg(3), arg(4), arg(5)); x = arg(4); y = arg(5); ptr += 6; break
+                case "c": ctx.bezierCurveTo(x + arg(0), y + arg(1), x + arg(2), y + arg(3), x + arg(4), y + arg(5)); x += arg(4); y += arg(5); ptr += 6; break
+                case "S": ctx.bezierCurveTo(x, y, arg(0), arg(1), arg(2), arg(3)); x = arg(2); y = arg(3); ptr += 4; break
+                case "Q": ctx.quadraticCurveTo(arg(0), arg(1), arg(2), arg(3)); x = arg(2); y = arg(3); ptr += 4; break
+                case "Z": case "z": ctx.closePath(); break
+                }
+            }
+            ctx.stroke()
         }
     }
 }

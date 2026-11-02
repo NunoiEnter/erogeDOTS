@@ -31,21 +31,21 @@ spawn_one() { # title, command...
   # shellcheck disable=SC2086
   local cmd="source \"\$HOME/.config/theme/env\" 2>/dev/null; $* ; exec zsh"
   if pgrep -x niri >/dev/null && command -v niri >/dev/null; then
-    niri msg action spawn -- ghostty --title="$title" -e bash -c "$cmd" >/dev/null
+    niri msg action spawn -- kitty --title="$title" -e bash -c "$cmd" >/dev/null
   else
     # shellcheck disable=SC2086
-    ghostty --title="$title" -e bash -c "$cmd" &
+    kitty --title="$title" -e bash -c "$cmd" &
     disown
   fi
 }
 
 case "${1:-open}" in
   kill)
-    pkill -f 'ghostty --title=larp-' 2>/dev/null || true
+    pkill -f '(ghostty|kitty) --title=larp-' 2>/dev/null || true
     ;;
   open)
     command -v niri >/dev/null || { echo "larp needs niri running" >&2; exit 1; }
-    pkill -f 'ghostty --title=larp-' 2>/dev/null || true
+    pkill -f '(ghostty|kitty) --title=larp-' 2>/dev/null || true
     sleep 0.3
     # Left column: TL then BL to its right, consume BL into TL.
     # (Focus left partner first: new windows open next to focus.)
