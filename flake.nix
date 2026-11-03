@@ -1,5 +1,5 @@
 {
-  description = "erogeDOTS ALPHA 2.1 - visual novel NixOS desktop";
+  description = "erogeDOTS ALPHA 2.2 - visual novel NixOS desktop";
 
   nixConfig = {
     extra-substituters = [ "https://cache.numtide.com" ];
@@ -33,7 +33,7 @@
     antigravity-cli = llmAgents.antigravity-cli;
     theme-picker = pkgs.rustPlatform.buildRustPackage {
       pname = "theme-picker";
-      version = "0.2.0";
+      version = "0.3.0";
       src = lib.cleanSourceWith {
         src = ./picker-rs;
         filter = path: type: type != "directory" || builtins.baseNameOf path != "target";

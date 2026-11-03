@@ -26,12 +26,10 @@ in
     experimental-features = [ "nix-command" "flakes" ];
     substituters = lib.mkForce [
       "https://cache.numtide.com"
-      "https://mirror.sjtu.edu.cn/nix-channels/store"
       "https://cache.nixos.org/"
     ];
     trusted-substituters = [
       "https://cache.numtide.com"
-      "https://mirror.sjtu.edu.cn/nix-channels/store"
       "https://cache.nixos.org/"
     ];
     trusted-public-keys = [
@@ -43,18 +41,19 @@ in
     fallback = true;
     connect-timeout = 10;
     stalled-download-timeout = 10;
-    download-attempts = 1;
+    download-attempts = 5;
     http-connections = 16;
     max-substitution-jobs = 8;
-    max-jobs = "auto";
-    cores = 0;
+    max-jobs = 4;
+    cores = 2;
     min-free = "5G";
     max-free = "20G";
+    auto-optimise-store = true;
   };
   nix.gc = {
     automatic = true;
     dates = "weekly";
-    options = "--delete-older-than 30d";
+    options = "--delete-older-than 14d";
   };
   nix.optimise.automatic = true;
 

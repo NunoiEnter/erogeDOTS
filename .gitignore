@@ -7,6 +7,11 @@ __pycache__/
 .opencode/
 .impeccable/hook.cache.json
 
+# Generated local previews and agent tooling state.
+preview/
+skills-lock.json
+*.hm-backup
+
 # Private account/profile exports never belong in a public dotfile repository.
 secrets/
 auth.json

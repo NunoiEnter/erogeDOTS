@@ -1,4 +1,4 @@
-# erogeDOTS — Alpha 2.1
+# erogeDOTS — Alpha 2.2
 
 [Thai version](README.th.md)
 
@@ -30,7 +30,7 @@ To change installed software or system services, edit the Nix sources or use **S
 
 Git transfers the tracked source files and wallpapers, not ignored Rust build output or Nix store packages. A fresh clone still downloads or builds the packages required by NixOS. Keep generated configs, temporary state, credentials and build artifacts outside the tracked tree.
 
-Alpha 2.1 builds on the first complete VN desktop snapshot with keyboard-first pages and session choices, a guided installer, graphical theme creation, separate panel and system-app appearance controls, live Nixpkgs package search, and a Niri layout preview. The original Alpha 2.0 snapshot remains preserved by the [`alpha-2.0` tag](https://github.com/NunoiEnter/erogeDOTS/tree/alpha-2.0); this guide describes the current 2.1 source.
+Alpha 2.2 builds on the first complete VN desktop snapshot with keyboard-first pages and session choices, a guided installer, graphical theme creation, separate panel and system-app appearance controls, live Nixpkgs package search, and a Niri layout preview. The original Alpha 2.0 snapshot remains preserved by the [`alpha-2.0` tag](https://github.com/NunoiEnter/erogeDOTS/tree/alpha-2.0); this guide describes the current 2.2 source.
 
 ## Cave mode
 

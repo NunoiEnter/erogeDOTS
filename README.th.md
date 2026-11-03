@@ -1,4 +1,4 @@
-# erogeDOTS — Alpha 2.1
+# erogeDOTS — Alpha 2.2
 
 [คู่มือภาษาอังกฤษ](README.md)
 
@@ -198,7 +198,7 @@ theme-switch style vn
 
 ## เดสก์ท็อปสไตล์ Romance VN และ Windows 98
 
-Alpha 2.1 ต่อยอดจาก snapshot **Alpha 2.0** ที่ tag [`alpha-2.0`](https://github.com/NunoiEnter/erogeDOTS/tree/alpha-2.0) โดยเพิ่มการควบคุมหน้าด้วยคีย์บอร์ด เมนู Exit แบบ VN ตัวติดตั้ง TUI การสร้าง theme ผ่านหน้า desktop การตั้งค่าความสว่างของ panel แยกจากแอป การค้นหา package จริง และตัวอย่าง layout ของ Niri คู่มือนี้อธิบาย source ปัจจุบันเวอร์ชัน 2.1
+Alpha 2.2 ต่อยอดจาก snapshot **Alpha 2.0** ที่ tag [`alpha-2.0`](https://github.com/NunoiEnter/erogeDOTS/tree/alpha-2.0) โดยเพิ่มการควบคุมหน้าด้วยคีย์บอร์ด เมนู Exit แบบ VN ตัวติดตั้ง TUI การสร้าง theme ผ่านหน้า desktop การตั้งค่าความสว่างของ panel แยกจากแอป การค้นหา package จริง และตัวอย่าง layout ของ Niri คู่มือนี้อธิบาย source ปัจจุบันเวอร์ชัน 2.2
 
 เมื่อเปิด Extra Mode, Music Room หรือ System Config โฟกัสจะไปที่ปุ่มแรกที่ใช้งานได้ ใช้ลูกศรเลือกปุ่มและ Enter เพื่อกด, Tab/Shift+Tab ไปยังตัวควบคุมถัดไปภายในหน้าเดิม พร้อมเลื่อนหน้าให้เห็นปุ่มที่เลือก Slider ใช้ซ้าย/ขวาปรับค่า ช่องตัวเลขและตัวแก้ไขข้อความยังใช้ปุ่มตามปกติ Escape กลับไปยังตัวเลือกเดิมใน title screen เมนูที่ปักหมุดจาก ribbon ใช้คีย์บอร์ดได้เช่นกัน
 

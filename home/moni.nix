@@ -24,14 +24,14 @@ let
     x-scheme-handler/about=firefox.desktop
     text/html=firefox.desktop
     application/xhtml+xml=firefox.desktop
-    text/plain=nvim-terminal.desktop
-    text/x-python=nvim-terminal.desktop
-    text/css=nvim-terminal.desktop
-    text/javascript=nvim-terminal.desktop
-    text/x-shellscript=nvim-terminal.desktop
-    application/json=nvim-terminal.desktop
-    application/xml=nvim-terminal.desktop
-    application/x-nix=nvim-terminal.desktop
+    text/plain=dev.zed.Zed.desktop
+    text/x-python=dev.zed.Zed.desktop
+    text/css=dev.zed.Zed.desktop
+    text/javascript=dev.zed.Zed.desktop
+    text/x-shellscript=dev.zed.Zed.desktop
+    application/json=dev.zed.Zed.desktop
+    application/xml=dev.zed.Zed.desktop
+    application/x-nix=dev.zed.Zed.desktop
     image/png=qimgv.desktop
     image/jpeg=qimgv.desktop
     image/gif=qimgv.desktop
@@ -240,6 +240,8 @@ in
     ];
     sessionVariables = {
       TERMINAL = "kitty";
+      EDITOR = "zed";
+      VISUAL = "zed";
       EROGEDOTS_ROOT = repo;
       MOZ_ENABLE_WAYLAND = "1";
       NIXOS_OZONE_WL = "1";
@@ -255,8 +257,8 @@ in
       grim slurp swappy wlogout wlsunset swaylock kdePackages.kdenlive
 
       # Applications
-      librewolf google-chrome vesktop kdePackages.dolphin kdePackages.ark
-      obs-studio qimgv vlc mpv yt-dlp ytui-music qbittorrent p7zip unrar
+      google-chrome vesktop kdePackages.dolphin kdePackages.ark
+      qimgv vlc mpv yt-dlp ytui-music qbittorrent p7zip unrar
       foliate figma-linux zed-editor arduino-ide arduino-cli tree discord
       discordo
 
@@ -270,7 +272,7 @@ in
       # Development
       neovim vscodium go cargo rustc bun gh gcc gdb
       ripgrep fd jq htop btop tree-sitter sqlite
-antigravity-cli
+      antigravity-cli
       pkgs.antigravity-ide
 
       # Gaming and media
